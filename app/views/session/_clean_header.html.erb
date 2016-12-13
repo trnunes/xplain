@@ -1,0 +1,41 @@
+<div class ='windowheader _NO_MINIMIZE'>
+    <div class="windowtitle">
+        <font style='font-size:11px;font-weight:normal'>
+            (<%= resourceset.size %> resources)
+        </font>
+		
+    </div>
+    <div class=' winoperations '>        
+	 
+        <div class ='_image_view' <%=@style_s%>>
+            <span class="tool">I<span class="tip">Group by subject</span></span>
+        </div>
+        <div class ='_relation_view' <%=@style_p%>>
+            <span class="tool">D<span class="tip">Group by predicate</span></span>
+        </div>
+		
+		 <div class ='_hide'>
+                       <div>
+                        <span class="tool"> &nbsp;<span class="tip">Minimize the window.</span></span></div>
+        </div>
+        <div class ='_show'>
+           <div>
+                        <span class="tool"> &nbsp;<span class="tip">Maximize the window.</span></span></div>
+        </div>
+        <div class ='_remove'>
+            X
+        </div>
+        &nbsp;
+    </div>
+    &nbsp;
+</div>
+<div class ='windowheader _NO_MINIMIZE' id='resname'>
+ <div class="windowtitle">
+ 	<%editid = "test_id"%>
+    	<div id="<%=editid%>"><%= "test_name_window_header" %></div>
+		
+ 			<!-- new Ajax.InPlaceEditor('editid%>', '/explorator/editSetName?uri=uri(resourceset)%>',{okControl:"false",cancelControl:"false",submitOnBlur:"true"}); -->
+		
+
+    </div> &nbsp;
+</div>

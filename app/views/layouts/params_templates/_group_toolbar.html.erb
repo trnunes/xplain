@@ -1,0 +1,16 @@
+
+		<div class ='_setparameter' id = 'relation' exp = "S" onclick="setParameter(this)">
+		    <span class="tool">Relation<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+		</div>
+
+			<select id = "group_select" onchange="group_selected(this.value)">
+			  <option value="image">By Relation</option>
+			  <option value="contains_one">Similarity</option>
+			</select>		
+		
+<script>
+		function group_selected(group_function) {
+			parameters.put('group', group_function);			
+		}
+</script>
+

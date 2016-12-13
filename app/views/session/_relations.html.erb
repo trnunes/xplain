@@ -1,0 +1,85 @@
+    <% relations = resourceset.extension%>
+	<% relations.each do |domain, images| %>
+    <%sddm = SecureRandom.uuid %>
+    <ul class="subjmenu" id="<%=sddm%>">
+        <li>
+            <%m1 = SecureRandom.uuid %>
+            <a href="#" onmouseover="mcancelclosetimemenu(),mopen('<%=m1%>')" onmouseout="mclosetimemenu(),mclosetime()"><img class="arrow" border=0 src="/images/arrow_video_down_white_2.png" width="13" height="13"></a>
+            <div id="<%=m1%>" onmouseover="mcancelclosetime(),mcancelclosetimemenu()" onmouseout="mclosetime(),mclosetimemenu()">
+	                <a class ="all" exp="findRelations(<%=domain%>)" view = "predicate_view">(All Properties)</a>
+            </div>
+        </li>
+    </ul>
+	<% 
+	if literal?(domain)
+		item_id = domain
+	else
+		item_id = domain.id
+	end
+		
+	%>
+    <div class = " _WINDOW  select <%=css(domain)%>  " id = "<%=item_id%>" set = "<%=resourceset.id%>" resource="<%=item_id%>" exp="" title="<%= item_id %>" onmouseover="mopenmenu('<%=sddm%>');" onmouseout="mclosetimemenu();">
+        <div class ="expand _NO_MINIMIZE">
+            <div class ='_collapseproperties' style="float:left;">
+                <span class="tool">-<span class="tip">Hide all properties values.</span></span>
+            </div>
+            <div class= "_expandproperties" style="float:left;">
+                <span class="tool">+ <span class="tip">Show the resource properties values</span></span>
+            </div>
+        </div>    
+		
+        <%= render_resource(domain) %>
+		
+        <% images.each do |p| %>
+		<% 
+		if literal?(p)
+			item_id = p
+		else
+			item_id = p.id
+		end
+		
+		%>
+		
+			<% if p.to_s != domain.to_s%>
+		        <div class = " _WINDOW properties">
+		            <div class = "_WINDOW draggable select _NO_MINIMIZE <%=css(p)%> predicate" id="<%= item_id%>" resource="<%= p.to_s %>" exp="" title="<%=  p.to_s %>">
+		                <%= render_resource(p) %>
+		            </div>
+		        </div>
+			<%end%>
+        <% end %>
+		
+
+        <div class = " properties">
+            <a class ="all" exp="('<%= domain.to_s %>',:p,:o)">More ...</a>
+        </div>
+    </div>
+    <% end %>
+    <br> 
+	
+    <div class ="flickr_pagination ">
+        <div align= center  >
+            
+        </div>
+    </div>
+  
+</div>
+
+<%if resourceset.size > 1 %>
+	<%= javascript_tag do %>
+		var set_uri = '<%= resourceset %>'.replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g,'\\$1');
+		$(set_uri).children('.properties').each(function(n){
+	        $(this).hide();
+	    });
+		$(set_uri).children('._collapseproperties').hide();
+	<%end%>
+<%else %>
+	<%= javascript_tag do %>
+		var set_uri = '<%= resourceset %>';
+		$(set_uri).children('._expandproperties').hide();		
+	<%end%>
+<%end %>
+
+<script>
+init_all();
+</script>

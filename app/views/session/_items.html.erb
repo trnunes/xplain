@@ -1,0 +1,44 @@
+
+	<% resourceset.each do |resource| %>
+    <%sddm = SecureRandom.uuid %>
+    <ul class="subjmenu" id="<%=sddm%>">
+        <li>
+            <%m1 = SecureRandom.uuid %>
+            <a href="#" onmouseover="mcancelclosetimemenu(),mopen('<%=m1%>')" onmouseout="mclosetimemenu(),mclosetime()"><img class="arrow" border=0 src="/images/arrow_video_down_white_2.png" width="13" height="13"></a>
+            <div id="<%=m1%>" onmouseover="mcancelclosetime(),mcancelclosetimemenu()" onmouseout="mclosetime(),mclosetimemenu()">
+                <%if relation?(resource) %>
+	                <a class ="all" exp="">(Used by)</a>
+	                <a class ="all" exp="">(Has values)</a>
+                <%else %>
+	                <a class ="all" exp="findRelations(<%=resource%>)" view = "predicate_view">(All Properties)</a>
+
+                <%end %>
+            </div>
+        </li>
+    </ul>
+	<% 
+	if literal?(resource)
+		item_id = resource
+	else
+		item_id = resource.id
+	end
+		
+	%>
+    <div class = " _WINDOW  select <%=css(resource)%>  " id = "<%=item_id%>" set = "<%=resourceset.id%>" resource="<%=item_id%>" exp="" title="<%= item_id %>" onmouseover="mopenmenu('<%=sddm%>');" onmouseout="mclosetimemenu();">
+        <div class ="expand _NO_MINIMIZE">
+            <div class ='_collapseproperties' style="float:left;">
+                <span class="tool">-<span class="tip">Hide all properties values.</span></span>
+            </div>
+            <div class= "_expandproperties" style="float:left;">
+                <span class="tool">+ <span class="tip">Show the resource properties values</span></span>
+            </div>
+        </div>    
+		
+        <%= render_resource(resource) %>		
+		
+
+        <div class = " properties">
+            <a class ="all" exp="('<%= resource %>',:p,:o)">More ...</a>
+        </div>
+    </div>
+    <% end %>

@@ -1,0 +1,45 @@
+		<%
+	        pred = relations(resource)        
+	        limit = pred.size
+        %>
+		
+        <%= render_resource(resource) %>
+        <%if limit > 1 %>
+        <hr><%end %>
+        <% pred[0..limit].each do |p| %>
+        <div class = " _WINDOW properties">
+            <div class = "_WINDOW draggable select _NO_MINIMIZE <%=css(p)%> predicate" resource="<%= p %>" exp="" title="<%= p %>">
+                <div class ="resourceuioperations _NO_MINIMIZE">
+                    <div class ='_hide'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Minimize the window.</span></span>
+                        </div>
+                    </div>
+                    <div class ='_show'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Show the resource properties values</span></span>
+                        </div>
+                    </div>
+                    <div class = "_close">
+                        x
+                    </div>
+                </div>
+                <%= render_resource(p) %>=<!-- BEGIN OBJECT -->
+			<%if  objects(resource,p).size != 1 %>
+                <div class = "resource select _WINDOW draggable objects" exp="">
+            <% end %>
+                    <% objects(resource,p).each do |o| %>
+                    <div class = " draggable  <%=css(o)%> select object " resource="<%= o %>" exp="('<%= o %>',:p,:o)" title="<%= o %>">
+                        <%if type?(o) %>
+                        <font class = "instances" classes="('<%= o %>',:p,:o)" instances="(:s,RDF::type,'<%= o %>')">
+                            i
+                        </font>
+                        <%end %>
+                        <%= render_resource(o) %>
+                    </div>
+                    <% end %>
+            <%if  objects(resource,p).size != 1 %>
+	            </div>
+            <% end %>
+                <!-- END OBJECT -->
+            </div>

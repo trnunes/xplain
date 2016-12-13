@@ -1,0 +1,24 @@
+
+			<select id = "map_select" onchange="map_function_selected(this.value)">
+			  
+			  <option value="count">Count</option>
+			  <option value="avg">Average</option>
+			  <option value="domain_count">Count image</option>
+			</select>		
+
+
+		<div class ='_setparameter' id = 'target_set' exp = "P" onclick="setParameter(this)">
+		    <span class="tool">Select Target Set<span class="tip">Press to select a value to filter</span></span>
+		</div>
+		
+<script>
+		$("#target_set").hide();
+		function map_function_selected(map_function) {
+			parameters.put('map_function', map_function);
+			
+			if(map_function === 'domain_count'){
+				$("#target_set").show();				
+			} 
+		}
+</script>
+

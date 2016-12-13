@@ -1,0 +1,39 @@
+<div class="_WINDOW facetgroupwindow set _draggable " id = "facetgroup">
+    <%= render :partial => 'windowheader' %>
+    <div class="_WINDOW window   set" id = "facets" set ="" exp= "">
+        <%= render :partial => 'windowheader' %>
+        <%= render :partial => 'windowfacet' %>
+
+        <% @groups.each_pair do |facet, values|%>
+        <div class=" _WINDOW " id ="<%=facet%>">
+            <div class = "resource select term draggable _NO_MINIMIZE" resource="<%=facet %>" exp="" onmouseover="Tip('<%= facet %>',DELAY, 1000);" onmouseout="UnTip();">
+                <div class ="resourceuioperations ">
+                    <div class ='_hide'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Minimize the window.</span></span>
+                        </div>
+                    </div>
+                    <div class ='_show'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Maximize the window.</span></span>
+                        </div>
+                    </div>
+                    <div class = "_close">
+                        x
+                    </div>
+                </div>
+                <%= render_resource(facet) %>
+            </div>
+			
+            <div class = "values resource select objects" exp="">
+                <% values.each do |value, count| %>
+					<div class = "draggable value resource select" resource="<%=value.to_s %>" exp="" >
+                    	<input type="checkbox" class="_checkboxfacet" name ="<%=facet%>" exp="" /><%= render_resource (value) %><span class='cardinality'>(<%= count %>)</span>
+                    <a class ="all" exp="">All</a>
+					</div> 
+                <% end%>
+            </div>
+        </div>
+        <% end %>
+    </div>
+</div>

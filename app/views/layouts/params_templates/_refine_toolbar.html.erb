@@ -1,0 +1,41 @@
+
+		<div class ='_setparameter parambutton' id = 'relation' exp = "S" onclick="setParameter(this)">
+		    <span class="tool">Relations<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+		</div>
+		
+
+			<label for="filter_select">Choose a Filter</label>
+
+			<select id = "filter_select" onchange="filter_selected(this.value)">
+			  <option value="equals">Equal</option>
+			  <option value="contains_one">Contains</option>
+			  <option value="match">Match</option>
+			  <option value="keyword_match">Keyword Match</option>
+			</select>		
+
+
+		<div class ='_setparameter' id = 'value' exp = "P" onclick="setParameter(this)">
+		    
+		</div>
+		
+<script>
+		$('#value').hide();
+		function filter_selected(filter) {
+			parameters.put('filter', filter);
+
+			if(filter === 'keyword_match'){
+				$('#relation').hide();
+				$('#value').replaceWith("<input id='keywords_input' type==\"text\" value =\"\" name= \"value\"/>")
+			} else{
+				$('#relation').show();
+				$('#value').remove();
+				$('#keywords_input').remove();
+				
+				var html = "<div class ='_setparameter' id = 'value' exp = \"P\" onclick=\"setParameter(this)\"> </div>"
+				
+				$(html).insertAfter('#filter_select');
+
+			}
+		}
+</script>
+

@@ -1,0 +1,107 @@
+<div class = "toolbars">
+    <div class = "toolbar">
+        <div class ='_union operation' id = 'A' exp = "A">
+            <span class="tool">&cup;<span class="tip"><b>Union</b> between A and B</span></span>
+        </div>
+        <div class ='_intersection   operation' id = 'A' exp = "A">
+            <span class="tool">&cap;<span class="tip"><b>Intersection</b> between A and B</span></span>
+        </div>
+        <div class ='_difference operation' id = 'A' exp = "A">
+            <span class="tool">-<span class="tip"><b>Difference</b> between A and B</span></span>
+        </div>
+    </div>
+    <div class = "toolbar">
+				
+        <div class ='_relations operation' id = 'find_relations'>
+            <span class="tool">Rel<span class="tip">Find the relations of the selected set</span></span>
+        </div>
+
+        <div class ='_pivot operation' id = 'A' exp = "A">
+            <span class="tool">Pivot<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+        </div>
+		
+        <div class ='_refine operation' id = 'A' exp = "A">
+            <span class="tool">Filter<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+        </div>
+		
+        <div class ='_group operation' id = 'A' exp = "A">
+            <span class="tool">Group<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+        </div>
+		
+        <div class ='_map operation' id = 'A' exp = "A">
+            <span class="tool">Map<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+        </div>
+		
+        <div class ='_rank operation' id = 'A' exp = "A">
+            <span class="tool">Rank<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+        </div>
+		
+
+		
+		
+				
+  
+        <!--
+        <div class ='_spo operation' id = ':r' exp=":p">
+        <span class="tool">P<span class="tip">It will return the P in the expression (S,P,O)</span></span>
+        </div>
+        <div class ='_spo operation' id = ':r' exp=":o">
+        <span class="tool">O<span class="tip">It will return the O in  the expression (S,P,O)</span></span>
+        </div> -->
+    </div>
+	<div id = "params_div" class = "toolbar">
+
+	</div>
+	
+    <div class = "toolbar">
+        <div class ='_equal operation ' id = ':r' exp=":s">
+            <span class="tool">=<span class="tip">Execute the expression.</span></span>
+        </div>
+    </div>
+   <!-- <div class = "toolbar">
+        <div class ='_delete operation ' id = ':r' exp=":s">
+            <span class="tool">D<span class="tip">Delete expression.</span></span>
+        </div>
+    </div> -->
+    <div class = "toolbar">
+        <div class ='_clear operation'>
+            <span class="tool">CLEAR<span class="tip">Clear all parameters selected.</span></span>
+        </div>
+    </div>&nbsp;
+</div>
+
+<script>
+$("#params_div").hide();
+function render_refine_toolbar(){
+	$("#params_div").empty();
+	$("#params_div").show();
+	$("#params_div").append("<%= j render(partial: 'layouts/params_templates/refine_toolbar')%>");
+	$('select').val("equals");
+	parameters.put('filter', 'equals')
+};
+
+function render_map_toolbar(){
+	$("#params_div").empty();
+	$("#params_div").show();
+	$("#params_div").append("<%= j render(partial: 'layouts/params_templates/map_toolbar')%>");
+	$('select').val("count");
+	parameters.put('map_function', 'count')
+};
+
+function render_group_toolbar(){
+	$("#params_div").empty();
+	$("#params_div").show();
+	$("#params_div").append("<%= j render(partial: 'layouts/params_templates/group_toolbar')%>");
+	$('select').val("image");
+	parameters.put('group_function', 'image')
+}
+
+function render_rank_toolbar(){
+	$("#params_div").empty();
+	$("#params_div").show();
+	$("#params_div").append("<%= j render(partial: 'layouts/params_templates/rank_toolbar')%>");
+	$('select').val("sort");
+	parameters.put('ranking_function', 'sort')	
+}
+
+</script> 

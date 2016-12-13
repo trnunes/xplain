@@ -1,0 +1,55 @@
+<div class="_WINDOW facetgroupwindow set _draggable " id = "facetgroup">
+    <%= render :partial => 'windowheader' %>
+    <div class="_WINDOW window   set" id = "facets" set ="<%=uri(resourceset)%>" exp= "(<%=h(resourceset.explorator::expression)%>)">
+        <%= render :partial => 'windowheader' %>
+        <%= render :partial => 'windowfacet' %>
+        <div class ='windowheader _NO_MINIMIZE'>
+            Select :
+            <select class = "_facetlist">
+                <option value=""></option>
+                <% @groups.each do |group| %>
+                <option value="<%=group.rdfs::label%>"><%=group.rdfs::label %></option>
+                <% end %>
+            </select>
+        </div>
+        <%if @entropies != nil
+        cut_at = $VIEW_FACET_NUMBER %>
+        <% @entropies.each do |facet,v |
+        break if cut_at ==0
+        cut_at-=1 %>
+        <div class=" _WINDOW " id ="<%=term(facet)%>">
+            <div class = "resource select term draggable _NO_MINIMIZE" resource="<%=(uri((term(facet)))) %>" exp="('<%=uri((term(facet))) %>',:p,:o)" onmouseover="Tip('<%= to_s((term(facet))) %>',DELAY, 1000);" onmouseout="UnTip();">
+                <div class ="resourceuioperations ">
+                    <div class ='_hide'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Minimize the window.</span></span>
+                        </div>
+                    </div>
+                    <div class ='_show'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Maximize the window.</span></span>
+                        </div>
+                    </div>
+                    <div class = "_close">
+                        x
+                    </div>
+                </div>
+                <%= render_resource(term(facet)) %>
+            </div>
+            <div class = "values resource select objects" exp="(SemanticExpression.new.spo(SemanticExpression.new('<%=uri(resourceset)%>').resources(:s),'<%=uri((term(facet))) %>',:o,:o))">
+                <% values = @facets_cardinalities[facet]
+                values.each do |value|
+                value.each_key do |key| %>
+
+                <div class = "draggable value resource select" resource="<%=(uri((key))) %>" exp="('<%=uri(key) %>',:p,:o)" >
+                    <input type="checkbox" class="_checkboxfacet" name ="<%=term(facet)%>" exp="(<%=h(@exp[facet][key])%>)" /><%= render_resource (key) %><span class='cardinality'>(<%= value[key] %>)</span>
+                    <a class ="all" exp="(<%=h(@exp[facet][key])%>)">All</a>
+                </div>
+ 
+                <% end end %>
+            </div>
+        </div>
+        <% end %>
+        <% end %>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+<div class="_WINDOW window _draggable select set" id = "<%=@paramsset%>" exp = "('<%=@paramsset%>')">
+     <div class= "tranparentpanel" >
+        <img src = "/images/loading_big.gif" style="position:absolute; top : 50%;left:43% "/>
+    </div>
+	<% @paramsset = ['p1', 'p2', 'p3']%>
+
+
+    <% @paramsset.each do |resource| %>
+    <%sddm = SecureRandom.uuid %>
+    <ul class="subjmenu" id="<%=sddm%>">
+        <li>
+            <%m1 = SecureRandom.uuid %>
+            <a href="#" onmouseover="mcancelclosetimemenu(),mopen('<%=m1%>')" onmouseout="mclosetimemenu(),mclosetime()"><img class="arrow" border=0 src="/images/arrow_video_down_white_2.png" width="13" height="13"></a>
+            <div id="<%=m1%>" onmouseover="mcancelclosetime(),mcancelclosetimemenu()" onmouseout="mclosetime(),mclosetimemenu()">
+                <%if relation?(resource) %>
+	                <a class ="all" exp="">(Used by)</a>
+	                <a class ="all" exp="">(Has values)</a>
+                <%else %>
+	                <a class ="all" exp="findRelations(<%=resource%>)" view = "predicate_view">(All Properties)</a>
+
+                <%end %>
+            </div>
+        </li>
+    </ul>
+    <div class = " _WINDOW  select <%=css(resource)%>  " set = "<%=@paramsset%>" resource="<%=resource%>" exp="" title="<%= resource %>" onmouseover="mopenmenu('<%=sddm%>');" onmouseout="mclosetimemenu();">
+        <div class ="expand _NO_MINIMIZE">
+        </div>
+		<%
+	        pred = relations(resource)        
+	        limit = pred.size
+        %>
+		
+        <%= resource %>
+        <%if limit > 1 %>
+        <hr><%end %>
+        <% pred[0..limit].each do |p| %>
+        <div class = " _WINDOW properties">
+            <div class = "_WINDOW draggable select _NO_MINIMIZE <%=css(p)%> predicate" resource="<%= p %>" exp="" title="<%= p %>">
+                <div class ="resourceuioperations _NO_MINIMIZE">
+                    <div class ='_hide'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Minimize the window.</span></span>
+                        </div>
+                    </div>
+                    <div class ='_show'>
+                        <div>
+                            <span class="tool">&nbsp;<span class="tip">Show the resource properties values</span></span>
+                        </div>
+                    </div>
+                    <div class = "_close">
+                        x
+                    </div>
+                </div>
+                <%= render_resource(p) %>=<!-- BEGIN OBJECT -->
+			<%if  objects(resource,p).size != 1 %>
+                <div class = "resource select _WINDOW draggable objects" exp="">
+            <% end %>
+                    <% objects(resource,p).each do |o| %>
+                    <div class = " draggable  <%=css(o)%> select object " resource="<%= o %>" exp="('<%= o %>',:p,:o)" title="<%= o %>">
+                        <%if type?(o) %>
+                        <font class = "instances" classes="('<%= o %>',:p,:o)" instances="(:s,RDF::type,'<%= o %>')">
+                            i
+                        </font>
+                        <%end %>
+                        <%= render_resource(o) %>
+                    </div>
+                    <% end %>
+            <%if  objects(resource,p).size != 1 %>
+	            </div>
+            <% end %>
+                <!-- END OBJECT -->
+            </div>
+        </div>
+        <% end %>
+        <div class = " properties">
+            <a class ="all" exp="('<%= resource %>',:p,:o)">More ...</a>
+        </div>
+    </div>
+    <% end %>
+    <br> 
+	
+    <div class ="flickr_pagination ">
+        <div align= center  >
+            
+        </div>
+    </div>
+  
+</div>
+<%if @paramsset.size > 1 %>
+	<%= javascript_tag do %>
+		var set_uri = '<%= @paramsset %>'.replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g,'\\$1');
+		$(set_uri).children('.properties').each(function(n){
+	        $(this).hide();
+	    });
+		$(set_uri).children('._collapseproperties').hide();
+	<%end%>
+<%else %>
+	<%= javascript_tag do %>
+		var set_uri = '<%= r@esourceset %>';
+		$(set_uri).children('._expandproperties').hide();		
+	<%end%>
+<%end %>

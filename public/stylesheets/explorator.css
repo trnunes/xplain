@@ -1,0 +1,1019 @@
+/***********************************************************
+ * HTML CSS
+ */
+body {
+    background-color: #efefef;
+}
+
+hr {
+    height: 1px;
+    border: 1px solid #efefef;
+}
+
+h1 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+table td#css {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    border: 1px solid #efefef;
+} .blue {
+    color: #4f94cd;
+} .tableheader {
+    font-weight: bold;
+    color: white;
+} .image {
+    max-width: 200px;
+}
+
+/**********************************************************************************/
+/*********************************************************************************
+ * ****************************** HELP INTERFACE **********************
+ * this section contains the css for the help interface.
+ */ .help_container {
+    position: fixed;
+    width: 100%;
+    height: 10%;
+    border: 1px solid #999;
+    background-color: #ccc;
+    left: 0px;
+    padding: 5px;
+    top: 90%;
+    font-size: 12px;
+    z-index: 1000;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/**********************************************************************************/
+/*********************************************************************************
+ * ****************************** CSS BEHAVIOUR  **********************
+ * This section defines some css rules that does some interface elements appear on mouse over (hover).
+ */ .resourceuioperations div {
+    font-weight: bold;
+    font-size: 12px;
+    color: #333333;
+    width: 15px;
+    height: 15px;
+    margin-left: 2px;
+    float: left;
+    text-align: center;
+    z-index: 10;
+    border: 1px groove #cccccc;
+    margin-bottom: 0px;
+    background-color: #efefef;
+} .expand div {
+    font-weight: bold;
+    font-size: 12px;
+    color: #888;
+    width: 14px;
+    height: 14px;
+    margin-right: 2px;
+    float: left;
+    text-align: center;
+    z-index: 10;
+    margin-bottom: 0px;
+    background-color: #fff;
+}
+
+div.resource > div.resourceuioperations {
+    display: none;
+}
+
+div.resource:hover > div.resourceuioperations {
+    display: block;
+    z-index: 10000;
+    position: relative;
+    float: right;
+}
+
+/*****************************************************************************
+ * ******************************* RDF RELATED FORMATTING ********************
+ *
+ */
+/* Format a resource*/ .resource {
+    overflow: hidden;
+    margin-bottom: 1px;
+    padding: 1px;
+    padding-left: 4px;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #fff;
+    border: 1px solid white; /*#ccc;*/
+    text-align: left;
+    color: black;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+div.resource:hover {
+    border: 1px dashed #4f3df3;
+}
+
+a.all {
+    color: #aaa;
+    font-size: 11px;
+    display: none;
+    cursor: pointer;
+}
+
+div.resource:hover a.all {
+    display: inline;
+    color: black;
+    text-decoration: underline;
+} .properties {
+    margin: 5px;
+    margin-left: 45px;
+} .objects {
+    border: 1px solid white; /*#999;*/
+    margin: 5px;
+    padding: 5px;
+    background-color: transparent;
+}
+
+div.objects:hover {
+    border: 1px dashed #4f3df3;
+} .predicate {
+    float: none;
+    border: 1px dashed white; /*#8FBC8F;*/
+    font-size: 14px;
+    text-align: left;
+}
+
+div.predicate:hover {
+    border: 1px dashed #4f3df3;
+} .object {
+    border: 1px dashed white;
+    text-align: left;
+    float: none;
+    font-size: 14px;
+}
+
+div.object:hover {
+    border: 1px dashed #4f3df3;
+}
+
+div.predicate > div.object {
+    margin: 2px;
+}
+
+/**
+ * Facets
+ */ .facetgroupwindow div.window {
+    margin: 5px;
+    top: 0px;
+} .facetgroupwindow {
+    background-color: #efefef;
+    font-family: Arial, Helvetica, sans-serif;
+    float: left;
+    margin-left: 14px;
+    width: 500px;
+    border: 2px solid #4f94cd;
+    top: 40px;
+    position: relative;
+} .term {
+    background-color: #dcdcdc;
+    border: 2px ridge #708090;
+    font-weight: bold;
+} .cardinality {
+    font-size: 12px;
+    font-weight: bold;
+} .class {
+    /*border: 1px solid #9AC0CD;*/
+    color: blue;
+    font-style: normal;;
+    font-weight: bold;
+} .property {
+    color: green;
+    /* border: 1px solid #8FBC8F;*/
+    font-weight: bold;
+} .string {
+    font-size: 90%;
+    font-family: georgia, serif;
+    color: #8B4513;
+}.fixnum{
+    font-size: 90%;
+    font-family: georgia, serif;
+    color: blue;
+} .inverse {
+    text-align: right;
+}
+
+/*********************************************************************************
+ * ****************************** USER INTERFACE FORMATTING **********************
+ * Formatting properties.
+ */
+/****************************************/
+div.windowtoolbar div.filter {
+    width: 120px;
+    height: 25px;
+    border: none;
+}
+
+div.filter {
+    height: 26px;
+}
+
+div.windowtoolbar div.filter:hover {
+    background-color: transparent;
+}
+
+/*a window representing a configuration screen*/ .config {
+    font-family: Arial, Helvetica, sans-serif;
+    float: left;
+    z-index: 1000;
+    margin-left: 14px;
+    width: 50%;
+    height: 95%;
+    border: 2px solid #cccccc;
+    text-align: center;
+    font-size: 14px;
+    padding: 9px;
+    position: fixed;
+    left: 25%;
+    top: 0px;
+    position: fixed;
+    overflow: auto;
+    background-color: #fefefe;
+}
+
+/*a window representing an error screen*/ .error {
+    font-family: Arial, Helvetica, sans-serif;
+    z-index: 10000;
+    border: 2px solid red;
+    font-size: 14px;
+    padding: 9px;
+    left: 25%;
+    width: 50%;
+    top: 25%;
+    position: fixed;
+    background-color: white;
+}
+
+/*a window representing an error screen*/ .confirmation {
+    font-family: Arial, Helvetica, sans-serif;
+    z-index: 10000;
+    border: 2px solid green;
+    font-size: 14px;
+    padding: 9px;
+    left: 25%;
+    width: 50%;
+    position: fixed;
+    background-color: white;
+}
+
+/*format the window ui component*/ .window {
+    font-family: Arial, Helvetica, sans-serif;
+    float: left;
+    margin-left: 14px;
+    width: 215px;
+    border: 2px solid #cccccc;
+    text-align: center;
+    font-size: 14px;
+    padding: 9px;
+    top: 75px;
+    position: relative;
+    background-color: #fefefe;
+}
+
+div.windowmaximized {
+    width: 350px;
+}
+
+/* CSS for the window toolbar */ .windowtoolbar {
+    padding: 8px;
+    background-color: #efefef;
+    border: 1px ridge #cccccc;
+    margin-bottom: 3px;
+}
+
+/*css for each operation widgets*/ .windowtoolbar div {
+    font-weight: bold;
+    font-size: 12px;
+    color: #333333;
+    float: left;
+    width: 17px;
+    height: 17px;
+    margin-right: 7px;
+    text-align: center;
+    z-index: 1;
+    border: 2px solid #fff;
+    margin-bottom: 0px;
+} .windowtoolbar div:hover {
+    background-color: white;
+}
+
+div.windowtoolbar div._view {
+    width: 40px;
+}
+
+/****************************************/
+/* CSS for the window header */ .windowheader {
+    font-weight: bold;
+    padding: 4px 4px 4px 4px;
+    border: 0px solid #cccccc;
+    background-color: #efefef;
+    margin-bottom: 3px;
+} .windowtitle {
+    z-index: 9;
+    position: absolute;
+} #resname {
+    height: 25px;
+} .winoperations {
+    background: inherit;
+    z-index: 10;
+    position: absolute;
+    right: 12px;
+}
+
+/*The button on the window header.*/ .winoperations div {
+    font-weight: bold;
+    font-size: 12px;
+    color: #333333;
+    float: left;
+    width: 15px;
+    height: 15px;
+    margin-left: 2px;
+    text-align: center;
+    border: 1px solid #cccccc;
+    margin-bottom: 0px;
+    cursor: pointer;
+}
+
+/********************
+ * Loading Window
+ */ #loadwindow {
+    padding: 10px;
+    z-index: 10000;
+    background: white;
+    color: red;
+    left: 45%;
+    position: fixed;
+    top: 50%;
+    border: 2px solid red;
+} .tranparentpanel {
+    opacity: 0.9;
+    z-index: 10;
+    top: 0px;
+    left: 0px;
+    display:none;
+    background-color: #fff
+} #loadingtext {
+    color: #555;
+    font-weight: bold;
+    font-size: 13px;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+} .filterwindow {
+    float: left;
+    margin-left: 14px;
+    width: 288px;
+    border: 2px solid #cccccc;
+    text-align: center;
+    font-size: 14px;
+    padding: 9px;
+    top: 25px;
+    position: relative;
+    background-color: #fefefe;
+}
+
+/** PARAM SELECTION WIDGETS **/
+
+/*format the window ui component*/ .paramwindow {
+    font-family: Arial, Helvetica, sans-serif;
+    float: left;
+    margin-left: 14px;
+    width: 215px;
+    border: 2px solid #cccccc;
+    text-align: center;
+    font-size: 14px;
+    padding: 9px;
+    top: 75px;
+    position: relative;
+    background-color: #fefefe;
+}
+
+/* Format a resource*/ .param {
+    overflow: hidden;
+    margin-bottom: 1px;
+    padding: 1px;
+    padding-left: 4px;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #fff;
+    border: 1px solid white; /*#ccc;*/
+    text-align: left;
+    color: black;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+div.param:hover {
+    border: 1px dashed #4f3df3;
+}
+
+div.param:hover a.all {
+    display: inline;
+    color: green;
+	font-weight: bold;
+    text-decoration: underline;
+} 
+.paramvalues {
+    border: 1px solid white; /*#999;*/
+    margin-left: 14px;
+    padding: 5px;
+    background-color: transparent;
+}
+
+div.paramvalues:hover {
+    border: 1px dashed #4f3df3;
+}
+
+.paramname {
+    color: green;
+    /* border: 1px solid #8FBC8F;*/
+    font-weight: bold;
+}
+ 
+.valuetext {
+    color: #8B4513;
+}
+
+.parambutton {margin-right: 4px;}
+
+
+/*****************************************************************************
+ ******************************** TOOL TIP FORMATTING ***********************
+ */
+span.tool span.exp {
+    display: none; /* so is this */
+}
+
+/* tooltip will display on :hover event */
+span.tool:hover span.exp {
+    display: block;
+    z-index: 100000;
+    position: absolute;
+    top: 1.5em;
+    left: 0;
+    line-height: 1.2em;
+    padding: 3px 7px 4px 6px;
+    border: 1px solid #336;
+    background-color: #c1ffc1;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    color: #000;
+    text-align: left;
+}
+
+/*The css below are used in the tool tip feature*/
+span.tool {
+    position: relative; /* this is key */
+}
+
+span.tool span.tip {
+    display: none; /* so is this */
+}
+
+/* tooltip will display on :hover event */
+span.tool:hover span.tip {
+    display: block;
+    z-index: 1000000;
+    position: absolute;
+    top: 1.5em;
+    left: 0;
+    width: 130px;
+    line-height: 1.2em;
+    padding: 3px 7px 4px 6px;
+    border: 1px solid #336;
+    background-color: #c1ffc1;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    color: #000;
+    text-align: left;
+}
+
+/*
+ *   Landmaks layout definition
+ */ .landmarks {
+    font-family: Arial, Helvetica, sans-serif;
+    float: left;
+    top: 38px;
+    left: 0px;
+    width: 100%;
+    background-color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+    color: #777;
+    z-index: 19;
+    border-bottom: 1px solid #afafaf;
+    padding-bottom: 0.3em;
+    position: fixed;
+} .landmark {
+    float: left;
+    margin-left: 6px;
+    padding: 12px;
+}
+
+.parambar {
+	top: 50px;
+	float: left;
+	left: 0px;
+	width: 100%;
+    background-color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+    color: #777;
+    z-index: 19;
+    border-bottom: 1px solid #afafaf;
+    padding-bottom: 0.3em;
+    position: fixed;
+}
+
+div.landmark:hover a {
+    color: #4f94cd;
+} .header {
+    position: fixed;
+    height: 40px;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    background: white;
+    padding: 4px;
+    z-index: 17;
+} .header div {
+    float: left;
+}
+
+/*
+ #searchform {
+ border: 1px solid #afafaf;
+ float: left;
+ padding-top: 4px;
+ padding-left: 4px;
+ height: 29px;
+ left: 0px;
+ top: 0px;
+ position: fixed;
+ background: white;
+ width: 100%;
+ z-index: 21;
+ } */ #submit {
+    margin-left: 0.5em;
+}
+
+/************************************************************************************
+ * Operation model -css for the operation widgets
+ */ .toolbars {
+    float: left;
+} .toolbar {
+    float: left;
+    margin-left: 12px;
+    margin-top: 8px;
+    border: 0px solid #4f94cd;
+    padding: 3px;
+} .toolbar div {
+    float: left;
+    padding: 4px;
+    /* width: 50px; */
+    /* height: 11px; */
+    border: 1px solid #afafaf;
+    text-align: center;
+    background-color: white;
+    margin-left: 1px;
+    cursor: pointer;
+}
+div ._operationparam {
+	float: bottom;
+    width: 30px;
+    height: 11px;
+    border: 1px solid #afafaf;
+    text-align: center;
+    background-color: white;
+    margin-left: 1px;
+    cursor: pointer;
+}
+
+div.space {
+    margin-left: 6px;
+}
+
+div.operation {
+    border: 1px solid #4f94cd;
+    color: white;
+    background-color: #4f94cd;
+    width: 40px;
+}
+
+div.operation:hover {
+    background-color: transparent;
+    color: #4f94cd;
+    border: 1px solid #4f94cd;
+}
+
+div.operation:active {
+    background-color: #4f94cd;
+}
+
+div._clear {
+    width: 48px;
+}
+
+/*************************************************8
+ * CSS for forms' elements and search form.
+ */
+input {
+    padding: 3px;
+    border: 1px solid #4f94cd;
+}
+
+form {
+    height: 0px;
+}
+
+textarea {
+    width: 100%;
+}
+
+div.windowtoolbar div.filter select {
+    border: 1px solid #fff;
+    padding: 1px;
+    background-color: #dfdfdf;
+}
+
+div.filter input {
+    border: 1px solid #dfdfdf;
+    padding: 2px;
+    width: 80%;
+    background-color: #fff;
+}
+
+input[type = button] {
+    padding: 2px;
+    background-color: #4f94cd;
+    color: #ffffff;
+    border: 1px outset #4f94cd;
+    cursor: pointer;
+}
+
+input[type = submit] {
+    padding: 2px;
+    background-color: #4f94cd;
+    color: #ffffff;
+    border: 1px outset #4f94cd;
+    cursor: pointer;
+}
+
+/*********************************************************************************
+ 
+ * All CSS that starts with '_' represent a user interface property.
+ * These properties could have behaviour, and they are defined in the explorator_ui.js
+ ***************************************************************************************/
+div.SELECTED {
+    border: 2px dashed #4f3df3;
+}
+
+div.SELECTED:hover {
+    border: 2px dashed #4f3df3;
+}
+
+div.FACETED {
+    background-color: #32cd32;
+}
+
+div.Param1 {
+    border-color: green;
+    border-style: solid;
+    border-width: 2px;
+}
+
+div.Param2 {
+    border-color: orange;
+    border-style: solid;
+    border-width: 2px;
+}
+
+div.Param3 {
+    border-color: red;
+    border-style: solid;
+    border-width: 2px;
+}
+
+div.A {
+    border-color: #009900;
+    border-style: solid;
+    border-width: 2px;
+}
+
+div.B {
+    border-style: solid;
+    border-color: #00FF33;
+    border-width: 2px;
+}
+
+div.S {
+    border-style: solid;
+    border-color: green;
+    border-width: 2px;
+
+}
+.toolbar div.S {
+	 background:green;
+	color:white;
+}
+div.P {
+    border-style: solid;
+    border-color: orange;
+    border-width: 2px;
+}
+.toolbar div.P{
+	 background: orange;
+	color:white;
+}
+
+div.O {
+    border-style: solid;
+    border-color: red;
+    border-width: 2px;
+}
+.toolbar div.O{
+	 background:red;
+	color:white;
+}
+/************************************************************
+ * Main Menu CSS
+ ************************************************************/
+div#mainmenu {
+    background: #eee;
+    float: left;
+    margin-top: 0.75em;
+    z-index: 16;
+    margin-left: 10px;
+}
+
+
+div#mainmenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 12em;
+    z-index: 16;
+    cursor: pointer;
+}
+
+div#mainmenu a, div#mainmenu h2 {
+    font: bold 11px / 16px arial, helvetica, sans-serif;
+    display: block;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #4f94cd;
+    margin: 0;
+    z-index: 16;
+    padding: 2px 3px;
+}
+
+div#mainmenu h2 {
+    color: #fff;
+    background: #4f94cd;
+    text-transform: uppercase;
+    z-index: 16;
+}
+
+div#mainmenu a {
+    color: #777;
+    background: #efefef;
+    text-decoration: none;
+    z-index: 16;
+}
+
+div#mainmenu a:hover {
+    color: #4f94cd;
+    background: #fff;
+}
+
+div#mainmenu li {
+    position: relative;
+    z-index: 16;
+}
+
+div#mainmenu ul ul {
+    position: absolute;
+    z-index: 500;
+}
+
+div#mainmenu ul ul ul {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: 16;
+}
+
+div#mainmenu ul ul, div#mainmenu ul li:hover ul ul, div#mainmenu ul ul li:hover ul ul {
+    display: none;
+}
+
+div#mainmenu ul li:hover ul, div#mainmenu ul ul li:hover ul, div#mainmenu ul ul ul li:hover ul {
+    display: block;
+}
+
+/**
+* Filter Menu
+**/
+
+div#filter_selection {
+    background: #eee;
+    float: left;
+    /* margin-top: 0.75em; */
+    z-index: 16;
+    /* margin-left: 10px; */
+}
+
+
+div#filter_selection ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    /* width: 12em; */
+    z-index: 16;
+    cursor: pointer;
+}
+
+div#filter_selection a, div#filter_selection h2 {
+    font: bold 11px / 16px arial, helvetica, sans-serif;
+    display: block;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #4f94cd;
+    margin: 0;
+    z-index: 16;
+    padding: 2px 3px;
+}
+
+div#filter_selection h2 {
+    color: #fff;
+    background: #4f94cd;
+    text-transform: uppercase;
+    z-index: 16;
+}
+
+div#filter_selection a {
+    color: #777;
+    background: #efefef;
+    text-decoration: none;
+    z-index: 16;
+}
+
+div#filter_selection a:hover {
+    color: #4f94cd;
+    background: #fff;
+}
+
+div#filter_selection li {
+    position: relative;
+    z-index: 16;
+}
+
+div#filter_selection ul ul {
+    position: absolute;
+    z-index: 500;
+}
+
+div#filter_selection ul ul ul {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: 16;
+}
+
+div#filter_selection ul ul, div#filter_selection ul li:hover ul ul, div#filter_selection ul ul li:hover ul ul {
+    display: none;
+}
+
+div#filter_selection ul li:hover ul, div#filter_selection ul ul li:hover ul, div#filter_selection ul ul ul li:hover ul {
+    display: block;
+}
+
+div#params_div {
+    border: 2px solid #4f94cd;
+    margin: 4px;
+}
+
+div#params_div {}
+
+div#params_div {}
+
+div#params_div select{
+	/* float: left; */
+	margin: 2px;
+}
+
+/*div#value {
+    border: none;
+    padding: 0px;
+
+}
+*/
+/************************************************************
+ * Subject View Menu CSS
+ ************************************************************/
+/* menu como um todo */ .subjmenu {
+    padding: 0;
+    margin: 0;
+    z-index: 10000000;
+    visibility: hidden
+}
+
+/* coluna do menu */ .subjmenu li {
+    margin: 0;
+    margin-right: -21px;
+    height: 0.8em;
+    padding: 0;
+    padding-left: 5px;
+    list-style: none;
+    float: right;
+    font: bold 11px arial;
+    z-index: 10000000;
+    width: 15px;
+    height: 18px;
+    border: 1px solid #ccc;
+    background-color: #ccc;
+}
+
+/* titulo da coluna */ .subjmenu li a {
+    width: 7px;
+    border: none;
+    text-decoration: none;
+    outline-style: none;
+    z-index: 10000000;
+}
+
+/* conteudo da coluna como um todo */ .subjmenu div {
+    position: absolute;
+    visibility: hidden;
+    margin-top: 0px;
+    width: 100px;
+    padding: 0;
+    margin-left: -86px;
+    background: #EAEBD8;
+    border: 1px solid #ccc;
+    border-bottom: 0;
+    z-index: 10000000;
+}
+
+/* elemento da coluna */ .subjmenu div a {
+    position: relative;
+    display: block;
+    margin: 0;
+    padding: 5px 10px;
+    width: auto;
+    white-space: nowrap;
+    text-decoration: none;
+    background: #EAEBD8;
+    color: #2875DE;
+    font: 11px arial;
+    border-bottom: 1px solid #ccc
+} .subjmenu div a:hover {
+    background: #49A3FF;
+    color: #FFF
+} .arrow {
+    margin-left: -7px;
+    margin-top: 2px;
+}
+
+/* ----------------------------------- */
+/* menu como um todo */ .instances {
+    padding: 0px 3px 0px 3px;
+    font-size: 11px;
+    width: 30px;
+    height: 10px;
+    border: 1px solid #afafaf;
+    text-align: center;
+} .bluebackground {
+    background-color: blue;
+    color: white;
+} ._show div {
+    margin-top: 2px;
+    width: 8px;
+    height: 7px;
+    border: 1px solid #333;
+    border-top: 2px solid #333;
+} ._hide div {
+    margin-top: 2px;
+    width: 10px;
+    height: 7px;
+    border: 0px solid #333;
+    border-top: 2px solid #333;
+} .tecweb {
+    width: 124px;
+    height: 20px;
+    margin-left: 9px;
+} .logo {
+    width: 110px;
+    height: 15px;
+    margin-left: 9px;
+    margin-right: 55px;
+} #seachbykeyword {
+    width: 100%;
+}

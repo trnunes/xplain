@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Xpair</title>
+	<%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+    <%= stylesheet_link_tag    'wxpair', media: 'all', 'data-turbolinks-track' => true %>
+	<%= stylesheet_link_tag    'explorator', media: 'all', 'data-turbolinks-track' => true %>
+	<%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+	<link type="text/css" rel="stylesheet" href="/stylesheets/simplePagination.css"/>
+	<script type="text/javascript" src="/javascripts/jshashtable-master/hashtable.js"></script>
+    <script type="text/javascript" src="/javascripts/uuid.js"></script>
+	<script type="text/javascript" src="/javascripts/jquery.simplePagination.js"></script>
+    <script type="text/javascript" src="/javascripts/explorator_ui.js"></script>
+	<script type="text/javascript" src="/javascripts/operations_controller.js"></script>
+    <script type="text/javascript" src="/javascripts/explorator_ajax.js"></script>
+    <script type="text/javascript" src="/javascripts/explorator_helper.js"></script>
+    <script type="text/javascript" src="/javascripts/explorator_controller.js"></script>
+
+    <script type="text/javascript" src="/javascripts/drop_down.js"></script>
+    <script type="text/javascript" src="/javascripts/explorator_querybuilder.js"></script>
+
+  <%= csrf_meta_tags %>
+</head>
+<body>
+<%= render :partial => 'layouts/search_bar' %>
+<%= render :partial => 'layouts/landmarks'%>
+
+
+<aside id="params_side_bar">
+	
+</aside>
+<div id="exploration_area">	
+<%= yield %>
+</div>
+
+</body>
+<script>
+init_all();
+register_ui_behaviour();
+
+</script>
+</html>

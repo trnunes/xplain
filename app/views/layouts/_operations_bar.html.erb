@@ -1,0 +1,42 @@
+<div class= "operations_bar">
+
+        <table width=98%>
+            <tr>
+                <td >
+						<%= button_to 'New Session', {controller: "session", action: "index"}, class: "btn btn-primary"%>
+
+
+                </td>
+				
+                <td >
+                    <input id="refine", type="button", onclick="newExecution(this.id)" title="It filters the dataset using the selected criteria.", value="Refine">
+                </td>
+                <td >
+                    <input id="pivot" type="button" onclick="newExecution(this.id)" title = "It pivots from the current set to a related set of items using the selected realtinos" value="&nbsp; Pivot &nbsp;">
+                </td>
+                <td >
+                    <input id="map_aggregate" type="button" onclick="newExecution(this.id)" title= "Maps the selected set onto an aggregated value according to the aggregation function" value="&nbsp; Aggregate &nbsp;">
+					
+                </td>
+                <td >
+                    <input id="map_transform" type="button" onclick="newExecution(this.id)" title= "Applies a tranfosrmation function to all items of the selected set" value="&nbsp; Transform &nbsp;">					
+                </td>
+                <td >
+                    <input id="map_combine" type="button" onclick="newExecution(this.id)" title= "Maps the selected set onto a set of combinations of two or more relations" value = "&nbsp; Combine &nbsp;">
+					
+                </td>
+                <td >
+                    <input id="group" type="button" onclick="newExecution(this.id)" title= "Groups the set of items using the selected groupping function" value="&nbsp; Group &nbsp;">
+					
+                </td>
+                <td >
+                    <input id="find_path" type="button" onclick="newExecution(this.id)" title= "Finds relations between two sets of items" value="&nbsp; Find Path &nbsp;">
+					
+                </td>
+                <td >
+                    <input id="Match" type="button" onclick="newExecution(this.id)" title= "Try to discover matches of elements in two sets according to the matching criteria" value="&nbsp; Match &nbsp;">					
+                </td>
+            </tr>
+        </table>
+
+</div>

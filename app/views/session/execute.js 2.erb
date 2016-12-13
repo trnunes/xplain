@@ -1,0 +1,33 @@
+var view = "<%= j render(partial: 'session/set', locals: { resourceset: @resourceset }) %>";
+var image_view = "<%= j render(partial: 'session/items', locals: { resourceset: @resourceset }) %>";
+var relations_view = "<%= j render(partial: 'session/relations', locals: { resourceset: @resourceset }) %>";
+if($('.set').length > 0) {
+	$(view).insertAfter($('.set').last());
+} else {
+	$(document.body).append($(view));
+}
+$('#<%=@resourceset.id%>').find('.pagination').pagination({
+    items: 100,
+    itemsOnPage: 10,
+    cssStyle: 'compact-theme',
+	onPageClick: function(page_number, event){
+		ajax_paginate('<%=@resourceset.id%>', page_number);
+	},
+	pages: <%=@resourceset.image_number_of_pages%>
+	
+});
+	
+var xset = new Xset();
+xset.set_id("<%=@resourceset.id%>");
+xset.set_view($('#<%=@resourceset.id%>'));
+xset.set_image_view(image_view);
+xset.set_relations_view(relations_view);
+XPAIR.currentsession.add_set(xset);
+init_all();
+$('.set').last().hide();
+
+$('.set').last().toggle({
+    effect: 'scale',
+	direction: "horizontal"
+});
+
