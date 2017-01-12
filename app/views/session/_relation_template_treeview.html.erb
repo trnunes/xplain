@@ -1,0 +1,13 @@
+<%relations.each do |relation|%>		
+	<%relation.each do |relation_key, values|%>
+		<li><%= relation_key%>
+			<ul>
+				<% values.each do |o| %>
+					<li> <%=o.to_s%> 
+						<ul>Relations</ul>
+					</li>
+				<%end%>
+			</ul>
+		</li>
+	<%end%>
+<%end%>

@@ -1,0 +1,64 @@
+<div class="_WINDOW window _draggable select set" id = "<%=resourceset.id%>" exp = "Xset.load('<%=resourceset.id%>')">
+     <div class= "tranparentpanel" >
+        <img src = "/images/loading_big.gif" style="position:absolute; top : 50%;left:43% "/>
+    </div>
+	<% @style_s = ' style = "background-color:white;" '
+
+    resources =  resources_paginated() 
+
+%>
+	    
+	<%= render :partial => 'layouts/windowheader', :locals=>{:resourceset => resourceset} %>
+	
+	<%
+		if render_relations
+			items_hash = resourceset.group_by_domain_and_relation
+		else
+			items_hash = resourceset.extension
+		end
+	%>
+	
+	<div class = "_items_area">
+	  <ul set = "<%=resourceset.id%>">
+			<% items_hash.each do |item, relations_hash|%>
+				<li resource="<%=item.to_s%>"><%=item.to_s%>
+					<%if render_relations%>
+						<ul>
+							<%relations_hash.each do |relation, values|%>
+								<li resource="<%=relation.to_s%>"><%=relation.to_s%></li>
+								<%values.each do |v|%>
+									<li resource="<%=v.to_s%>"><%=v.to_s%></li>
+								<%end%>						
+							<%end%>
+						</ul>
+					<%else%>
+						<ul class = "relations"><li>Relations</li></ul>
+					<%end%>
+				</li>
+			<%end%>			
+		</ul>
+	</div>
+    <div class ="pagination">
+    </div>
+</div>
+
+<!-- <%if resourceset.size > 1 %>
+	<%= javascript_tag do %>
+		var set_uri = '<%= resourceset %>'.replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g,'\\$1');
+		$(set_uri).children('.properties').each(function(n){
+	        $(this).hide();
+	    });
+		$(set_uri).children('._collapseproperties').hide();
+	<%end%>
+<%else %>
+	<%= javascript_tag do %>
+		var set_uri = '<%= resourceset %>';
+		$(set_uri).children('._expandproperties').hide();
+	<%end%>
+<%end %>
+ -->
+<script>
+
+// init_all();
+</script>
+

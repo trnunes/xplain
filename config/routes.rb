@@ -4,6 +4,7 @@ Rails.application.routes.draw do
 
   get 'session/nextpage'
   get 'session/renderdomain'
+  get 'session/relations'
   get 'refine/index'
   post 'refine/index'
   post 'session/index'

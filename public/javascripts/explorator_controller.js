@@ -208,6 +208,24 @@ function cmd_set(){
 		render_refine_toolbar();
 		
 	});
+	
+	$('._facets').unbind().click(function(event){
+		setParameter(this);
+		$.ajax(	{			
+			type: "GET",
+			url: "/session/relations?id="+node_to_open.text,
+			data_type: "script",
+			success: function(data, status, jqrequest) {
+
+				console.log(relations_subtree);
+				for (var i = 0; i < relations_json.length; i++) {
+					$('#<%=@resourceset.id%>').find('._items_area').jstree().create_node(node_to_open, relations_json[i], "first");
+				}
+
+			}
+		});
+		
+	});
 	$('._group').unbind().click(function(event){
 		setParameter(this)
 		parameters.put('operation', 'group')
@@ -218,6 +236,11 @@ function cmd_set(){
 		parameters.put('operation', 'rank');
 		render_rank_toolbar();
 	});
+	$('._merge').unbind().click(function(event){
+		setParameter(this)
+		parameters.put('operation', 'merge');
+	});
+	
 	$('._pivot').unbind().click(function(event){
 		setParameter(this)
 		parameters.put('operation', 'pivot')
@@ -262,6 +285,8 @@ function cmd_set(){
 				ajax_create(new SemanticExpression('A').rank());
 			} else if (parameters.get('operation') == 'map') {
 				ajax_create(new SemanticExpression('A').map());
+			} else if (parameters.get('operation') == 'merge') {
+				ajax_create(new SemanticExpression('A').merge('B'))
 			}
             else {//spo
                 if (validation_spo()) 
@@ -437,9 +462,17 @@ SemanticExpression.prototype.pivot = function(param){
 	if(targetRelation === undefined)
 		return this;
 	
-	this.expression += ".pivot_forward('" +$(targetRelation).attr('resource').replace("#", "%23")+ "')"
+	this.expression += ".pivot_forward(['" +$(targetRelation).attr('resource').replace("#", "%23")+ "'])"
 	return this;
 	
+};
+
+SemanticExpression.prototype.merge = function(param){
+	var targetSet = parameters.get(param);
+	if(targetSet === undefined)
+		return this;
+	this.expression += ".merge("+$(targetSet).attr('exp')+")";
+	return this;
 };
 
 SemanticExpression.prototype.refine = function() {

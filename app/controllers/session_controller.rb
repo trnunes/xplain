@@ -16,11 +16,14 @@ class SessionController < ApplicationController
     @resourceset = eval(params[:exp])
     @resourceset.paginate(1, 5)    
     @resourceset.save
-    
+    if(params[:exp].include?("group"))
+      @render_relations = true;
+    end
     respond_to do |format|
       format.js
     end    
   end
+  
   
   def nextpage
     @resourceset = Xset.load(params[:set])
@@ -38,6 +41,19 @@ class SessionController < ApplicationController
       format.js
     end
     
+  end
+  
+  def relations
+    server = Xset.load('default').server
+    query = server.begin_nav_query do |q|        
+      q.on(Entity.new(params[:id]))
+      q.find_relations
+    end    
+    results_hash = query.execute
+    @relations = results_hash.values    
+    respond_to do |format|
+      format.js
+    end     
   end
   
   def new

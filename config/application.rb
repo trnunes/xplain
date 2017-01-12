@@ -69,7 +69,7 @@ module Wxpair
       graph << [RDF::URI("_:p3"),  RDF::URI("_:publicationYear"), "1998"]
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), "2010"]     
     end
-    papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
+    # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
 
     SERVER = RDFDataServer.new(papers_graph)
     s = Xset.new do |s|

@@ -56,7 +56,7 @@
                 <div class = "resource select _WINDOW draggable objects" exp="">
             <% end %>
                     <% objects(resource,p).each do |o| %>
-                    <div class = " draggable  <%=css(o)%> select object " resource="<%= o %>" exp="('<%= o %>',:p,:o)" title="<%= o %>">
+                    <div class = " _draggable  <%=css(o)%> select object " resource="<%= o %>" exp="('<%= o %>',:p,:o)" title="<%= o %>">
                         <%if type?(o) %>
                         <font class = "instances" classes="('<%= o %>',:p,:o)" instances="(:s,RDF::type,'<%= o %>')">
                             i

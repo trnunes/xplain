@@ -1,0 +1,34 @@
+<div class = " _WINDOW properties">
+	<%relations.each do |relation|%>		
+		<%relation.each do |relation_key, values|%>
+			<div class = "_WINDOW _draggable select _NO_MINIMIZE relation" resource="" exp="" title="">
+		        <div class ="expand _NO_MINIMIZE">
+		            <div class ='_collapseproperties' style="float:left;">
+		                <span class="tool">-<span class="tip">Hide all properties values.</span></span>
+		            </div>
+		            <div class= "_expandproperties" style="float:left;">
+		                <span class="tool">+ <span class="tip">Show the resource properties values</span></span>
+		            </div>
+		        </div>    
+			
+                <div class = " draggable select predicate " resource="<%= relation_key.to_s %>" exp="" title="<%= relation_key.to_s %>">
+					<%= relation_key.to_s%>
+            
+                </div>				
+
+                    <% values.each do |o| %>
+	                    <div class = " draggable select object " resource="<%= o.to_s %>" exp="" title="<%= o.to_s %>">
+							<%if entity?(o)%>
+								<%= render partial: "session/item", locals: {item: o}%>							
+							<%else%>
+								<%= o.to_s %>
+							<%end%>
+                    
+	                    </div>
+                    <% end %>
+
+			</div>
+		<%end%>
+	<%end%>
+	<a class ="all" exp="">More ...</a>
+</div>

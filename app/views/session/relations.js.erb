@@ -1,0 +1,22 @@
+var relations_subtree = "<%= j render(partial: 'session/relation_template_treeview', locals: { relations: @relations }) %>"
+relations_json = [ 
+<%@relations.each do |relation|%>	
+	<%relation.each do |relation_key, values|%>
+	{
+
+		text: '<%=relation_key%>',		
+		children: [
+		<% values.each do |o| %>
+			{ 
+
+				'text': '<%=o.to_s%>',
+				'li_attr': {'resource': '<%=o.to_s%>'},
+				'children': [{'text': 'Relations'}]
+			},
+		<%end%>	
+		],
+		li_attr: {'resource': '<%=relation_key.id%>'}
+	},
+	<%end%>
+<%end%>	
+]

@@ -74,7 +74,7 @@ table td#css {
     float: left;
     text-align: center;
     z-index: 10;
-    margin-bottom: 0px;
+    /* margin-bottom: 0px; */
     background-color: #fff;
 }
 
@@ -94,7 +94,6 @@ div.resource:hover > div.resourceuioperations {
  *
  */
 /* Format a resource*/ .resource {
-    overflow: hidden;
     margin-bottom: 1px;
     padding: 1px;
     padding-left: 4px;
@@ -137,6 +136,7 @@ div.objects:hover {
 } .predicate {
     float: none;
     border: 1px dashed white; /*#8FBC8F;*/
+    color: blue;
     font-size: 14px;
     text-align: left;
 }
@@ -156,6 +156,7 @@ div.object:hover {
 
 div.predicate > div.object {
     margin: 2px;
+	color: #2762FF;
 }
 
 /**
@@ -267,9 +268,9 @@ div.windowtoolbar div.filter:hover {
     font-family: Arial, Helvetica, sans-serif;
     float: left;
     margin-left: 14px;
-    width: 215px;
+    /* width: 230px; */
     border: 2px solid #cccccc;
-    text-align: center;
+    /* text-align: center; */
     font-size: 14px;
     padding: 9px;
     top: 75px;
@@ -642,7 +643,11 @@ div.windowtoolbar div.filter select {
     padding: 1px;
     background-color: #dfdfdf;
 }
-
+li select{
+    border: 1px solid #fff;
+    padding: 1px;
+    background-color: #dfdfdf;
+}
 div.filter input {
     border: 1px solid #dfdfdf;
     padding: 2px;
@@ -678,7 +683,15 @@ div.SELECTED {
 div.SELECTED:hover {
     border: 2px dashed #4f3df3;
 }
-
+li.SELECTED {
+    border: 2px dashed #4f3df3;
+}
+.jstree-anchor > .jstree-checkbox-disabled {
+    display: none;
+}
+li.SELECTED:hover {
+    border: 2px dashed #4f3df3;
+}
 div.FACETED {
     background-color: #32cd32;
 }
@@ -1016,4 +1029,4 @@ div#params_div select{
     margin-right: 55px;
 } #seachbykeyword {
     width: 100%;
-}
+}

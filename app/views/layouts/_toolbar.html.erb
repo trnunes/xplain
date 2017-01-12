@@ -24,9 +24,17 @@
             <span class="tool">Filter<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
         </div>
 		
+        <div class ='_facets operation' id = 'A' exp = "A">
+            <span class="tool">Facets<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
+        </div>		
+		
         <div class ='_group operation' id = 'A' exp = "A">
             <span class="tool">Group<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
         </div>
+		
+        <div class ='_merge operation' id = 'A' exp = "A">
+            <span class="tool">Merge<span class="tip">Merge two sets</span></span>
+        </div>		
 		
         <div class ='_map operation' id = 'A' exp = "A">
             <span class="tool">Map<span class="tip">Subject of the SPO expression. It can be a set of classes, instances or predicates.</span></span>
@@ -72,6 +80,9 @@
 
 <script>
 $("#params_div").hide();
+function show_refine_checkboxes(){
+	$(parameters.get("A")).find("._items_area").jstree().show_checkboxes();
+};
 function render_refine_toolbar(){
 	$("#params_div").empty();
 	$("#params_div").show();

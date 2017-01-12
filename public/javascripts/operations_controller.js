@@ -57,6 +57,33 @@ function Session(session_id){
 	};
 };
 
+function Item(item_view){
+	this.view = item_view
+	var this_item = this;
+
+	this.getView = function() {
+		return this.view
+	}
+	this.id = function() {
+		return $(item_view).attr("id")
+	}
+	
+	this.render_relations = function() {
+
+		$.ajax(	{			
+			type: "GET",
+			url: "/session/relations?id="+this_item.id(),
+			data_type: "script",
+			success: function(data, status, jqrequest) {
+
+				
+				$('._items_area').jstree("create_node", [this_item.getView(),returnedRelationsDiv, "first"]);
+				init_all();
+			}
+		});		
+	}
+};
+
 function Xset() {
 	this.data = { 
 		items: [],
@@ -100,8 +127,7 @@ function Xset() {
 				ajax_renderdomain(this_controller.id());
 					
 			});
-		});
-		
+		});		
 	};
 	this.set_image_view = function(view) {
 		this.image_view = view;

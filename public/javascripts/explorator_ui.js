@@ -6,7 +6,7 @@
 jQuery.fn.extend({
     //Hide an element
     ui_hide: function(item){
-		$(this).hide("blind", {direction: "up"}, 1000);        
+		// $(this).hide("blind", {direction: "up"}, 1000);
     },
     //Show an element
     ui_show: function(item){
@@ -107,7 +107,8 @@ function register_ui_resource_behaviour(){
                 if ($('.SELECTED').first().hasClass('resource')) {
                     alert('You can only facet a SET not a RESOURCE.')
                     return;
-                }                
+                }
+                                
                 $('.SELECTED').first().crt_facet('default');
             }            
         });
@@ -207,18 +208,22 @@ function register_ui_window_behaviour(){
     });
 	
     //Add window hide behaviour to the elements with _MINIMIZE annotation
-    $('._hide').each(function(item){
-        $(this).click(function colapse(){
-            $(this).parents('._WINDOW').first().children().each(function(x){
-                if (!$(this).hasClass('_NO_MINIMIZE') && $(this).is(":visible")) {
-                    $(this).ui_hide();
-                }
-            });
-        });
-    });
+    // $('._hide').each(function(item){
+    //     $(this).click(function colapse(){
+    //         $(this).parents('._WINDOW').first().children().each(function(x){
+    //             if (!$(this).hasClass('_NO_MINIMIZE') && $(this).is(":visible")) {
+    //                 $(this).ui_hide();
+    //             }
+    //         });
+    //     });
+    // });
     
     $('._expandproperties').each(function(item){
+    	
         $(this).click(function(e){
+			if($(this).parents('._WINDOW').first().children('.properties').size() == 0) {
+				new Item($(this).parent().parent()).render_relations();
+			} 
             $(this).parents('._WINDOW').first().children('.properties').each(function(x){
                 $(this).ui_show();
             });
@@ -277,9 +282,14 @@ function register_ui_window_behaviour(){
     //    });
     
     //Add the drag and drop behaviour. This allows the object to be repositioned on the screen.
-    $('._draggable').each(function(item){
-        $(this).draggable({ snap: true });
-    });    
+}
+function select_item(item) {
+	$(item).parents(".SELECTED").removeClass("SELECTED")
+	$(item).addClass("SELECTED");
+}
+
+function select_page(view, page) {
+	$(view).find('.pagination').pagination('drawPage', page);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,7 +297,15 @@ function register_ui_window_behaviour(){
 function register_ui_selection_behaviour(){
     $('.select').each(function(item){
 		var that_item = this;
+		
         $(that_item).unbind().click(function(event){
+			if (!$(this).data('ui-draggable') && $(this).hasClass("_draggable")){
+				$(this).draggable({snap: true})
+			}			
+
+			if (event.target !== this)
+				return
+				
             $(that_item).children('.properties').each(function(x){
                 if (!$(this).hasClass('_NO_MINIMIZE') && $(this).is(":visible")) {
                     $(this).ui_hide();
