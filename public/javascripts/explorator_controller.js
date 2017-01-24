@@ -245,6 +245,7 @@ function cmd_set(){
 		setParameter(this)
 		parameters.put('operation', 'pivot')
 	});
+	
 	$('._map').unbind().click(function(event){
 		setParameter(this);
 		parameters.put('operation', 'map');
@@ -343,6 +344,69 @@ function clear(){
 function removeCSS(item){
     $('.' + item).removeClass(item);
 }
+var projection_map = new Hashtable();
+function project(set_id, relation) {
+	if (projection_map.get(set_id) !== null) {
+		if(projection_map.get(set_id).get(relation) !== null) {
+			var projection = projection_map.get(set_id).get(relation);
+			var tree = $("#" + set_id).find('._items_area').jstree();
+			for (var i = 0; i < projection.keys().length; i++) {
+				var item_to_be_projected = projection.keys()[i];
+				tree.set_text(item_to_be_projected, projection.get(item_to_be_projected));
+			}
+		}
+	}
+	
+	if(relation === "ID") {
+		var $tree = $("#"+set_id).find("._items_area");
+		$($tree.jstree().get_json($tree, {
+		  flat: true
+		}))
+		.each(function(index, value) {
+		  var node = $tree.jstree().get_json(this.id);
+		  console.log(node);
+		  $tree.jstree().set_text(node.id, node.data.item);
+		});
+	}
+	$.ajax({
+		type: "GET",
+		url: "/session/project?set=" + set_id + "&relation="+relation,
+		data_type: "script",
+		success: function(data, status, jqrequest) {
+			
+		}
+	});
+}
+
+function ajax_keyword_search() {
+	var inputValues = $("#seachbykeyword").val()
+	var keywords_url = "/session/search?"
+	if (inputValues === '') {
+		return this;
+	} else {
+		var valuesArray = inputValues.split(' ')
+		for (var index in valuesArray){
+			keywords_url += "keywords[]=" + valuesArray[index] + "&&"
+		}
+	}
+	ajax_request(keywords_url)
+}
+
+function ajax_select() {
+	var inputValues = $(".SELECTED").attr("resource")
+	var keywords_url = "/session/select?"
+	if (inputValues === '') {
+		return this;
+	} else {
+		var valuesArray = inputValues.split(' ')
+		for (var index in valuesArray){
+			keywords_url += "selected[]=" + valuesArray[index] + "&&"
+		}
+	}
+	ajax_request(keywords_url)
+	
+}
+
 
 /////////////////////////////// SEMANTIC OPERATIONS //////////////////////////////////////////
 //These are the operations applyed over triples or semantics annotations
@@ -362,12 +426,10 @@ function cmd_semantic(){
         ajax_create(new SemanticExpression().go($F('seachbykeyword')));
         ajax_update('listenabledrepositories', '/repository/listenabledrepositories');
     };
-    $('search').onclick = function(){
-        ajax_create(new SemanticExpression().search($F('seachbykeyword')));
-    };
-    
-    
-    
+	
+    $('#search').unbind().click(function(){
+        ajax_keyword_search();
+    });    
     
     $('id_form_keyword').onsubmit = function(){
         if ($F('seachbykeyword').indexOf('http://') != -1) 
@@ -397,6 +459,48 @@ function cmd_semantic(){
             return false;
         };
     });
+}
+
+function pivot(set_view, isForward, isPath) {
+	var setExpr = "Xset.load('" + set_view.attr("id").replace("#", "%23") + "')";
+	var pivotExpr = "";
+	if (isForward) {
+		pivotExpr = ".pivot_forward(";
+	}else {
+		pivotExpr = ".pivot_backward(";
+	}
+
+
+	if (isPath) {
+		pivotExpr += get_path_expr();
+	} else {
+		pivotExpr += get_multiple_relations_expr();
+	}
+	pivotExpr += ")";
+	console.log("PIVOT EXPR: " + setExpr+pivotExpr)
+	ajax_create(setExpr+pivotExpr);
+}
+
+function get_path_expr() {
+	var path_expr = "[[";
+	$(".SELECTED").each(function(){
+		path_expr += "'" + $(this).attr("resource") + "',"
+		
+	});
+	path_expr += "]]";
+	console.log("PATH EXPRESSION: " + path_expr);
+	return path_expr;
+}
+
+function get_multiple_relations_expr() {
+	var multiple_relations_expr = "[";
+	$(".SELECTED").each(function(){
+		multiple_relations_expr += "'" + $(this).attr("resource") + "',"
+		
+	});
+	multiple_relations_expr += "]";
+	console.log("MULTIPLE RELATIONS EXPRESSION: " + multiple_relations_expr);
+	return multiple_relations_expr;	
 }
 
 ///////////////////////////////////// SemanticExpression Class ////////////////////
@@ -505,6 +609,7 @@ SemanticExpression.prototype.refine = function() {
 			}
 			values = "["+values+"]"			
 		} else {
+			console.log(valuesArray);
 			values = "'"+$(valuesArray).attr("resource").replace("#", "%23")+"'"
 		}
 		var relation = parameters.get("relation").attr('resource').replace("#", "%23")

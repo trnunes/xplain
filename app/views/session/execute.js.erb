@@ -8,8 +8,19 @@ if($('.set').length > 0) {
 	$(document.body).append($(view));
 	
 }
+var $tree = $("#"+'<%=@resourceset.id%>').find("._items_area");
+$(".search-input").keyup(function() {
 
-$('#<%=@resourceset.id%>').find('._items_area').jstree({
+    var searchString = $(this).val();
+	
+    console.log(searchString);
+	if (searchString.length > 3) {
+	    $tree.jstree('search', searchString);
+	} else if (searchString.length == 0) {
+		$tree.jstree('search', searchString);
+	}
+});
+$tree.jstree({
     "core": {        
         "check_callback": true,
 		
@@ -17,11 +28,97 @@ $('#<%=@resourceset.id%>').find('._items_area').jstree({
 	"checkbox" : {
       "keep_selected_style" : false
     },
-    "plugins" : [ "checkbox" ]
-});
-$('#<%=@resourceset.id%>').find('._items_area').jstree().hide_checkboxes();
+    "plugins" : [ "sort", "types", "checkbox", "contextmenu", "search"],
+    "search" : {
+                 'case_sensitive' : false,
+                 'show_only_matches' : true
+            },
+	"contextmenu":{         
+	    "items": function($node) {
+	        var tree = $("#tree").jstree(true);
+			if ($('#'+$node.id).hasClass("Entity")){
+		        return {
 
-$('#<%=@resourceset.id%>').find('._items_area').on("before_open.jstree", function (e, data) {
+		            "Select": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Select",
+		                "action": function (obj) { 
+							ajax_select();
+		                }
+		            },
+		            "Rename": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Rename",
+		                "action": function (obj) { 
+		                    tree.edit($node);
+		                }
+		            },                         
+		            "Remove": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Remove",
+		                "action": function (obj) { 
+		                    tree.delete_node($node);
+		                }
+		            }
+		        };			
+			} else if($('#'+$node.id).hasClass("Relation")){
+				return {
+		            "Applied To": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Relation Of",
+		                "action": function (obj) { 
+							alert("Relations of");
+		                }
+		            },
+		            "Range": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Range",
+		                "action": function (obj) { 
+							alert("Range");
+		                }
+		            }
+				};
+			} else if($('#'+$node.id).hasClass("Type")){
+				return  {
+		            "instances": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Items",
+		                "action": function (obj) { 
+							console.log($node.data.item);
+							ajax_request('/session/instances?type=' + $node.data.item);
+		                }
+		            },
+		            "relations": {
+		                "separator_before": false,
+		                "separator_after": false,
+		                "label": "Relations for this type",
+		                "action": function (obj) { 
+							alert("Relations");
+		                }
+		            }
+				};		
+			}
+	    }
+	}
+});
+
+$($tree.jstree().get_json($tree, {
+  flat: true
+})).each(function(index, value) {
+	var node = $tree.jstree().get_node(this.id);
+	node.data = {item: node.text.trim()};
+  
+});
+
+$tree.jstree().hide_checkboxes();
+
+$tree.on("before_open.jstree", function (e, data) {
 
 	var node_to_open = data.node
 
@@ -52,27 +149,9 @@ $('#<%=@resourceset.id%>').find('._items_area').on("before_open.jstree", functio
 	}
 });
 
-$('#<%=@resourceset.id%>').find('._items_area').on("changed.jstree", function(e, data){
-	var node_id = data.selected[0]
-	console.log("NODE ID: " + node_id);
-	console.log(e);
-	select_item($("#" + node_id));
-
-});
-$('#<%=@resourceset.id%>').find('.pagination').pagination({
-    items: 100,
-    itemsOnPage: 10,
-    cssStyle: 'compact-theme',
-	onPageClick: function(page_number, event){
-		ajax_paginate('<%=@resourceset.id%>', page_number);
-	},
-	pages: <%=@resourceset.number_of_pages%>
-	
-});
-$('#<%=@resourceset.id%>').ready(function() {
-  $('#<%=@resourceset.id%>').find('.pagination').pagination('drawPage', <%=@resourceset.page%>);
-});
-
+register_tree_selection_behavior();
+create_set_context_menu('<%=@resourceset.id%>');
+create_pivot_menu('<%=@resourceset.id%>');
 
 init_all();
 

@@ -86,12 +86,14 @@ function ajax_remove(_uri){
 
 //execute a AJAX request, creating a new container with the content return by the request.
 function ajax_create(_uri){
-    // $('#loadwindow').show();
+    $('#loadwindow').show();
 	$.ajax({
 		type: "GET",
 		url: executeuri + _uri,
 		data_type: "script",
 		success: function(data, status, jqrequest) {
+			$('#loadingtext').innerHTML = loading_text;
+            $('#loadwindow').hide();  
 			
 		}
 	});    

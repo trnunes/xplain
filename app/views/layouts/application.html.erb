@@ -14,10 +14,9 @@
     <script type="text/javascript" src="/javascripts/explorator_helper.js"></script>
     <script type="text/javascript" src="/javascripts/explorator_controller.js"></script>
 	<link href="/javascripts/jquery-contextmenu-common-master/dist/fixed/jquery.contextMenu.min.css" rel="stylesheet">
-	<link href="/javascripts/jquery-contextmenu-common-master/dist/jquery.contextMenuCommon.min.css" rel="stylesheet">
 
 	<script src="/javascripts/jquery-contextmenu-common-master/dist/fixed/jquery.contextMenu.min.js"></script>
-	<script src="/javascripts/jquery-contextmenu-common-master/dist/jquery.contextMenuCommon.min.js"></script>
+
     <script type="text/javascript" src="/javascripts/drop_down.js"></script>
     <script type="text/javascript" src="/javascripts/explorator_querybuilder.js"></script>
 	
@@ -26,6 +25,7 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
+<%= render :partial => '/layouts/loading' %>
 <%= render :partial => 'layouts/search_bar' %>
 <%= render :partial => 'layouts/landmarks'%>
 
@@ -41,6 +41,7 @@
 <script>
 init_all();
 register_ui_behaviour();
+$("#loadwindow").hide();
 
 </script>
 </html>

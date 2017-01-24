@@ -17,18 +17,22 @@
 			items_hash = resourceset.each_item
 		end
 	%>
+		<div>
+			<input class="search-input form-control" style="width: 100%;">
+		</div>
 
 	<div class = "_items_area">
 	  <ul set = "<%=resourceset.id%>">
 			<% items_hash.each do |item, relations_hash|%>
-				<li resource="<%=item.to_s%>"><%=item.to_s%>
+				
+				<li class = "<%=item.class.to_s%>" resource="<%=item.to_s%>"><%=item.to_s%>
 					<%if render_relations%>
 						<ul>
 							<%relations_hash.each do |relation, values|%>
-								<li resource="<%=relation.to_s%>"><%=relation.to_s%>
+								<li class = "<%=relation.class.to_s%>"resource="<%=relation.to_s%>"><%=relation.to_s%><%= " of" if relation.inverse%>								
 									<ul>
 										<%values.each do |v|%>
-											<li resource="<%=v.to_s%>"><%=v.to_s%></li>
+											<li class = "<%=v.class.to_s%>" resource="<%=v.to_s%>"><%=v.to_s%></li>
 										<%end%>
 									</ul>
 								</li>
@@ -42,27 +46,4 @@
 		</ul>
 	</div>
 
-    <div class ="pagination">
-    </div>
 </div>
-
-<!-- <%if resourceset.size > 1 %>
-	<%= javascript_tag do %>
-		var set_uri = '<%= resourceset %>'.replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g,'\\$1');
-		$(set_uri).children('.properties').each(function(n){
-	        $(this).hide();
-	    });
-		$(set_uri).children('._collapseproperties').hide();
-	<%end%>
-<%else %>
-	<%= javascript_tag do %>
-		var set_uri = '<%= resourceset %>';
-		$(set_uri).children('._expandproperties').hide();
-	<%end%>
-<%end %>
- -->
-<script>
-
-// init_all();
-</script>
-

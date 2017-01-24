@@ -268,7 +268,8 @@ div.windowtoolbar div.filter:hover {
     font-family: Arial, Helvetica, sans-serif;
     float: left;
     margin-left: 14px;
-    /* width: 230px; */
+    width: 350px;
+    height: 350px;
     border: 2px solid #cccccc;
     /* text-align: center; */
     font-size: 14px;
@@ -277,7 +278,10 @@ div.windowtoolbar div.filter:hover {
     position: relative;
     background-color: #fefefe;
 }
-
+div._items_area {
+	overflow: auto;
+	height: 70%;
+}
 div.windowmaximized {
     width: 350px;
 }
@@ -333,8 +337,8 @@ div.windowtoolbar div._view {
     font-size: 12px;
     color: #333333;
     float: left;
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
     margin-left: 2px;
     text-align: center;
     border: 1px solid #cccccc;
@@ -689,6 +693,9 @@ li.SELECTED {
 .jstree-anchor > .jstree-checkbox-disabled {
     display: none;
 }
+.jstree-default a.jstree-loading .jstree-icon { 
+    background:url("/images/loading.gif") center center no-repeat !important; 
+} 
 li.SELECTED:hover {
     border: 2px dashed #4f3df3;
 }
@@ -1029,4 +1036,4 @@ div#params_div select{
     margin-right: 55px;
 } #seachbykeyword {
     width: 100%;
-}
+} 

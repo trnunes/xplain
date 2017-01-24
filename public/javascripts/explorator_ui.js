@@ -15,11 +15,14 @@ jQuery.fn.extend({
 	
     //remove an element
     ui_remove: function(item){
-        //removes the element from the model and replace the interface with a new one.	
-        $(this).hide();
+        //removes the element from the model and replace the interface with a new one.
+        $(this).remove();
     }, //close an element
     ui_close: function(item){
-    	$(this).remove();        
+
+    	$(this).find("._items_area").jstree().destroy();
+		$(this).remove();
+		
     }, //open an element
     ui_open: function(item){
     
@@ -38,6 +41,77 @@ function register_ui_behaviour(){
     register_ui_resource_behaviour();
 }
 
+function create_pivot_menu(set_id) {
+	console.log("#" + set_id + " .pivot_button");
+    $(function() {
+		var isForward = true;
+		var isPath = false;
+		var isMultiple = false;		
+		$.contextMenu({
+		  selector: "#" + set_id + " .pivot_button",
+		  trigger: 'left',
+		  callback: function(key, options) {
+		      var m = "clicked: " + key;
+		      window.console && console.log(m) || alert(m); 
+		  },
+		  items: {
+		      "forward": {name: "Forward", selected: true, type: "radio"},
+		      "backward": {name: "Backward", type: "radio", events: {change: function(e){isForward = false}}},                 
+		      "sep1": "---------",
+			  "path": {name: "Path", type: "checkbox", events: {change: function(e){isPath = true}}},
+			  "multiple": {name: "Multiple", type: "checkbox", events: {change: function(e){isMultiple = true}}},
+			  "sep2": "---------",
+			  key: {
+				  name: "Pivot", 
+				  callback: function(){				  
+					  pivot($("#" + set_id), isForward, isPath);
+					  isForward = true;
+					  isPath = false;
+					  isMultiple = false;
+				  }
+		      },
+		      "quit": {name: "Quit", icon: function(){
+		          return 'context-menu-icon context-menu-icon-quit';
+		      }}
+		  },
+
+		});
+
+		$("#" + set_id + " .pivot_button").on('click', function(e){
+		  console.log('clicked', this);
+		})    
+		});
+}
+
+function create_set_context_menu(set_id){
+	console.log("#" + set_id + " .project_button");
+	$.ajax(	{
+		type: "GET",
+		url: '/session/common_relations?set='+set_id,
+		data_type: "script",
+		success: function(data, status, jqrequest) {
+			$.contextMenu({
+			    selector: "#" + set_id + " .project_button",
+				trigger: 'left',
+			    build: function($triggerElement, e){
+			        return {
+						items:{
+						    select: {
+						        name: "Select a relation", type: 'select', options: common_relations_menu,
+						        events: {
+						            change: function (e) {
+										var selectedRelation = $(e.target).find(":selected").text();
+										project(set_id, selectedRelation);
+						            }
+						        }
+							}
+						}
+					};
+				}
+			});
+		}
+	});
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////	
 //////////////////////////////RESOURCE BEHAVIOURS/////////////////////////////////////////////////////////
 function register_ui_resource_behaviour(){
@@ -58,18 +132,6 @@ function register_ui_resource_behaviour(){
     });
 	
     
-    $('.flickr_pagination').each(function(item){
-    
-        $(this).click(function(e){
-            $(this).prev('.tranparentpanel').css({
-                display: 'block',
-                position: 'absolute',
-                width: '100%',
-                height: '100%'
-            });
-            
-        });
-    });
     
     $('.all').each(function(resource){
         $(this).identify();
@@ -107,8 +169,7 @@ function register_ui_resource_behaviour(){
                 if ($('.SELECTED').first().hasClass('resource')) {
                     alert('You can only facet a SET not a RESOURCE.')
                     return;
-                }
-                                
+                }                
                 $('.SELECTED').first().crt_facet('default');
             }            
         });
@@ -179,11 +240,11 @@ function register_ui_resource_behaviour(){
 //////////////////////////////WINDOW BEHAVIOURS/////////////////////////////////////////////////////////
 function register_ui_window_behaviour(){
     //create a new window with the expression.
-    $('._new').unbind().each(function(view_item){
-        $(this).on("click", function(){
-            ajax_create($(this).attr("exp"));
-        });
-    });
+    // $('._new').unbind().each(function(view_item){
+    //     $(this).on("click", function(){
+    //         ajax_create($(this).attr("exp"));
+    //     });
+    // });
     $('._refresh').each(function(item){
         $(this).on ("click", function(){
             $(this).parent('._WINDOW').crt_refresh('subject_view', '');
@@ -264,17 +325,17 @@ function register_ui_window_behaviour(){
     //Add window close behaviour to the elements with _WINDOW annotation	
     $('._remove').each(function(item){
         $(this).click(function(){
+
             $(this).parents('._WINDOW').first().ui_remove();
         });
     });
 	
     $('._close').each(function(item){
         $(this).click(function(){
+			
             $(this).parents('._WINDOW').first().ui_close();
         });
-    });
-	
-	
+    });	
 	
     
     //    $('._editable').each(function(item){
@@ -283,10 +344,36 @@ function register_ui_window_behaviour(){
     
     //Add the drag and drop behaviour. This allows the object to be repositioned on the screen.
 }
-function select_item(item) {
-	$(item).parents(".SELECTED").removeClass("SELECTED")
-	$(item).addClass("SELECTED");
+
+function register_tree_selection_behavior(){
+	$tree.on("changed.jstree", function(e, data){
+		var $node = $("#" + data.node.id);
+	    if (!(event.ctrlKey || event.shiftKey)) {
+			$(".SELECTED").removeClass("SELECTED");
+			$node.addClass("SELECTED");
+	    }
+	    //When a shift + click event happens
+	    else {
+			console.log("SHIFT PRESSED " +$node.attr("id") )
+	        //If it was selected before, deselect. 
+	        if ($node.hasClass('SELECTED')) {
+	            $node.removeClass('SELECTED');
+	        }
+	        //If it was not selected before, select.
+	        else {
+				console.log("ADDING SELECTION TO: " + $node.attr("id"))
+	            $node.addClass('SELECTED');
+	        }
+	        //If the window is selected, then does not select this element
+	        if ($node.parents('._WINDOW.SELECTED').size() > 0) {
+	            $node.removeClass('SELECTED');
+	        }
+	    }
+		
+
+	});	
 }
+
 
 function select_page(view, page) {
 	$(view).find('.pagination').pagination('drawPage', page);
@@ -299,9 +386,15 @@ function register_ui_selection_behaviour(){
 		var that_item = this;
 		
         $(that_item).unbind().click(function(event){
-			if (!$(this).data('ui-draggable') && $(this).hasClass("_draggable")){
-				$(this).draggable({snap: true})
-			}			
+			$('._draggable').each(function(){
+				if ($(this).data('ui-draggable')){
+					$(this).draggable("destroy");
+					$(this).resizable("destroy");				
+				}
+				$(this).draggable({snap: true});
+				$(this).resizable();				
+			});
+			
 
 			if (event.target !== this)
 				return
@@ -313,7 +406,7 @@ function register_ui_selection_behaviour(){
             });
             var uri = $(that_item).attr('resource');
             if (uri != null) 
-                $('seachbykeyword').value = uri.replace('<', '').replace('>', '')
+                $('#seachbykeyword').value = uri.replace('<', '').replace('>', '')
             
             
             $(that_item).children('._collapseproperties').hide();
