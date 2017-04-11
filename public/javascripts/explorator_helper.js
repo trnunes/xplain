@@ -24,6 +24,33 @@ function init_all(){
     querybuilderselection();
     curlbracket();
 }
+function jstree_icon_type(item) {
+	if (item.type === "Relation") {
+		return "relation";
+	} else if (item.type === "Entity" || item.type === "Type") {
+		return "entity";
+	} else {
+		return "literal";
+	}
+}
+
+
+function to_jstree(set_json) {
+	var jstree_nodes = [];
+	var items = set_json.set.extension;
+	for(var i in items) {
+		var item = items[i];		
+		var item_node = {
+			text: item.id,
+			type: jstree_icon_type(item),
+			data: {set: set_json.set.id, item: item.id, resultedFrom: set_json.set.resultedFrom},
+			children: [{text: "Relations"}],
+			li_attr: {'resource': item.id}
+		}
+		jstree_nodes.push(item_node);	
+	}
+	return jstree_nodes;
+}
 
 // The functions below remove all css rules registered for a rdf resource and replace for the new's one.
 String.prototype.trim = function(){

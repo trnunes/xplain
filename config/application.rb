@@ -29,32 +29,41 @@ module Wxpair
     
     papers_graph = RDF::Graph.new do |graph|
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:cite"), RDF::URI("_:p2")]
+      graph << [RDF::URI("_:paper1"),  RDF::URI("_:label"), RDF::URI("_:paper1")]
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:cite"), RDF::URI("_:p3")]
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:cite"), RDF::URI("_:p4")]
       graph << [RDF::URI("_:p6"),  RDF::URI("_:cite"), RDF::URI("_:p2")]
+      graph << [RDF::URI("_:p6"),  RDF::URI("_:label"), RDF::URI("_:p6")]
       graph << [RDF::URI("_:p6"),  RDF::URI("_:cite"), RDF::URI("_:p3")]
       graph << [RDF::URI("_:p6"),  RDF::URI("_:cite"), RDF::URI("_:p5")]
       graph << [RDF::URI("_:p7"),  RDF::URI("_:cite"), RDF::URI("_:p3")]
+      graph << [RDF::URI("_:p7"),  RDF::URI("_:label"), RDF::URI("_:p7")]
       graph << [RDF::URI("_:p7"),  RDF::URI("_:cite"), RDF::URI("_:p5")]
       graph << [RDF::URI("_:p8"),  RDF::URI("_:cite"), RDF::URI("_:p5")]
+      graph << [RDF::URI("_:p8"),  RDF::URI("_:label"), RDF::URI("_:p8")]
       graph << [RDF::URI("_:p8"),  RDF::URI("_:cite"), RDF::URI("_:p3")]
       graph << [RDF::URI("_:p9"),  RDF::URI("_:cite"), RDF::URI("_:p5")]
+      graph << [RDF::URI("_:p9"),  RDF::URI("_:label"), RDF::URI("_:p9")]
       graph << [RDF::URI("_:p10"),  RDF::URI("_:cite"), RDF::URI("_:p5")]
+      graph << [RDF::URI("_:p10"),  RDF::URI("_:label"), RDF::URI("_:p10")]
       
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:submittedTo"), RDF::URI("_:journal1")]
       
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:author"),RDF::URI("_:a1") ]
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:author"),RDF::URI("_:a2") ]
       graph << [RDF::URI("_:p2"),  RDF::URI("_:author"), RDF::URI("_:a1")]
+      graph << [RDF::URI("_:p2"),  RDF::URI("_:label"), RDF::URI("lp2")]
       graph << [RDF::URI("_:p3"),  RDF::URI("_:author"), RDF::URI("_:a2")]
+      graph << [RDF::URI("_:p3"),  RDF::URI("_:label"), RDF::URI("lp3")]
       graph << [RDF::URI("_:p5"),  RDF::URI("_:author"), RDF::URI("_:a1")]
       graph << [RDF::URI("_:p5"),  RDF::URI("_:author"), RDF::URI("_:a2")]
+      graph << [RDF::URI("_:p5"),  RDF::URI("_:label"), RDF::URI("_:p5")]
 
       graph << [RDF::URI("_:p2"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal1")]
       graph << [RDF::URI("_:p3"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal2")]
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal1")]
       
-      graph << [RDF::URI("_:journal1"),  RDF::URI("_:releaseYear"), "2005"]
+      graph << [RDF::URI("_:journal1"),  RDF::URI("_:releaseYear"), RDF::Literal("2005")]
       graph << [RDF::URI("_:journal2"),  RDF::URI("_:releaseYear"), "2010"]
       
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:keywords"), RDF::URI("_:k1")]
@@ -65,16 +74,23 @@ module Wxpair
       graph << [RDF::URI("_:p3"),  RDF::URI("_:keywords"), RDF::URI("_:k2")]
       graph << [RDF::URI("_:p5"),  RDF::URI("_:keywords"), RDF::URI("_:k1")]
       
-      graph << [RDF::URI("_:p2"),  RDF::URI("_:publicationYear"), "2000"]
-      graph << [RDF::URI("_:p3"),  RDF::URI("_:publicationYear"), "1998"]
-      graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), "2010"]     
+      graph << [RDF::URI("_:p2"),  RDF::URI("_:publicationYear"), 2000]
+      graph << [RDF::URI("_:p3"),  RDF::URI("_:publicationYear"), 1998]
+      graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), 2010]     
     end
     # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
+    # papers_graph = "http://opencitations.net/sparql"
+    # server = RDFDataServer.new(papers_graph, method: "get", results_limit: 5000, items_limit: 25, use_select: false)
+    
+    
+    papers_graph = "http://data.semanticweb.org/sparql"
 
-    SERVER = RDFDataServer.new(papers_graph)
+
+    server = RDFDataServer.new(papers_graph, results_limit: 7000, items_limit: 500, use_select: false)
+    # server.label_property = RDF::RDFS.label.to_s
     s = Xset.new do |s|
       s.id = 'default'
-      s.server = SERVER
+      s.server = server
     end
     
     s.save

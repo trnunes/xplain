@@ -1,8 +1,10 @@
 Rails.application.routes.draw do
 
   get 'session/execute'
-
-  get 'session/nextpage'
+  post 'session/execute'
+  get 'session/trace_subset_domains'
+  get 'session/trace_item_domains'
+  get 'session/render_page'
   get 'session/renderdomain'
   get 'session/relations'
   get 'session/common_relations'
@@ -10,6 +12,7 @@ Rails.application.routes.draw do
   get 'session/all_types'
   get 'session/instances'
   get 'session/select'
+  get 'session/get_level'
   get 'session/search'
   get 'session/project'
   get 'refine/index'

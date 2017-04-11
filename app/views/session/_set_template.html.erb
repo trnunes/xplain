@@ -1,32 +1,25 @@
-<div class="_WINDOW window _draggable select set" id = "" exp = "">
+<div class="_WINDOW window _draggable select set" id = "setViewTemplate" exp = "">
      <div class= "tranparentpanel" >
         <img src = "/images/loading_big.gif" style="position:absolute; top : 50%;left:43% "/>
     </div>
+	<% @style_s = ' style = "background-color:white;" '
 
-    <%= render :partial => 'layouts/windowheader', :locals=>{:resourceset => resourceset} %>
+    resources =  resources_paginated() 
+
+%>
+	    
+	<%= render :partial => 'layouts/windowheader_template'%>
+	
+	<div class="search-div">
+		<input class="search-input form-control" style="width: 100%;">
+	</div>
+
 	<div class = "_items_area">
-		
-    </div>
-    <div class ="pagination">
-    </div>
+	</div>
+	
+	<ul class="pagination">
+	  <li><a >1</a></li>
+	</ul>
+	
 </div>
 
-<!-- <%if resourceset.size > 1 %>
-	<%= javascript_tag do %>
-		var set_uri = '<%= resourceset %>'.replace(/([ #;&,.+*~\':"!^$[\]()=>|\/])/g,'\\$1');
-		$(set_uri).children('.properties').each(function(n){
-	        $(this).hide();
-	    });
-		$(set_uri).children('._collapseproperties').hide();
-	<%end%>
-<%else %>
-	<%= javascript_tag do %>
-		var set_uri = '<%= resourceset %>';
-		$(set_uri).children('._expandproperties').hide();
-	<%end%>
-<%end %>
- -->
-<script>
-
-// init_all();
-</script>

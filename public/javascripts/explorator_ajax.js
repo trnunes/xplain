@@ -2,6 +2,50 @@
  * @author samuraraujo
  */
 var loading_text="Loading ..."
+XPAIR.AjaxHelper = {
+	execute: function(expression, successFunction, format) {
+		
+		var executeOperationUrl = "/session/execute";
+		if(format){
+			executeOperationUrl += "."+format;
+		}
+		executeOperationUrl += "?exp=" + expression;
+		
+		XPAIR.AjaxHelper.post(executeOperationUrl, format, successFunction);
+	},
+	get: function(uri, format, success_function) {
+	    $('#loadwindow').show();
+		$.ajax({
+			type: 'GET',
+			url: uri,
+			format: format,
+			success: function(data, status, jqrequest){
+				
+
+				$('#loadingtext').innerHTML = loading_text;
+	            $('#loadwindow').hide();			
+				success_function(data);
+			}
+		});	
+	},
+	
+	post: function(uri, format, success_function) {
+	    $('#loadwindow').show();
+		$.ajax({
+			type: 'POST',
+			url: uri,
+			format: format,
+			success: function(data, status, jqrequest){
+				
+
+				$('#loadingtext').innerHTML = loading_text;
+	            $('#loadwindow').hide();			
+				success_function(data);
+			}
+		});	
+	}	
+	
+}
 //Execute an AJAX request , updating the container with the response text.
 function ajax_update_callback(id, _uri, callbackfunction){
     $(id).innerHTML = 'Loading....'
@@ -48,12 +92,29 @@ function ajax_request(uri){
 		type: 'GET',
 		url: uri,
 		success: function(data, status, jqrequest){
+
+
 			$('#loadingtext').innerHTML = loading_text;
-            $('#loadwindow').hide();
+            $('#loadwindow').hide();			           	
 
 		}
 	});
 }
+
+function ajax_get(uri, success_function) {
+    $('#loadwindow').show();
+	$.ajax({
+		type: 'GET',
+		url: uri,
+		success: function(data, status, jqrequest){
+
+			$('#loadingtext').innerHTML = loading_text;
+            $('#loadwindow').hide();			
+			success_function();
+		}
+	});	
+}
+
 
 //TODO: consertar facetas
 //Execute a ajax request.

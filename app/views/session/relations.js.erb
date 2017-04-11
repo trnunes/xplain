@@ -1,16 +1,21 @@
-var relations_subtree = "<%= j render(partial: 'session/relation_template_treeview', locals: { relations: @relations }) %>"
+var relations_subtree = "<%= j render(partial: 'session/relation_template_treeview', locals: { relations: @resourceset.relations_hash, resourceset: @resourceset}) %>"
 relations_json = [ 
-<%@relations.each do |relation|%>	
-	<%relation.each do |relation_key, values|%>
+	<%@resourceset.relations_hash.each do |relation_key, values|%>
 	{
 
-		text: '<%=relation_key%>',		
+		text: '<%=relation_key%>',
+		type: "<%=icon_type(relation_key)%>",
 		children: [
 		<% values.each do |o| %>
 			{ 
 
 				'text': '<%=o.to_s%>',
-				'li_attr': {'resource': '<%=o.to_s%>'},
+				'type': "<%=icon_type(o)%>",
+				'li_attr': {
+					'resource': '<%=o.to_s%>', 					
+					'set': '<%=@resourceset.id%>'
+				},
+				
 				'children': [{'text': 'Relations'}]
 			},
 		<%end%>	
@@ -18,5 +23,5 @@ relations_json = [
 		li_attr: {'resource': '<%=relation_key.id%>'}
 	},
 	<%end%>
-<%end%>	
+
 ]

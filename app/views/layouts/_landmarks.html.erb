@@ -1,5 +1,16 @@
 <div class = "landmarks">
-    <div id="mainmenu">
+    <div class="btn-group">
+      <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+      Main Menu <span class="caret"></span></button>
+      <ul class="dropdown-menu" role="menu">
+  		<li class="dropdown-header">Starting Points</li>
+  		<li><a id = "all_types"  >All Data Types</a></li>
+  		<li><a id = "all_relations" >All Relations</a></li>
+      </ul>
+    </div>
+
+	
+    <!-- <div id="mainmenu">
         <ul>
             <li>
                 <h2>MENU &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<img class="arrow" src="/images/arrow_video_down_white_2.png" width="13" height="13"></h2>
@@ -7,11 +18,11 @@
                     <div>
                         <a onclick ="ajax_request('/repository/index')">Repositories</a>
                     </div>
-					
+
                     <div>
                         <a id = "items" class = "_new" exp= "Xset.load('default')">All Items</a>
-                    </div>					
-					
+                    </div>
+
                     <div>
                         <a id = "Types" class = "_new" onclick="ajax_request('session/all_types')">All Types</a>
                     </div>
@@ -20,7 +31,7 @@
                     </div>
                     <div>
                         <a onclick ="$('qcontainer').show()">Query</a>
-                    </div> 
+                    </div>
 					 <div>
                         <a href="/application/reset">Reset Session</a>
                     </div>
@@ -36,7 +47,7 @@
                 </ul>
             </li>
         </ul>
-    </div>
+    </div> -->
     <%= render :partial => '/layouts/toolbar' %>
 
 	&nbsp;

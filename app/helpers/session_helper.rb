@@ -23,6 +23,49 @@ module SessionHelper
     return false
   end
   
+  def generate_jbuilder(xset)
+    json = Jbuilder.new do |set|
+      set.set do
+      	set.id xset.id
+      	set.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?  
+      	set.intention xset.intention
+      	set.size xset.size
+      	set.extension build_extension(xset.extension, xset)
+      end
+    end
+    json.target!
+  end
+  
+  def build_extension(hash, xset)
+    extension = []    
+      
+
+    Jbuilder.new do |item| 
+      item.array!(hash.keys) do |key|
+  	  	if(key.is_a?(Entity) || key.is_a?(Relation))
+  		  	item.id key.id
+    			item.text key.id
+    			item.type key.class.to_s
+    			item.inverse key.inverse if key.is_a?(Relation)	
+    		else
+          puts "ITEM: " << item.inspect
+          puts "KEY: " << key.inspect
+    			item.id key.to_s
+    			item.text key.to_s
+    			item.type "Xpair::Literal"
+    		end
+      	item.set xset.id
+      	item.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil? 
+      end
+    end
+  end
+  
+  def icon_type(item)
+    return "literal" if item.is_a?(Fixnum) || item.is_a?(String)
+    return "relation" if item.is_a? Relation
+    return "entity"
+  end
+  
   def resources_paginated
     return []
   end

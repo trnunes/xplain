@@ -269,12 +269,12 @@ div.windowtoolbar div.filter:hover {
     float: left;
     margin-left: 14px;
     width: 350px;
-    height: 350px;
+    /* height: 350px; */
     border: 2px solid #cccccc;
     /* text-align: center; */
     font-size: 14px;
     padding: 9px;
-    top: 75px;
+    /* top: 75px; */
     position: relative;
     background-color: #fefefe;
 }
@@ -695,7 +695,9 @@ li.SELECTED {
 }
 .jstree-default a.jstree-loading .jstree-icon { 
     background:url("/images/loading.gif") center center no-repeat !important; 
-} 
+}
+.jstree-default a ins.jstree-icon {display: initial!important}
+ 
 li.SELECTED:hover {
     border: 2px dashed #4f3df3;
 }
@@ -715,19 +717,19 @@ div.Param2 {
     border-width: 2px;
 }
 
-div.Param3 {
+.relation {
     border-color: red;
     border-style: solid;
     border-width: 2px;
 }
 
-div.A {
+.A {
     border-color: #009900;
     border-style: solid;
     border-width: 2px;
 }
 
-div.B {
+.B {
     border-style: solid;
     border-color: #00FF33;
     border-width: 2px;
@@ -751,6 +753,23 @@ div.P {
 .toolbar div.P{
 	 background: orange;
 	color:white;
+}
+div.windowmaximized {
+    /* width: 350px; */
+}
+.blink-class {
+    border: 1px solid #ee1b1b !important;
+}
+.pagination > .pg_active > a,
+.pagination > .pg_active > span,
+.pagination > .pg_active > a:hover,
+.pagination > .pg_active > span:hover,
+.pagination > .pg_active > a:focus,
+.pagination > .pg_active > span:focus {
+  color: #fff;
+  cursor: default;
+  background-color: #337ab7;
+  border-color: #337ab7;
 }
 
 div.O {

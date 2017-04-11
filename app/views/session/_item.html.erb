@@ -3,7 +3,7 @@
 <ul class="subjmenu" id="<%=sddm%>">
     <li>
         <%m1 = SecureRandom.uuid %>
-        <a href="#" onmouseover="mcancelclosetimemenu(),mopen('<%=m1%>')" onmouseout="mclosetimemenu(),mclosetime()"><img class="arrow" border=0 src="/images/arrow_video_down_white_2.png" width="13" height="13"></a>
+        <a  onmouseover="mcancelclosetimemenu(),mopen('<%=m1%>')" onmouseout="mclosetimemenu(),mclosetime()"><img class="arrow" border=0 src="/images/arrow_video_down_white_2.png" width="13" height="13"></a>
         <div id="<%=m1%>" onmouseover="mcancelclosetime(),mcancelclosetimemenu()" onmouseout="mclosetime(),mclosetimemenu()">
             <%if relation?(item) %>
                 <a class ="all" exp="">(Used by)</a>

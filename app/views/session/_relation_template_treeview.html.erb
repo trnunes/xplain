@@ -1,13 +1,12 @@
-<%relations.each do |relation|%>		
-	<%relation.each do |relation_key, values|%>
-		<li><%= relation_key%>
+
+<ul>
+	<%relations.each do |relation, values|%>
+		<li data-jstree='{"type":"<%=icon_type(relation)%>"}' class = "<%=relation.class.to_s%>"resource="<%=relation.to_s%>"><%=relation.to_s%><%= " of" if relation.inverse%>								
 			<ul>
-				<% values.each do |o| %>
-					<li> <%=o.to_s%> 
-						<ul>Relations</ul>
-					</li>
+				<%values.each do |v|%>
+					<li data-jstree = '{"type":"<%=icon_type(v)%>"}' set = "<%=resourceset.id%>" class = "<%=v.class.to_s%>" resource="<%=v.to_s%>"><%=v.to_s%></li>
 				<%end%>
 			</ul>
 		</li>
 	<%end%>
-<%end%>
+</ul>

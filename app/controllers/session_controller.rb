@@ -11,28 +11,39 @@ class SessionController < ApplicationController
   end
   
   def execute
-    puts "EXPRESSION: " << params[:exp]
-    
+
+    @page = 1
+
     @resourceset = eval(params[:exp])
-   
+    if params[:render_relations].nil?
+      @render_relations = false
+    else
+      @render_relations = eval(params[:render_relations])
+    end    
+    @resourceset.paginate(10)
     @resourceset.save
+
     if(params[:exp].include?("group"))
       @render_relations = true;
     end
+    
     respond_to do |format|
       format.js
+      format.json {render :json => generate_jbuilder(@resourceset)}
+      format.any {render :text => "SUCCESSFUL"}
     end    
   end
   
   
-  def nextpage
+  def render_page
     @resourceset = Xset.load(params[:set])
-    page_to_display = params[:page].to_i
-    
-    @resourceset.paginate(page_to_display, 5)
+    @page = params[:page].to_i
+
     respond_to do |format|
       format.js
-    end
+      format.json {render :json => generate_jbuilder(@resourceset)}
+      format.any {render :text => "SUCCESSFUL"}
+    end    
   end
   
   def renderdomain
@@ -44,6 +55,7 @@ class SessionController < ApplicationController
   end
   
   def all_relations
+    @page = 1
     server = Xset.load('default').server
     @resourceset = Xset.new do |s|
       server.relations.each do |relation|
@@ -52,15 +64,19 @@ class SessionController < ApplicationController
       s.server = server
     end
 
-    @render_relations = false;  
+
+
+    @resourceset.paginate(10)
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
+        format.json {render :json => generate_jbuilder(@resourceset)}
       end
     end 
   end
   
   def all_types
+    @page = 1
     server = Xset.load('default').server
     @resourceset = Xset.new do |s|
       server.types.each do |relation|
@@ -68,14 +84,15 @@ class SessionController < ApplicationController
       end
       s.server = server
     end
- 
-    @render_relations = false;  
-    
+    @resourceset.paginate(10)
+    @resourceset.save
     respond_to do |format|
       if @resourceset.save
+
         format.js { render :file => "/session/execute.js.erb" }
+        format.json {render :json => generate_jbuilder(@resourceset)}
       end
-    end 
+    end     
   end
   
   def search
@@ -87,10 +104,13 @@ class SessionController < ApplicationController
       end
       s.server = server
     end
-    @render_relations = false;
+    @resourceset.paginate(20)
+    @page = 1
     respond_to do |format|
       if @resourceset.save
+
         format.js { render :file => "/session/execute.js.erb" }
+        format.json {render :json => generate_jbuilder(@resourceset)}
       end
     end     
   end
@@ -99,13 +119,17 @@ class SessionController < ApplicationController
   end
   
   def relations
-    server = Xset.load('default').server
-    query = server.begin_nav_query do |q|        
-      q.on(Entity.new(params[:id]))
-      q.find_relations
-    end    
-    results_hash = query.execute
-    @relations = results_hash.values    
+    input_set = Xset.load(params[:set])
+    selection_set = input_set.select([Entity.new(params[:id])])
+    selection_set.each do |item|
+
+    end
+    @resourceset = selection_set.pivot
+    @resourceset.each do |item|
+
+    end
+    
+    @resourceset.save
     respond_to do |format|
       format.js
     end     
@@ -114,14 +138,11 @@ class SessionController < ApplicationController
   def common_relations
 
     set = Xset.load(params[:set])
-    newset = Xset.new do |s|     
-      s << Relation.new("http://wwww.w3.org/2000/01/rdf-schema#label")
-      s.server = set.server
-    end
     
-    @common_relations = newset
+    @common_relations = set.relations()
     respond_to do |format|
       format.js
+
     end
   end
   
@@ -129,32 +150,27 @@ class SessionController < ApplicationController
     server = Xset.load('default').server
     type = Type.new(params[:type])
     type.add_server(server)
-    puts "FINDING INSTANCES FOR: #{type.to_s}"
-    puts "  #{type.instances.size}"
+    
     @resourceset = Xset.new do |s|      
-      type.instances.each do |item|
-        s << item
-      end
+      s.extension = type.instances.map{|i| [i, i]}.to_h
       s.server = server
     end
-
-    @render_relations = false;  
-    
+    @resourceset.paginate(20)
+    @page = 1
     respond_to do |format|
       if @resourceset.save
+
         format.js { render :file => "/session/execute.js.erb" }
+        format.json {render :json => generate_jbuilder(@resourceset)}
       end
-    end    
+    end     
   end
   
   def select
+    selection_set = params[:set]
     selected_items = params[:selected];
-    @resourceset = Xset.new do |s|
-      selected_items.each do |item|
-        s << Entity.new(item)
-      end
-      s.server = Xset.load('default').server
-    end
+    selected_items.each{}
+    @resourceset = selection_set.select(selected_items.map{})
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -171,7 +187,174 @@ class SessionController < ApplicationController
       format.js
     end    
   end
+  def trace_subset_domains
+    set = Xset.load(params[:set])
+    subset = set.get_subset(params[:subset])
+
+
+    domains = set.trace_domains(subset)
+
+
+    target_json = Jbuilder.new do |json|
+      json.array!(domains) do |local_domains|
+        json.id local_domains.first
+        json.domains Jbuilder.new do |domain_json|
+          domain_json.array!(local_domains[1..local_domains.size]) do |local_domain|
+            domain_json.id local_domain.id
+            domain_json.type local_domain.class.to_s
+          end
+        end
+      end
+    end.target!
+        
+    respond_to do |format|
+      format.json {render :json => target_json}
+    end     
+    
+  end
+  
+  def trace_item_domains
+    set = Xset.load(params[:set])
+    item = set.get_item(params[:item])
+
+    domains = set.trace_domains(item)
+
+
+    target_json = Jbuilder.new do |json|
+      json.array!(domains) do |local_domains|
+        json.id local_domains.first
+        json.domains Jbuilder.new do |domain_json|
+          domain_json.array!(local_domains[1..local_domains.size]) do |local_domain|
+            if local_domain.is_a? Xpair::Literal
+              domain_json.id local_domain.value
+            else
+              domain_json.id local_domain.id
+            end
+            
+            domain_json.type local_domain.class.to_s
+          end
+        end
+      end
+    end.target!
+        
+    respond_to do |format|
+      format.json {render :json => target_json}
+    end     
+    
+  end
+  
+  def get_level
+    set = Xset.load(params[:set])
+    level_items = set.select_level(params[:level].to_i).map{|items_hash| items_hash.keys}.flatten
+    respond_to do |format|
+      format.json {render :json => build_json(level_items, set)}
+    end
+    
+  end
   
   def new
   end
+  
+  def build_json(items, set)
+    Jbuilder.new do |json|
+      json.array!(items) do |item|
+        to_jbuilder(json, item, set)
+      end
+    end.target!
+  end
+  
+  def generate_jbuilder(xset)
+    json = Jbuilder.new do |set|
+      set.set do
+      	set.id xset.id
+        set.pages_count xset.count_pages
+      	set.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?  
+      	set.intention xset.intention
+      	set.size xset.size
+        set.levels xset.count_levels
+        set.generates = Jbuilder.new do |generated_set_json|
+          generated_set_json.array!(xset.generates) do |generated_set|
+            generated_set_json.id = generated_set.id
+          end
+        end
+
+
+
+      	set.extension build_extension(xset.each_image(page: @page), xset)
+      end
+    end
+    json.target!
+  end
+  
+  def build_extension(images, xset, subset="")
+    extension = []    
+      
+
+    Jbuilder.new do |json|
+
+      json.array!(images) do |item|
+
+
+        if(item.is_a? Xsubset)
+          to_jbuilder(json, item.key, xset, item.id)
+          json.children Jbuilder.new do |image_json|            
+            image_json.array!(item.keys) do |key|
+              relations = item[key]
+        	  	to_jbuilder(image_json, key, xset, item.id)
+              if(relations.is_a? Xsubset)
+                json.children build_extension(relations.extension, xset, relations.id)
+              else
+                json.children Jbuilder.new do |relations_json|
+                  relations_json.array!(relations) do |relation|
+                    to_jbuilder(relations_json, relation, xset, item.id)
+                  end
+                end
+              end            
+            end            
+          end
+        else
+          to_jbuilder(json, item, xset, subset)
+        end
+        
+      end
+    end
+  end
+  
+  def to_jbuilder(json, item, xset, subset_id= "")
+  	if(item.is_a?(Entity) || item.is_a?(Relation)|| item.is_a?(Type))
+
+	  	json.id item.id
+      if item.text.nil?
+        json.text item.id
+      else
+        json.text item.text
+      end
+			
+			json.type item.class.to_s
+			json.inverse item.inverse if item.is_a?(Relation)	
+		else
+			json.id item.to_s
+
+			json.text item.text
+			json.type "Xpair::Literal"
+      if item.has_datatype?
+        json.datatype item.datatype
+      end
+		end
+
+
+    if !subset_id.empty?
+      json.subset subset_id
+    end
+
+    json.parents Jbuilder.new do |cjson|
+      cjson.array!(item.parents) do |child|
+        to_jbuilder(cjson, child, xset)
+      end
+    end
+    
+  	json.set xset.id
+  	json.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?
+  end
+
 end

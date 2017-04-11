@@ -1,3 +1,4 @@
+
 var nodes_hash = new Hashtable();
 var $tree = $("#"+'<%=@projected_set.id%>').find("._items_area");
 $($tree.jstree().get_json($tree, {
@@ -18,4 +19,8 @@ var projection = new Hashtable();
 		projection.put(node_id.id, "<%=item.to_s%>");
 	<%end%>	
 <%end%>
+
+$('#loadingtext').innerHTML = loading_text;
+$('#loadwindow').hide();			
+
 projection_map.get("<%=@projected_set.id%>").put("<%=@projection_relation%>", projection);

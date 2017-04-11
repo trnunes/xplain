@@ -2,6 +2,8 @@
  * This code implements all the user interface behaviour of explorator
  * @author samuraraujo
  */
+
+var context_menus_hash = new Hashtable();
 //Add global ui methods to the elements
 jQuery.fn.extend({
     //Hide an element
@@ -9,16 +11,28 @@ jQuery.fn.extend({
 		// $(this).hide("blind", {direction: "up"}, 1000);
     },
     //Show an element
-    ui_show: function(item){
-    	$(this).show("blind", {direction: "down"}, 1000);        
+    ui_show: function(){
+		$(this).find('._show').hide()
+		
+		$(this).find('._hide').show();
+		
+        $(this).first().attr("style", "");
+		$(this).find("._NO_MINIMIZE").nextAll().slideToggle();
+		$(this).css("top", "75px");
+		$(this).find(".btn-group").show();
+		$(this).css("width", "350px");
+		$(this).appendTo("#exploration_area");
+    	
     }, //maximize a window
 	
     //remove an element
     ui_remove: function(item){
         //removes the element from the model and replace the interface with a new one.
-        $(this).remove();
+
+        $(this).fadeOut();
     }, //close an element
     ui_close: function(item){
+		debugger;
 
     	$(this).find("._items_area").jstree().destroy();
 		$(this).remove();
@@ -39,79 +53,47 @@ function register_ui_behaviour(){
     register_ui_selection_behaviour();
     //Initialize de resource behaviour.
     register_ui_resource_behaviour();
+	
+	register_modal_actions();
+	
+	registerToolbarBehavior();
 }
 
-function create_pivot_menu(set_id) {
-	console.log("#" + set_id + " .pivot_button");
-    $(function() {
-		var isForward = true;
-		var isPath = false;
-		var isMultiple = false;		
-		$.contextMenu({
-		  selector: "#" + set_id + " .pivot_button",
-		  trigger: 'left',
-		  callback: function(key, options) {
-		      var m = "clicked: " + key;
-		      window.console && console.log(m) || alert(m); 
-		  },
-		  items: {
-		      "forward": {name: "Forward", selected: true, type: "radio"},
-		      "backward": {name: "Backward", type: "radio", events: {change: function(e){isForward = false}}},                 
-		      "sep1": "---------",
-			  "path": {name: "Path", type: "checkbox", events: {change: function(e){isPath = true}}},
-			  "multiple": {name: "Multiple", type: "checkbox", events: {change: function(e){isMultiple = true}}},
-			  "sep2": "---------",
-			  key: {
-				  name: "Pivot", 
-				  callback: function(){				  
-					  pivot($("#" + set_id), isForward, isPath);
-					  isForward = true;
-					  isPath = false;
-					  isMultiple = false;
-				  }
-		      },
-		      "quit": {name: "Quit", icon: function(){
-		          return 'context-menu-icon context-menu-icon-quit';
-		      }}
-		  },
+function registerToolbarBehavior(){
+	$('.dropdown-submenu a.test').on("click", function(e){
 
-		});
-
-		$("#" + set_id + " .pivot_button").on('click', function(e){
-		  console.log('clicked', this);
-		})    
-		});
+		$('.dropdown-submenu').children('ul').hide()
+	    $(this).next('ul').toggle();
+		e.stopPropagation();
+        e.preventDefault();
+     });
 }
 
-function create_set_context_menu(set_id){
-	console.log("#" + set_id + " .project_button");
-	$.ajax(	{
-		type: "GET",
-		url: '/session/common_relations?set='+set_id,
-		data_type: "script",
-		success: function(data, status, jqrequest) {
-			$.contextMenu({
-			    selector: "#" + set_id + " .project_button",
-				trigger: 'left',
-			    build: function($triggerElement, e){
-			        return {
-						items:{
-						    select: {
-						        name: "Select a relation", type: 'select', options: common_relations_menu,
-						        events: {
-						            change: function (e) {
-										var selectedRelation = $(e.target).find(":selected").text();
-										project(set_id, selectedRelation);
-						            }
-						        }
-							}
-						}
-					};
-				}
-			});
+function register_modal_actions(){
+	$("#define_path").unbind().click(function(e){
+		
+		var inputParams = parameters.get("A");
+		for(var i=0; i<inputParams.length; i++){
+			var setId = $(inputParams[i]).attr("id");
+			XPAIR.currentSession.getProjections(setId)[0].showPathModal()();			
 		}
+
 	});
+	
+	$("#myModal").on("hide.bs.modal", function () {
+		
+		$("#selected_path_header").nextAll().remove();
+		$("#selected_path_header").remove();
+	    $("#pivot_group .dropdown-menu").append("<li id=\"selected_path_header\" class=\"dropdown-header\">Selected Path</li>");
+
+		for(var i in parameters.get("B")){
+			$("#pivot_group .dropdown-menu").append("<li class=\"dropdown-header\">"+$(parameters.get("B")).attr("item")+"</li>");
+		}
+
+	});
+	
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////	
 //////////////////////////////RESOURCE BEHAVIOURS/////////////////////////////////////////////////////////
 function register_ui_resource_behaviour(){
@@ -245,6 +227,7 @@ function register_ui_window_behaviour(){
     //         ajax_create($(this).attr("exp"));
     //     });
     // });
+	
     $('._refresh').each(function(item){
         $(this).on ("click", function(){
             $(this).parent('._WINDOW').crt_refresh('subject_view', '');
@@ -257,17 +240,17 @@ function register_ui_window_behaviour(){
         $(this).identify();
     });
     //Add window show behaviour to the elements with  _MINIMIZE annotation 
-    $('._show').each(function(item){
-        $(this).click(function(e){
-            $(this).parents('._WINDOW').first().children().each(function(x){
-                if (!$(this).hasClass('_NO_MINIMIZE')) {
-                    $(this).ui_show();
-                }
-            });
-            e.stopPropagation();
-        });
-    });
-	
+    // $('._show').each(function(item){
+    //     $(this).click(function(e){
+    //         $(this).parents('._WINDOW').first().children().each(function(x){
+    //             if (!$(this).hasClass('_NO_MINIMIZE')) {
+    //                 $(this).ui_show();
+    //             }
+    //         });
+    //         e.stopPropagation();
+    //     });
+    // });
+    //
     //Add window hide behaviour to the elements with _MINIMIZE annotation
     // $('._hide').each(function(item){
     //     $(this).click(function colapse(){
@@ -301,8 +284,10 @@ function register_ui_window_behaviour(){
             $(this).parents('._WINDOW').first().children('.properties').each(function(x){
                 $(this).ui_hide();
             });
+			$(this).parents('._WINDOW').css("top", "0px");
             $(this).parents('._WINDOW').first().children('._expandproperties').show();
             $(this).parents('._WINDOW').first().children('._collapseproperties').hide();
+			
             e.stopPropagation();
         });
         
@@ -310,16 +295,36 @@ function register_ui_window_behaviour(){
     
     
     //Add window maximize behaviour to the _WINDOW
-    $('._maximize').each(function(item){
-        $(this).click(function(){
-            $(this).parents('._WINDOW').first().addClass('windowmaximized');
+    $('._show').each(function(item){
+        $(this).unbind().click(function(){
+			$(this).parents('._WINDOW').first().ui_show();
+			// $(this).hide();
+			//
+			// $(this).parents('._WINDOW').find('._hide').show();
+			//
+			//             $(this).parents('._WINDOW').first().attr("style", "");
+			// $(this).parents('._WINDOW').find("._NO_MINIMIZE").nextAll().slideToggle();
+			// $(this).parents('._WINDOW').css("top", "75px");
+			// $(this).parents('._WINDOW').find(".btn-group").show();
+			// $(this).parents('._WINDOW').css("width", "350px");
+			// $(this).parents('._WINDOW').appendTo("#exploration_area");
         });
     });
 	
-    $('._minimize').each(function(item){
-        $(this).click(function(){
-            $(this).parents('._WINDOW').first().removeClass('windowmaximized');
+    $('._hide').each(function(item){
+		
+        $(this).unbind().click(function(){
+			$(this).hide();
+			$(this).parents('._WINDOW').find('._show').show();
+			$(this).parents('._WINDOW').first().attr("style", "");
+            $(this).parents('._WINDOW').find("._NO_MINIMIZE").nextAll().slideToggle();
+			$(this).parents('._WINDOW').css("top", "0px");
+			$(this).parents('._WINDOW').css("width", "150px");
+			$(this).parents('._WINDOW').find(".btn-group").hide();
+			$(this).parents('._WINDOW').appendTo(".container")
+
         });
+		
     });
 	
     //Add window close behaviour to the elements with _WINDOW annotation	
@@ -345,34 +350,6 @@ function register_ui_window_behaviour(){
     //Add the drag and drop behaviour. This allows the object to be repositioned on the screen.
 }
 
-function register_tree_selection_behavior(){
-	$tree.on("changed.jstree", function(e, data){
-		var $node = $("#" + data.node.id);
-	    if (!(event.ctrlKey || event.shiftKey)) {
-			$(".SELECTED").removeClass("SELECTED");
-			$node.addClass("SELECTED");
-	    }
-	    //When a shift + click event happens
-	    else {
-			console.log("SHIFT PRESSED " +$node.attr("id") )
-	        //If it was selected before, deselect. 
-	        if ($node.hasClass('SELECTED')) {
-	            $node.removeClass('SELECTED');
-	        }
-	        //If it was not selected before, select.
-	        else {
-				console.log("ADDING SELECTION TO: " + $node.attr("id"))
-	            $node.addClass('SELECTED');
-	        }
-	        //If the window is selected, then does not select this element
-	        if ($node.parents('._WINDOW.SELECTED').size() > 0) {
-	            $node.removeClass('SELECTED');
-	        }
-	    }
-		
-
-	});	
-}
 
 
 function select_page(view, page) {
@@ -382,6 +359,7 @@ function select_page(view, page) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////SELECTION BEHAVIOURS//////////////////////////////////////////////////////
 function register_ui_selection_behaviour(){
+	
     $('.select').each(function(item){
 		var that_item = this;
 		
@@ -391,7 +369,7 @@ function register_ui_selection_behaviour(){
 					$(this).draggable("destroy");
 					$(this).resizable("destroy");				
 				}
-				$(this).draggable({snap: true});
+				$(this).draggable();
 				$(this).resizable();				
 			});
 			

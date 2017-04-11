@@ -14,9 +14,7 @@ var facetsuri = '/refine/index?'
 
 
 var currentExecution = null;
-
-var XPAIR = XPAIR || {};
-XPAIR.currentsession = new Session("current");
+var params_hash = new Hashtable();
 
 //Global controller methods
 jQuery.fn.extend({
@@ -66,7 +64,7 @@ jQuery.fn.extend({
 			data_type: "script"
 		});
         parameters.put('O', $(this));
-        ajax_create(new SemanticExpression('O') + '&view=' + $(this).attr('view'));
+        XPAIR.calculate(new SemanticExpression('O') + '&view=' + $(this).attr('view'));
     },
 	
 	//TODO: corrigir a geração de facetas.
@@ -144,151 +142,95 @@ var parameters = new Hashtable();
 function register_controllers(){
     cmd_set();
     cmd_semantic();
+	register_landmark_handlers();
+}
+
+function register_landmark_handlers(){
+	$("#all_types").unbind().click(function(){
+		XPAIR.AjaxHelper.get("/session/all_types.json", "json", function(data){
+			var xset = new XPAIR.Xset(data.set);
+			xset.setIntention("All Types")
+			var xsetAdapter = new XPAIR.adapters.JstreeAdapter(xset);
+			new XPAIR.projections.Jstree(xsetAdapter).init();
+		});
+	});
+	
+	$("#all_relations").unbind().click(function(){
+		XPAIR.AjaxHelper.get("/session/all_relations.json", "json", function(data){
+			var xset = new XPAIR.Xset(data.set);
+			xset.setIntention("All Relations");
+			debugger;
+			var xsetAdapter = new XPAIR.adapters.JstreeAdapter(xset);
+			
+			new XPAIR.projections.Jstree(xsetAdapter).init();
+		});
+	});
 }
 
 /////////////////////////////// SET OPERATIONS //////////////////////////////////////////
 function setParameter(item){
+
     removeCSS($(item).exp());
     $('.SELECTED').addClass($(item).exp());
     $(item).addClass($(item).exp());
     parameters.put($(item).attr("id"), $('.SELECTED'));
     removeCSS('SELECTED');
 }
+function setupRefineControls(){
+	$("#facetedRefine").click(function(){
 
+		XPAIR.currentSession.getProjections($("._WINDOW.A").attr("id"))[0].activateFacetedFiltering();
+	});
+	$("[name=filterradio]").click(function(){
+		XPAIR.addParameter("relation", $(".SELECTED"));
+	})
+}
 //These are the operations applyed over sets
 function cmd_set(){
-    $('._setparameter').unbind().each(function(item){
-        $(this).on("click", function(){
-            setParameter(item);
-        });
-    });
+	
+	$(".operation").click(function(){
+		setParameter(this);
+		$(".active").removeClass("active");
+		var operationId = $(this).attr("operation");
+		parameters.put("operation", operationId);
+		$(this).addClass("active");
+	});
 	
 	
-	$('._relations').unbind().each(function(){
-		$(this).click(function(){
-	        if ($('.SELECTED').size() != 1) {
-	            alert("Select JUST 1 set to find the relations.");
-	        }
-	        else {
-	            if ($('.SELECTED').first().hasClass('resource')) {
-	                alert('You can only facet a SET not a RESOURCE.')
-	                return;
-	            }
-				parameters.put('A', $('.SELECTED').first())                
-	            ajax_create(new SemanticExpression('A').relations());
-	        }
-		});
+	$('.param').click(function(){
+		parameters.put($(this).attr("param"), $(this).attr("param_value"));
 	});	
-	
-	$('._query').unbind().each(function(item){
-		$(this).on("click", function(){
-			parameters.put('operation', 'query');			
-		});
-	});
-    $('._union').unbind().click(function(){
-            setParameter(this);
-            parameters.put('operation', 'union');        
-    });
-    
-    $('._intersection').unbind().each(function(item){
-        $(this).on("click", function(){
-            setParameter(this);
-            parameters.put('operation', 'intersection');
-        });
-    });
-    $('._difference').unbind().each(function(item){
-        $(this).on("click", function(){
-            setParameter(this);
-            parameters.put('operation', 'difference');
-        });
-    });
-	$('._refine').unbind().click(function(event){
-		setParameter(this)
-		parameters.put('operation', 'refine');
-		render_refine_toolbar();
-		
-	});
-	
-	$('._facets').unbind().click(function(event){
-		setParameter(this);
-		$.ajax(	{			
-			type: "GET",
-			url: "/session/relations?id="+node_to_open.text,
-			data_type: "script",
-			success: function(data, status, jqrequest) {
-
-				console.log(relations_subtree);
-				for (var i = 0; i < relations_json.length; i++) {
-					$('#<%=@resourceset.id%>').find('._items_area').jstree().create_node(node_to_open, relations_json[i], "first");
-				}
-
-			}
-		});
-		
-	});
-	$('._group').unbind().click(function(event){
-		setParameter(this)
-		parameters.put('operation', 'group')
-		render_group_toolbar();
-	});
-	$('._rank').unbind().click(function(event){
-		setParameter(this)
-		parameters.put('operation', 'rank');
-		render_rank_toolbar();
-	});
-	$('._merge').unbind().click(function(event){
-		setParameter(this)
-		parameters.put('operation', 'merge');
-	});
-	
-	$('._pivot').unbind().click(function(event){
-		setParameter(this)
-		parameters.put('operation', 'pivot')
-	});
-	
-	$('._map').unbind().click(function(event){
-		setParameter(this);
-		parameters.put('operation', 'map');
-		render_map_toolbar();
-	});
-    $('._delete').unbind().each(function(item){
-        $(this).on("click", function(){
-            if (validation_spo()) 
-                return;
-            parameters.put($(this).attr("id"), $(this).exp());
-            var view = 'subject_view';
-            if (parameters.get(':s') != undefined && parameters.get(':p') != undefined && parameters.get(':o') == undefined) {
-                view = 'object_view';
-            }
-            ajax_create(new SemanticExpression().remove(':s', ':p', ':o', ':r') + "&view=" + view);
-            clear();
-        });
-    });
-	
-	
+	setupRefineControls();
     $('._equal').unbind().each(function(item){
         $(this).on("click", function(){
-            parameters.put('B', $('.SELECTED'));
+
+			parameters.put('B', $('.SELECTED'));
+
+            
             if (parameters.get('operation') == 'union') {
-                ajax_create(new SemanticExpression('A').union('B'));
+                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
             }
-            else if (parameters.get('operation') == 'intersection') 
-                ajax_create(new SemanticExpression('A').intersection('B'));
-            else if (parameters.get('operation') == 'difference') 
-                ajax_create(new SemanticExpression('A').difference('B'));
+            else if (parameters.get('operation') == 'intersect') 
+                XPAIR.currentOperation = new SemanticExpression('A').intersection('B').expression;
+            else if (parameters.get('operation') == 'diff') 
+                XPAIR.currentOperation = new SemanticExpression('A').difference('B').expression;
 			else if (parameters.get('operation') == 'pivot') {
-				ajax_create(new SemanticExpression('A').pivot('B'));
-			} else if (parameters.get('operation') == 'refine') {
-				ajax_create(new SemanticExpression('A').refine());
+				XPAIR.currentOperation = new SemanticExpression('A').pivot('B').expression;				
+			}else if (parameters.get('operation') == 'union') {
+                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
+			}else if (parameters.get('operation') == 'refine') {
+				XPAIR.currentOperation = new SemanticExpression('A').refine().expression;
 			} else if (parameters.get('operation') == 'group') {
-				ajax_create(new SemanticExpression('A').group('B'));
+				XPAIR.currentOperation = new SemanticExpression('A').group('B').expression;
 			} else if (parameters.get('operation') == 'rank') {
-				ajax_create(new SemanticExpression('A').rank());
+				XPAIR.currentOperation = new SemanticExpression('A').rank('B').expression;
 			} else if (parameters.get('operation') == 'map') {
-				ajax_create(new SemanticExpression('A').map());
+				XPAIR.currentOperation = new SemanticExpression('A').map('B').expression;
 			} else if (parameters.get('operation') == 'merge') {
-				ajax_create(new SemanticExpression('A').merge('B'))
-			}
+				XPAIR.currentOperation = new SemanticExpression('A').merge('B').expression
+			} else if (parameters.get('operation') == 'flatten') {
+				XPAIR.currentOperation = new SemanticExpression('A').flatten().expression;
+			}			
             else {//spo
                 if (validation_spo()) 
                     return;
@@ -298,10 +240,13 @@ function cmd_set(){
                     view = 'object_view';
                 }
                 
-                ajax_create(new SemanticExpression().spo(':s', ':p', ':o', ':r') + "&view=" + view);
+                XPAIR.calculate(new SemanticExpression().spo(':s', ':p', ':o', ':r') + "&view=" + view);
                 
             }
-            clear();
+			
+			if(XPAIR.currentOperation.execute("json")){
+				clear();
+			}            
         });
     });
     $('._sum').unbind().each(function(item){
@@ -320,31 +265,34 @@ function validation_set(){
     return false;
 }
 
-//Validates a spo command. S, P or O must be defined for this operation be success executed.
-function validation_spo(){
-    if ((!parameters.get(':s') && !parameters.get(':p') && !parameters.get(':o'))) {
-        alert('Parameter S, P or O must be defined.')
-        return true;
-    }
-    return false;
-}
 
 function clear(){
-	var paramsArray = ['A', 'B', 'S', 'P', 'O'];
+	var paramsArray = ['A', 'B', 'S', 'P', 'O', "relation"];
     //Remove all CSS added to which resource selected.
     for (var index in paramsArray){
         removeCSS(paramsArray[index]);
     }
 	$("#params_div").hide();
     removeCSS('SELECTED');
+	removeCSS('active');
     parameters = new Hashtable();
-    
+	for(var i in XPAIR.currentSession.allProjections()){
+
+		XPAIR.currentSession.allProjections()[i].clear();
+	}
+	$('[type=radio]').prop('checked', false);
+	var projections = XPAIR.currentSession.allProjections();
+	for(var i in projections){
+		projections[i].getAdapter().clear();
+	}
+	XPAIR.currentOperation = null;
 }
 
 function removeCSS(item){
     $('.' + item).removeClass(item);
 }
 var projection_map = new Hashtable();
+
 function project(set_id, relation) {
 	if (projection_map.get(set_id) !== null) {
 		if(projection_map.get(set_id).get(relation) !== null) {
@@ -354,46 +302,65 @@ function project(set_id, relation) {
 				var item_to_be_projected = projection.keys()[i];
 				tree.set_text(item_to_be_projected, projection.get(item_to_be_projected));
 			}
+			return;
 		}
-	}
-	
-	if(relation === "ID") {
-		var $tree = $("#"+set_id).find("._items_area");
-		$($tree.jstree().get_json($tree, {
-		  flat: true
-		}))
-		.each(function(index, value) {
-		  var node = $tree.jstree().get_json(this.id);
-		  console.log(node);
-		  $tree.jstree().set_text(node.id, node.data.item);
-		});
-	}
-	$.ajax({
-		type: "GET",
-		url: "/session/project?set=" + set_id + "&relation="+relation,
-		data_type: "script",
-		success: function(data, status, jqrequest) {
-			
-		}
-	});
+	} else {
+		if(relation === "ID") {
+			var $tree = $("#"+set_id).find("._items_area");
+			$($tree.jstree().get_json($tree, {
+			  flat: true
+			}))
+			.each(function(index, value) {
+			  var node = $tree.jstree().get_json(this.id);
+			  console.log(node);
+			  $tree.jstree().set_text(node.id, node.data.item);
+			});
+		} else {
+			ajax_request("/session/project?set=" + set_id + "&relation="+relation);
+		}	
+	} 	
 }
 
 function ajax_keyword_search() {
+	
 	var inputValues = $("#seachbykeyword").val()
-	var keywords_url = "/session/search?"
+	
+
 	if (inputValues === '') {
+		$("#seachbykeyword").fadeOut(50).promise().done(function () {
+	        $(this).toggleClass("blink-class").fadeIn(50);
+	    });
+
+		alert("Please, type one or more keywords!");
 		return this;
 	} else {
-		var valuesArray = inputValues.split(' ')
-		for (var index in valuesArray){
-			keywords_url += "keywords[]=" + valuesArray[index] + "&&"
+		$("#seachbykeyword").removeClass("blink-class").fadeIn(50);		
+		var valuesArray = inputValues.split(' ');
+		if($(".SELECTED").hasClass("set")){
+			var refine = new Refine(new Load($(".SELECTED").attr("id")));
+			refine.setFilter("keyword_match");
+			refine.setFilterParams({keywords: [valuesArray]});
+			refine.execute("json");
+		} else{
+			var keywords_url = "/session/search.json?"
+			for (var index in valuesArray){
+				keywords_url += "keywords[]=" + valuesArray[index] + "&&"
+			}
+			XPAIR.AjaxHelper.get(keywords_url, "json", function(data){
+				var xset = new XPAIR.Xset(data.set);
+				xset.setIntention("Search('"+ valuesArray + "')");
+
+				var xsetAdapter = new XPAIR.adapters.JstreeAdapter(xset);
+				var proj = new XPAIR.projections.Jstree(xsetAdapter);
+				proj.init();
+
+			});			
 		}
 	}
-	ajax_request(keywords_url)
 }
 
 function ajax_select() {
-	var inputValues = $(".SELECTED").attr("resource")
+	var inputValues = $(".SELECTED").attr("item")
 	var keywords_url = "/session/select?"
 	if (inputValues === '') {
 		return this;
@@ -423,7 +390,7 @@ function cmd_semantic(){
             method: 'get'
         });
         
-        ajax_create(new SemanticExpression().go($F('seachbykeyword')));
+        XPAIR.calculate(new SemanticExpression().go($F('seachbykeyword')));
         ajax_update('listenabledrepositories', '/repository/listenabledrepositories');
     };
 	
@@ -433,10 +400,10 @@ function cmd_semantic(){
     
     $('id_form_keyword').onsubmit = function(){
         if ($F('seachbykeyword').indexOf('http://') != -1) 
-            ajax_create(new SemanticExpression().go($F('seachbykeyword')));
+            XPAIR.calculate(new SemanticExpression().go($F('seachbykeyword')));
         else 
         
-            ajax_create(new SemanticExpression().search($F('seachbykeyword')));
+            XPAIR.calculate(new SemanticExpression().search($F('seachbykeyword')));
         return false;
     };
     
@@ -461,195 +428,189 @@ function cmd_semantic(){
     });
 }
 
-function pivot(set_view, isForward, isPath) {
-	var setExpr = "Xset.load('" + set_view.attr("id").replace("#", "%23") + "')";
-	var pivotExpr = "";
-	if (isForward) {
-		pivotExpr = ".pivot_forward(";
-	}else {
-		pivotExpr = ".pivot_backward(";
-	}
-
-
-	if (isPath) {
-		pivotExpr += get_path_expr();
-	} else {
-		pivotExpr += get_multiple_relations_expr();
-	}
-	pivotExpr += ")";
-	console.log("PIVOT EXPR: " + setExpr+pivotExpr)
-	ajax_create(setExpr+pivotExpr);
-}
-
-function get_path_expr() {
-	var path_expr = "[[";
-	$(".SELECTED").each(function(){
-		path_expr += "'" + $(this).attr("resource") + "',"
-		
-	});
-	path_expr += "]]";
-	console.log("PATH EXPRESSION: " + path_expr);
-	return path_expr;
-}
-
-function get_multiple_relations_expr() {
-	var multiple_relations_expr = "[";
-	$(".SELECTED").each(function(){
-		multiple_relations_expr += "'" + $(this).attr("resource") + "',"
-		
-	});
-	multiple_relations_expr += "]";
-	console.log("MULTIPLE RELATIONS EXPRESSION: " + multiple_relations_expr);
-	return multiple_relations_expr;	
-}
-
 ///////////////////////////////////// SemanticExpression Class ////////////////////
 function SemanticExpression(param) {
-	var inputSet = parameters.get(param)
-    if (param != undefined) {
-        this.expression = "Xset.load('" + $(inputSet).attr("id").replace("#", "%23") + "')";
-    }	
+
+	var operationInput = parameters.get(param);
+	var inputExpression = "";
+
+	var selectExpressionsHash = new Hashtable();
+	if(parameters.get("level") > 1){
+
+		this.expression = new Expression(operationInput.first().parents("._WINDOW").attr("exp"));
+	} else {
+		
+		if (operationInput.length > 0) {
+			this.expression = XPAIR.generateExpressionFromSelection(operationInput);
+			
+		} else {
+			alert("You must select at least one item/set in the exploration view!");
+		}
+		
+		
+	}
+		
+	
+	console.log("INPUT EXPRESSION: " + this.expression);	
+};
+
+SemanticExpression.prototype.flatten = function(){
+	this.expression = new Flatten(this.expression);
+    return this;
 };
 
 SemanticExpression.prototype.union = function(param){
-    var a = parameters.get(param);
-    if (a == undefined) 
+    var setsToUnite = parameters.get(param);
+    if (setsToUnite == undefined) 
         return this;
     //The parameter could be only one element or several.
-    if (Object.prototype.toString.call(a) === '[object Array]') {
-        this.expression += a.map(function(x){
-            return '.union(' + $(x).attr('exp') + ')';
-        }).join('');
+
+    if (!(Object.prototype.toString.call(setsToUnite) === '[object Array]')) {
+		setsToUnite = [setsToUnite];
     }
-    else {
-		
-        this.expression += '.union(' + a.attr('exp') + ')';
-		alert(this.expression);
-    }
-    return this;
-}
-SemanticExpression.prototype.intersection = function(param) {
-    var a = parameters.get(param);
-    if (a == undefined) 
-        return this;
-    //The parameter could be only one element or several.
-    if (Object.prototype.toString.call(a) === '[object Array]') {
-		
-        this.expression += a.map(function(inputElem){
-			return '.intersect(' + $(inputElem).attr("exp") + ')'
-		}).join('');        
-    }
-    else {
-        this.expression += '.intersect(' + $(a).attr("exp") + ")";
-    }
+	
+    setsToUnite = setsToUnite.map(function(selectedSet){
+        return new Load($(selectedSet).attr('id'));
+    });
+	setsToUnite.push(this.expression)
+	var union = new Union(setsToUnite);
+	this.expression = union;
     return this;
 };
-SemanticExpression.prototype.difference = function(param){
-    var a = parameters.get(param);
-    if (a == undefined) 
+
+SemanticExpression.prototype.intersection = function(param) {
+    var setsToIntersect = parameters.get(param);
+    if (setsToIntersect == undefined) 
         return this;
+    //The parameter could be only one element or several.
+
+    if (!(Object.prototype.toString.call(setsToIntersect) === '[object Array]')) {
+		setsToIntersect = [setsToIntersect];
+    }
+	
+    setsToIntersect = setsToIntersect.map(function(selectedSet){ return new Load($(selectedSet).attr('id')) });	
+	setsToIntersect.push(this.expression);
+	
+	var intersection = new Intersection(setsToIntersect);
+	
+	this.expression = intersection;
+    return this;
+};
+
+SemanticExpression.prototype.difference = function(param){
+    var setsToDiff = parameters.get(param);
+    if (setsToDiff == undefined) 
+        return this;
+
+    if (!(Object.prototype.toString.call(setsToDiff) === '[object Array]')) {
+		setsToDiff = [setsToDiff];
+    }
+
+    setsToDiff = setsToDiff.map(function(selectedSet){ return new Load($(selectedSet).attr('id')) });	
+	setsToDiff.unshift(this.expression);
     //The parameter could be only one element or several.			
-    if (Object.prototype.toString.call(a) === '[object Array]') {
-        this.expression += a.map(function(x){
-            return '.diff(' + $(x).attr("exp") + ")";
-        }).join('');
-    }
-    else {
-        this.expression += '.diff(' + $(a).attr("exp") + ")";
-    }
+    this.expression = new Difference(setsToDiff);
+
     return this;
 };
 
 SemanticExpression.prototype.pivot = function(param){
-	var targetRelation = parameters.get(param);
+
+	var pivot = new Pivot(this.expression, parameters.get("level"));
+	parameters.put('relations', parameters.get('B'));
+	pivot.setParams(parameters);
+	this.expression = pivot;
 	
-	if(targetRelation === undefined)
-		return this;
-	
-	this.expression += ".pivot_forward(['" +$(targetRelation).attr('resource').replace("#", "%23")+ "'])"
 	return this;
-	
 };
 
 SemanticExpression.prototype.merge = function(param){
-	var targetSet = parameters.get(param);
-	if(targetSet === undefined)
-		return this;
-	this.expression += ".merge("+$(targetSet).attr('exp')+")";
+	// var targetSet = parameters.get(param);
+	// if(targetSet === undefined)
+	// 	return this;
+	// this.expression += ".merge("+$(targetSet).attr('exp')+")";
 	return this;
 };
 
 SemanticExpression.prototype.refine = function() {
-
-	var filter = parameters.get("filter")
-	var values = "";
-	if (filter == 'keyword_match') {
-		var inputValues = $("#keywords_input").val()
-		if (inputValues === '') {
-			return this;
-		} else {
-			var valuesArray = inputValues.split(' ')
-			for (var index in valuesArray){
-				values += "'" + valuesArray[index] + "',"				
-			}
-			values = "[["+values+"]]"			
-		}
-		this.expression += ".refine{|f| f."+ filter+"(" +values+")}"
-		
-	} else {
-
-		var valuesArray = $('.SELECTED')
-		console.log(valuesArray.toString());
-		if(valuesArray.size() > 1) {
-			for (var index =0; index < valuesArray.length; index++){
-				values += "'" + $(valuesArray[index]).attr("resource").replace("#", "%23") + "'"	
-				if(index < valuesArray.length - 1) {
-					values += ",";
-				}
-			}
-			values = "["+values+"]"			
-		} else {
-			console.log(valuesArray);
-			values = "'"+$(valuesArray).attr("resource").replace("#", "%23")+"'"
-		}
-		var relation = parameters.get("relation").attr('resource').replace("#", "%23")
-		this.expression += ".refine{|f| f."+ filter+"('"+relation+"', " + values + ")}"
-	}	
-	return this;
 	
-};
-
-SemanticExpression.prototype.group = function() {
-	var relation = parameters.get("relation").attr('resource').replace("#", "%23");
-	if (relation === '') {
+	if(parameters.get("FacetedRefine")){
+		this.expression = XPAIR.currentOperation;
+		if(parameters.containsKey('connector')){
+			this.expression.setConnector(parameters.get('connector'))			
+		}
+		
+		console.log("Refine");
+		console.log(this.expression);
 		return this;
 	}
-	
-	this.expression += ".group('"+relation+"')"
+	var refine = new Refine(this.expression);
+	var filter = parameters.get("filter");
+
+	var values = "";
+	if (filter == 'keyword_match') {
+
+		var inputValues = $("#seachbykeyword").val()
+
+		var valuesArray = inputValues.split(' ');			
+
+		parameters.put('values', valuesArray);
+
+		
+	} else {
+		parameters.put("values", $('.SELECTED'));
+	}
+	refine.setParams(parameters);	
+	this.expression = refine;
 	return this;	
 };
 
-SemanticExpression.prototype.rank = function() {
-	var ranking_function = parameters.get("ranking_function");
-	this.expression += ".rank"
-	if(ranking_function == 'image_count') {
-		var target_set = parameters.get('target_set');
-		this.expression += "{|ranking_function| ranking_function.each_image_count("+$(target_set).attr("exp")+")}"
-		
-	}	
+SemanticExpression.prototype.group = function(param) {
+
+	var group = new Group(this.expression, parameters.get("level"));
+	
+	if (parameters.containsKey(param)){
+		parameters.put('relations', parameters.get(param));
+	}
+	group.setParams(parameters);
+	this.expression = group;
+	return this;	
+};
+
+SemanticExpression.prototype.rank = function(param) {
+	var rank = new Rank(this.expression);
+	if(parameters.containsKey(param)){
+		parameters.put("relations", parameters.get(param))
+	}
+	
+	rank.setParams(parameters);
+
+	this.expression = rank;
 	return this;
 };
-SemanticExpression.prototype.map = function(){	
-	var map_function = parameters.get('map_function');
-	var inputSetExp = this.expression;
-	this.expression += ".map{|map_function|"
-	if (map_function === 'domain_count'){
-		var target_set = parameters.get('target_set')
-		this.expression += "map_function.domain_count("+  $(target_set).attr("exp") + ".merge(" +inputSetExp +"))"
-	} else {
-		this.expression += "map_function." + map_function
-	}
-	this.expression += "}"
+SemanticExpression.prototype.map = function(param){	
+	var mapFunction = parameters.get('mapFunction');
+	var map = new Map(this.expression, parameters.get("level"));
+	var mapViewParams = parameters.get(param);
+	var functionParams = [];
+	mapViewParams.each(function(){
+		var paramExp = ""
+		if($(this).hasClass("set")){
+			paramExp = $(this).attr("exp")
+		} else if($(this).attr("item_type") == "Relation"){
+			paramExp = "Relation.new('"+$(this).attr("item")+"')"
+		} else if($(this).attr("item_type") == "Item"){
+			paramExp = "Item.new('"+$(this).attr("item")+"')"
+		} else if($(this).attr("item_type") == "Xpair::Literal"){
+			paramExp = "Xpair::Literal.new('"+$(this).attr("item")+"')"
+		}
+		functionParams.push(paramExp);
+		
+	});
+	
+	map.setFunctionParams(functionParams);
+	map.setFunction(mapFunction);
+	this.expression = map;
 	return this;
 };
 

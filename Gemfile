@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.3'
 # Use jdbcsqlite3 as the database for Active Record
+gem 'pry'
 
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5.0'
@@ -18,9 +19,11 @@ gem 'jquery-rails'
 
 gem 'jquery-ui-rails'
 
-gem 'linkeddata'
+gem 'rdf', '2.1.0'
 
-gem 'sparql-client'
+gem 'linkeddata', '2.0.0'
+
+gem 'sparql-client', '2.0.1'
 
 gem 'xpair'
 
