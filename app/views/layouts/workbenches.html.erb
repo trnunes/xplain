@@ -1,0 +1,14 @@
+<div class = "workbenchs">
+    <div class = "workbenchcommands">
+        <div class ="workbenchtool _createworkbench" >
+            <span class="workbenchtool">CREATE NEW<span class="tip">Create new workbench.</span></span>
+        </div>
+		<% if session[:application].workbenchs.length > 1  %>
+	        <div class="workbenchtool _removeworkbench">
+	            <span class="workbenchtool">REMOVE CURRENT<span class="tip">Remove current workbench.</span></span>
+	        </div>		
+		<% end %>
+    </div> 
+	<%= render :partial => 'workbench_index' %>
+	<%= render :partial => '/openid/openid_info' %>
+</div>

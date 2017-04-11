@@ -1,0 +1,4 @@
+
+XPAIR.table = function(setJson){
+	
+}

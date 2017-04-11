@@ -1,0 +1,92 @@
+<div class ='windowheader _NO_MINIMIZE'>
+    <div class="windowtitle">
+        <font id="size" style='font-size:11px;font-weight:normal'>
+            
+        </font>		
+    </div>
+    <div class=' winoperations '>        
+	 
+		
+		 <div class ='_hide'>
+                       <div>
+                        <span class="tool"> &nbsp;<span class="tip">Minimize the window.</span></span></div>
+        </div>
+        <div class ='_show'>
+           <div>
+                        <span class="tool"> &nbsp;<span class="tip">Maximize the window.</span></span></div>
+        </div>
+        <div class ='_remove'>
+            X
+        </div>
+        &nbsp;
+    </div>
+    &nbsp;
+	<div class="btn-group" style="margin-left: 36px">
+		<button type="button"  id="A" exp="A" operation="refine" class="_refine operation btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">
+		P</button>
+	  <ul class="dropdown-menu" >
+	       <li class="dropdown-submenu">
+	         <a class="test" tabindex="-1" >Select Level<span class="caret"></span></a>
+	         <ul id = "select_levels_list" class="dropdown-menu levels_list">				 
+	           <li>
+				<div class="radio">
+				  <label><input type="radio" name="filterradio" class="param" param="filter" param_value="equals" value="1">Level 1</label>
+				</div>	           	
+	           </li>
+	         </ul>
+	       </li>
+		   <li class="dropdown-submenu">
+			   <a id="project_button" class="test" tabindex="-1" >Project</a>
+			</li>		   
+	     </ul>
+	</div>
+
+	<div class="btn-group">
+		<button type="button"  id="A" exp="A" operation="refine" class="_refine operation btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">
+			F</button>
+	  <ul class="dropdown-menu">
+	       <li><a id="facetedRefine" tabindex="-1" >Faceted Refine</a></li>
+	       <li class="dropdown-submenu">
+	         <a class="test" tabindex="-1" >Select Filter <span class="caret"></span></a>
+	         <ul class="dropdown-menu">				 
+	           <li>
+				<div class="radio">
+				  <label><input type="radio" name="filterradio" class="param" param="filter" param_value="equals">Equals</label>
+				</div>	           	
+	           </li>
+	           <li>
+				<div class="radio">
+				  <label><input type="radio" name="filterradio" class="param" param="filter" param_value="keyword_match">Keyword Match</label>
+				</div>	           	
+	           </li>
+	           <li>
+				<div class="radio">
+				  <label><input type="radio" name="filterradio" class="param" param="filter" param_value="contains_one">Contains</label>
+				</div>	           	
+	           </li>			   
+	         </ul>
+	       </li>
+		   <li class="dropdown-submenu">
+			   <a class="test" tabindex="-1" >Select Relation<span class="caret"></span></a>
+			   <ul class="dropdown-menu">
+		     		<li>
+			   			<div class="radio keep_opened">
+			   			  <label><input type="radio" name="connector" class="param" param="connector" param_value="AND" checked>AND</label>
+			   			</div>
+			   		</li>
+		     		<li>
+			   			<div class="radio">
+			   			  <label><input type="radio" name="connector" class="param" param="connector" param_value="OR" >OR</label>
+			   			</div>			
+			   		</li>
+				</ul>
+			</li>		   
+	     </ul>
+	</div>		
+	
+</div>
+<div class ='windowheader _NO_MINIMIZE' id='resname'>
+	<div class="windowtitle"> 	
+	    <div id="intention"></div>
+	</div> &nbsp;	
+</div>
