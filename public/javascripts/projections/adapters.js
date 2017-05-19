@@ -243,7 +243,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 			}
 		}
 		
-		if (item_node.type == "Relation"){
+		if (item_node.type == "SchemaRelation"){
 			item_node.li_attr.inverse = item.inverse
 		}else if ((item.type == "Xpair::Literal") && item.datatype ){
 			item_node.data.datatype = item.datatype;

@@ -79,7 +79,7 @@ module Wxpair
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), 2010]     
     end
     # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
-    papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
+    # papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
     # server = RDFDataServer.new(papers_graph, method: "get", results_limit: 5000, items_limit: 25, use_select: false)
     
 
@@ -88,12 +88,25 @@ module Wxpair
     Explorable.use_cache(true)
     server = RDFDataServer.new(papers_graph, results_limit: 10000, items_limit: 500, use_select: false)
     # server.label_property = RDF::RDFS.label.to_s
-    s = Xset.new do |s|
-      s.id = 'default'
-      s.server = server
-    end
+    s = Xset.new('default', '') 
+    s.server = server
+    
     
     s.save
+    
+    test_set = Xset.new('test_set', '')
+    test_set.add_item Entity.new("_:paper1")
+    test_set.add_item Entity.new("_:p2")
+    test_set.add_item Entity.new("_:p3")
+    test_set.add_item Entity.new("_:p4")
+    test_set.add_item Entity.new("_:p5")
+    test_set.add_item Entity.new("_:p6")
+    test_set.add_item Entity.new("_:p7")
+    test_set.add_item Entity.new("_:p8")
+    test_set.add_item Entity.new("_:p9")
+    test_set.add_item Entity.new("_:p10")
+    test_set.server = server
+    test_set.save
 
 
   end

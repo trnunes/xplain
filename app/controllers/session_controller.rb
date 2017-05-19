@@ -28,26 +28,18 @@ class SessionController < ApplicationController
   
   def execute
 
-    @page = 1
+    @group_page = 1
+    @items_page = 1
     start = Time.now
     begin
       @resourceset = eval(params[:exp])
     rescue Exception => e
       puts e.backtrace
     end
-    if params[:render_relations].nil?
-      @render_relations = false
-    else
-      @render_relations = eval(params[:render_relations])
-    end    
     # binding.pry
-    @resourceset.paginate(20)
+    @resourceset.index.paginate_items(20)
     @resourceset.save
     @session.add_set(@resourceset)
-
-    if(params[:exp].include?("group"))
-      @render_relations = true;
-    end
     
     respond_to do |format|
       format.js
@@ -96,13 +88,14 @@ class SessionController < ApplicationController
 
     if(@resourceset.nil?)
       server = Xset.load('default').server
-      @resourceset = Xset.new do |s|
-        server.relations.each do |relation|
-          s << relation
-        end
-        s.server = server
+      @resourceset = Xset.new("all_relations", "relations") 
+
+      server.relations.each do |relation|
+        @resourceset.add_item relation
       end
-      @resourceset.paginate(20)
+      @resourceset.server = server
+
+      @resourceset.indexpaginate_items(20)
       @resourceset.id = "all_relations"
       @session.add_set(@resourceset)
     end
@@ -119,16 +112,19 @@ class SessionController < ApplicationController
   def all_types
     @page = 1
     @resourceset = Xset.load("all_types")
+    @items_page = 1
+    @group_page = 1
     
     if(@resourceset.nil?)
       server = Xset.load('default').server
-      @resourceset = Xset.new do |s|
-        server.types.each do |relation|
-          s << relation
-        end
-        s.server = server
+      
+      @resourceset = Xset.new("all_types", "types")
+      server.types.each do |item|
+        @resourceset.add_item item
       end
-      @resourceset.paginate(20)
+      @resourceset.server = server
+
+      @resourceset.index.paginate_items(20)
       @resourceset.id = "all_types"
       @session.add_set(@resourceset)
     end
@@ -143,16 +139,17 @@ class SessionController < ApplicationController
   end
   
   def search
+    @items_page = 1
+    @group_page = 1
     server = Xset.load('default').server
     keywords = params[:keywords]
-    @resourceset = Xset.new do |s|
-      # server.search(keywords).each do |item|
-      server.blaze_graph_search(keywords).each do |item|
-        s << item     
-      end
-      s.server = server
+    @resourceset = Xset.new(SecureRandom.uuid, "search(\"#{keywords.inspect}\")")
+    server.search(keywords).each do |item|
+    # server.blaze_graph_search(keywords).each do |item|
+      @resourceset.add_item item     
     end
-    @resourceset.paginate(20)
+    @resourceset.server = server
+    @resourceset.index.paginate_items(20)
     @page = 1
     @session.add_set(@resourceset)
     respond_to do |format|
@@ -198,14 +195,16 @@ class SessionController < ApplicationController
     server = Xset.load('default').server
     type = Type.new(params[:type])
     type.add_server(server)
+    @items_page = 1
+    @group_page = 1
     
-    @resourceset = Xset.new do |s|      
-      s.extension = type.instances.map{|i| [i, {}]}.to_h
-      s.server = server
-    end
+    @resourceset = Xset.new('instances', "pivot(select(type), \"typeOf\")")
+    @resourceset.index.indexed_items = type.instances
+    @resourceset.server = server
+
 
     # binding.pry
-    @resourceset.paginate(20)
+    @resourceset.index.paginate_items(20)
     # binding.pry
     @page = 1
     @session.add_set(@resourceset)
@@ -325,65 +324,81 @@ class SessionController < ApplicationController
   
   def generate_jbuilder(xset)
     # binding.pry
+    @parents_by_item
     json = Jbuilder.new do |set|
       set.set do
       	set.id xset.id
         set.title xset.title
-        set.pages_count xset.count_pages
+        # set.pages_count xset.count_pages
       	set.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?  
       	set.intention xset.expression
-      	set.size xset.size
-        set.levels xset.count_levels
-        set.generates = Jbuilder.new do |generated_set_json|
-          generated_set_json.array!(xset.generates) do |generated_set|
-            generated_set_json.id = generated_set.id
-          end
-        end
-      	set.extension build_extension(xset.each_image(page: @page), xset)
+      	set.size xset.each_item.size
+      	set.extension build_subtree(xset.index, Jbuilder.new, xset)
       end
     end
+
     json.target!
   end
   
-  def build_extension(images, xset, subset="")
-    extension = []    
+  def build_subtree(parent, json, xset)
+
+    to_jbuilder(json, parent.indexing_item, xset)  unless(parent.indexing_item == 'root')
+    
+    if(parent.children(@group_page).empty?)
       
-    # binding.pry
-    Jbuilder.new do |json|
-
-      json.array!(images) do |item|
-
-        # binding.pry
-        if(item.is_a? Xsubset)
-          # binding.pry
-          to_jbuilder(json, item.key, xset, item.id)
-          # binding.pry
-          json.children Jbuilder.new do |image_json|            
-            image_json.array!(item.keys) do |key|
-              relations = item[key]
-        	  	to_jbuilder(image_json, key, xset, item.id)
-              if(relations.is_a? Xsubset)
-                json.children build_extension(relations.extension, xset, relations.id)
-              else
-                json.children Jbuilder.new do |relations_json|
-                  relations_json.array!(relations) do |relation|
-                    to_jbuilder(relations_json, relation, xset, item.id)
-                  end
-                end
-              end            
-            end            
-          end
-          # binding.pry
-        else
-          to_jbuilder(json, item, xset, subset)
+        json.array!(parent.indexed_items) do |item|
+          to_jbuilder(json, item, xset)
         end
-        
+      
+    else
+      json.children Jbuilder.new do |child_json|
+        child_json.array!(parent.indexed_items(@items_page)) do |child|
+          build_subtree(child, child_json, xset)
+        end
       end
     end
+    json
   end
   
+  # def build_extension(images, xset, subset="")
+  #   extension = []
+  #
+  #   # binding.pry
+  #   Jbuilder.new do |json|
+  #
+  #     json.array!(images) do |item|
+  #
+  #       # binding.pry
+  #       if(item.is_a? Xsubset)
+  #         # binding.pry
+  #         to_jbuilder(json, item.key, xset, item.id)
+  #         # binding.pry
+  #         json.children Jbuilder.new do |image_json|
+  #           image_json.array!(item.keys) do |key|
+  #             relations = item[key]
+  #             to_jbuilder(image_json, key, xset, item.id)
+  #             if(relations.is_a? Xsubset)
+  #               json.children build_extension(relations.extension, xset, relations.id)
+  #             else
+  #               json.children Jbuilder.new do |relations_json|
+  #                 relations_json.array!(relations) do |relation|
+  #                   to_jbuilder(relations_json, relation, xset, item.id)
+  #                 end
+  #               end
+  #             end
+  #           end
+  #         end
+  #         # binding.pry
+  #       else
+  #         to_jbuilder(json, item, xset, subset)
+  #       end
+  #
+  #     end
+  #   end
+  # end
+  
   def to_jbuilder(json, item, xset, subset_id= "")
-  	if(item.is_a?(Entity) || item.is_a?(Relation)|| item.is_a?(Type))
+  	if(item.is_a?(Entity) || item.is_a?(SchemaRelation)|| item.is_a?(ComputedRelation) || item.is_a?(Type))
 
 	  	json.id item.id
       if item.text.nil?
@@ -393,7 +408,7 @@ class SessionController < ApplicationController
       end
 			
 			json.type item.class.to_s
-			json.inverse item.inverse if item.is_a?(Relation)	
+			json.inverse item.inverse if item.is_a?(SchemaRelation)	
 		else
 			json.id item.to_s
       # binding.pry
