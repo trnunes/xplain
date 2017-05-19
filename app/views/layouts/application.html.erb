@@ -20,7 +20,8 @@
     <script type="text/javascript" src="/javascripts/explorator_helper.js"></script>
     <script type="text/javascript" src="/javascripts/explorator_controller.js"></script>
 	<script type="text/javascript" src="/javascripts/projections/jstree.js"></script>
-		<script type="text/javascript" src="/javascripts/projections/adapters.js"></script>
+	<script type="text/javascript" src="/javascripts/projections/adapters.js"></script>
+	<script type="text/javascript" src="/javascripts/projections/facetTree.js"></script>
 	<script src="/javascripts/jquery-contextmenu-common-master/dist/fixed/jquery.contextMenu.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.19.1/vis.min.js"></script>
 
@@ -39,15 +40,26 @@
 
 
 
-<div id="graph_area" style="position: fixed; top: 77px; width: 100%; height: 100%">	
-
-</div>
 <div id="exploration_area">	
-
+<%= render :partial => 'session/graph_div'%>
 
 
 </div>
 <%= render :partial => 'session/set_template'%>
+
+<div id="node-popUp">
+  <span id="node-operation">node</span> <br>
+  <table style="margin:auto;">
+    <tr>
+      <td>id</td><td><input id="node-id" value="new value" /></td>
+    </tr>
+    <tr>
+      <td>label</td><td><input id="node-label" value="new value" /></td>
+    </tr>
+  </table>
+  <input type="button" value="save" id="node-saveButton" />
+  <input type="button" value="cancel" id="node-cancelButton" />
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -68,6 +80,77 @@
     <!-- /.modal-dialog -->
 </div>
 
+<div class="modal fade" id="facetModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                 <h4 class="modal-title">Filters</h4>
+				 <div class="filters" style="float:left">
+				 </div>
+            </div>
+			<div style="
+			    display: inline-block;
+			">
+				<div class="facet_values" style="
+				    float: left;
+				    width: 50%;
+					padding: 8px;
+				">
+					<div>
+						<label><input type="radio" class="param" param="connector" param_value="AND" name="conn">AND</label>
+						<label><input type="radio" class="param" param="connector" param_value="OR" name="conn">OR</label>
+						<div>
+							<label><button id = "eql_comp" class="param filter_comparator" param="operator" param_value="=" name="conn">=</button></label>
+							<label><button class="param filter_comparator" param="operator" param_value="<" name="conn">< </button></label>
+							<label><button class="param filter_comparator" param="operator" param_value="<=" name="conn">&le;</button></label>
+							<label><button class="param filter_comparator" param="operator" param_value=">" name="conn">></button></label>
+							<label><button class="param filter_comparator" param="operator" param_value=">=" name="conn">&ge;</button></label>
+						</div>
+
+					</div>
+					<div id="values" style="position: relative;">
+						<div style="width: 335px; margin: 0;top: 0px;">
+							<div class="pagination_div">
+							    <ul class="pagination">
+							      <li class="page-item">
+							        <a class="page-link" aria-label="Previous">
+							          <span aria-hidden="true">&laquo;</span>
+							          <span class="sr-only">Previous</span>
+							        </a>
+							      </li>
+							      <li class="page-item"><a id="current_page" class="page-link" >1</a></li>
+							      <li class="page-item">
+							        <a class="page-link" aria-label="Next">
+							          <span aria-hidden="true">&raquo;</span>
+							          <span class="sr-only">Next</span>
+							        </a>
+							      </li>
+							    </ul>
+							</div>
+						</div>
+						<ul id="values_list" style ="
+													    list-style: none;
+													    margin: 0px;
+													    padding-left: 5px;
+													">
+						</ul>
+					</div>
+				</div>
+				
+				<div style="float: left; width: 50%">
+		            <div class="modal-body">
+					</div>
+				</div>
+
+			</div>
+			
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
 
     <div class="navbar navbar-inverse navbar-fixed-bottom" >
         <div class="container">
@@ -77,11 +160,14 @@
 </body>
 
 <script>
-$("._WINDOW").hide();
-init_all();
+$(document).ready(function(){
+	$("._WINDOW").hide();
+	init_all();
 
 
-$("#loadwindow").hide();
+	$("#loadwindow").hide();
+	
+})
 
 </script>
 </html>

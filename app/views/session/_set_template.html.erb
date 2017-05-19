@@ -1,4 +1,4 @@
-<div class="_WINDOW window _draggable select set" id = "setViewTemplate" exp = "">
+<div class="_WINDOW window _draggable hideable select set" id = "setViewTemplate" exp = "">
      <div class= "tranparentpanel" >
         <img src = "/images/loading_big.gif" style="position:absolute; top : 50%;left:43% "/>
     </div>
@@ -17,9 +17,25 @@
 	<div class = "_items_area">
 	</div>
 	
-	<ul class="pagination">
-	  <li><a >1</a></li>
-	</ul>
+	<div style="position: absolute; width: 335px; margin: 0;bottom: 0px;">
+		<div class="pagination_div">
+		    <ul class="pagination">
+		      <li class="page-item">
+		        <a class="page-link" aria-label="Previous">
+		          <span aria-hidden="true">&laquo;</span>
+		          <span class="sr-only">Previous</span>
+		        </a>
+		      </li>
+		      <li class="page-item"><a class="page-link" >1</a></li>
+		      <li class="page-item">
+		        <a class="page-link" aria-label="Next">
+		          <span aria-hidden="true">&raquo;</span>
+		          <span class="sr-only">Next</span>
+		        </a>
+		      </li>
+		    </ul>
+		</div>
+	</div>
 	
 </div>
 

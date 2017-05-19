@@ -159,7 +159,7 @@ function register_landmark_handlers(){
 		XPAIR.AjaxHelper.get("/session/all_relations.json", "json", function(data){
 			var xset = new XPAIR.Xset(data.set);
 			xset.setIntention("All Relations");
-			debugger;
+			
 			var xsetAdapter = new XPAIR.adapters.JstreeAdapter(xset);
 			
 			new XPAIR.projections.Jstree(xsetAdapter).init();
@@ -198,7 +198,22 @@ function cmd_set(){
 	
 	
 	$('.param').click(function(){
-		parameters.put($(this).attr("param"), $(this).attr("param_value"));
+		if($(this).is(':checkbox')){
+			if($(this).is(':checked')){
+				parameters.put($(this).attr("param"), $(this).attr("param_value"));
+			} else {
+				parameters.remove($(this).attr("param"));
+			}
+		} else {
+			parameters.put($(this).attr("param"), $(this).attr("param_value"));
+		}
+		if($(this).hasClass('filter_comparator')){
+			debugger;
+			$('.filter_comparator_active').removeClass('filter_comparator_active');
+			$(this).addClass('filter_comparator_active');
+			
+		}
+		
 	});	
 	setupRefineControls();
     $('._equal').unbind().each(function(item){
@@ -285,6 +300,8 @@ function clear(){
 	for(var i in projections){
 		projections[i].getAdapter().clear();
 	}
+	$("#facetModal .facet_values ul").empty();
+	$('.filter_comparator_active').removeClass('filter_comparator_active')
 	XPAIR.currentOperation = null;
 }
 
@@ -517,7 +534,18 @@ SemanticExpression.prototype.difference = function(param){
 SemanticExpression.prototype.pivot = function(param){
 
 	var pivot = new Pivot(this.expression, parameters.get("level"));
-	parameters.put('relations', parameters.get('B'));
+	debugger;
+	if(!parameters.containsKey('relations')){
+		parameters.put('relations', []);
+		for(var i = 0; i < parameters.get('B').length; i++){
+			var relation = {item: $(parameters.get('B')[i]).attr("item")}
+			if($(parameters.get('B')[i]).attr("inverse")){
+				relation.inverse = eval($(parameters.get('B')[i]).attr("inverse"));
+			}
+			
+			parameters.get('relations').push(relation);
+		}
+	}
 	pivot.setParams(parameters);
 	this.expression = pivot;
 	
@@ -566,7 +594,7 @@ SemanticExpression.prototype.refine = function() {
 };
 
 SemanticExpression.prototype.group = function(param) {
-
+	
 	var group = new Group(this.expression, parameters.get("level"));
 	
 	if (parameters.containsKey(param)){

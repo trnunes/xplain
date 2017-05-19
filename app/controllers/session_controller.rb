@@ -1,5 +1,19 @@
 class SessionController < ApplicationController
+  before_action :load_current_session
   
+  def load_current_session
+    # binding.pry
+    # reset_session
+    session[:current_session] = nil
+    if(session[:current_session].nil?)
+      exp_session = Xpair::Session.new
+      exp_session.save
+      session[:current_session] = exp_session.id
+    end
+      
+    
+    @session = Xpair::Session.load(session[:current_session])
+  end
     
   def index
     s = Xset.new do |s|
@@ -8,20 +22,28 @@ class SessionController < ApplicationController
     end
     s.save
     @sets = [s]
+
+
   end
   
   def execute
 
     @page = 1
-
-    @resourceset = eval(params[:exp])
+    start = Time.now
+    begin
+      @resourceset = eval(params[:exp])
+    rescue Exception => e
+      puts e.backtrace
+    end
     if params[:render_relations].nil?
       @render_relations = false
     else
       @render_relations = eval(params[:render_relations])
     end    
-    @resourceset.paginate(10)
+    # binding.pry
+    @resourceset.paginate(20)
     @resourceset.save
+    @session.add_set(@resourceset)
 
     if(params[:exp].include?("group"))
       @render_relations = true;
@@ -31,7 +53,10 @@ class SessionController < ApplicationController
       format.js
       format.json {render :json => generate_jbuilder(@resourceset)}
       format.any {render :text => "SUCCESSFUL"}
-    end    
+      finish = Time.now 
+      puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"
+    end   
+
   end
   
   
@@ -54,19 +79,35 @@ class SessionController < ApplicationController
     
   end
   
+  
+  def update_title
+    @resourceset = Xset.load(params[:set])
+    @resourceset.title = Xset.load(params[:title])
+    @resourceset.save
+    respond_to do |format|
+      format.any {render :text => "SUCCESSFUL"}
+    end    
+    
+  end
+  
   def all_relations
     @page = 1
-    server = Xset.load('default').server
-    @resourceset = Xset.new do |s|
-      server.relations.each do |relation|
-        s << relation
+    @resourceset = Xset.load("all_relations")
+
+    if(@resourceset.nil?)
+      server = Xset.load('default').server
+      @resourceset = Xset.new do |s|
+        server.relations.each do |relation|
+          s << relation
+        end
+        s.server = server
       end
-      s.server = server
+      @resourceset.paginate(20)
+      @resourceset.id = "all_relations"
+      @session.add_set(@resourceset)
     end
-
-
-
-    @resourceset.paginate(10)
+    # binding.pry
+    @resourceset.title = "All Relations"
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -77,15 +118,21 @@ class SessionController < ApplicationController
   
   def all_types
     @page = 1
-    server = Xset.load('default').server
-    @resourceset = Xset.new do |s|
-      server.types.each do |relation|
-        s << relation
+    @resourceset = Xset.load("all_types")
+    
+    if(@resourceset.nil?)
+      server = Xset.load('default').server
+      @resourceset = Xset.new do |s|
+        server.types.each do |relation|
+          s << relation
+        end
+        s.server = server
       end
-      s.server = server
+      @resourceset.paginate(20)
+      @resourceset.id = "all_types"
+      @session.add_set(@resourceset)
     end
-    @resourceset.paginate(10)
-    @resourceset.save
+    @resourceset.title = "Types"
     respond_to do |format|
       if @resourceset.save
 
@@ -99,13 +146,15 @@ class SessionController < ApplicationController
     server = Xset.load('default').server
     keywords = params[:keywords]
     @resourceset = Xset.new do |s|
-      server.search(keywords).each do |item|      
+      # server.search(keywords).each do |item|
+      server.blaze_graph_search(keywords).each do |item|
         s << item     
       end
       s.server = server
     end
     @resourceset.paginate(20)
     @page = 1
+    @session.add_set(@resourceset)
     respond_to do |format|
       if @resourceset.save
 
@@ -125,11 +174,9 @@ class SessionController < ApplicationController
 
     end
     @resourceset = selection_set.pivot
-    @resourceset.each do |item|
-
-    end
     
     @resourceset.save
+    @session.add_set(@resourceset)
     respond_to do |format|
       format.js
     end     
@@ -147,23 +194,34 @@ class SessionController < ApplicationController
   end
   
   def instances
+    start = Time.now
     server = Xset.load('default').server
     type = Type.new(params[:type])
     type.add_server(server)
     
     @resourceset = Xset.new do |s|      
-      s.extension = type.instances.map{|i| [i, i]}.to_h
+      s.extension = type.instances.map{|i| [i, {}]}.to_h
       s.server = server
     end
+
+    # binding.pry
     @resourceset.paginate(20)
+    # binding.pry
     @page = 1
+    @session.add_set(@resourceset)
+    finish = Time.now
+
+    puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"     
+    # binding.pry
+    
     respond_to do |format|
       if @resourceset.save
 
         format.js { render :file => "/session/execute.js.erb" }
         format.json {render :json => generate_jbuilder(@resourceset)}
+        # binding.pry
       end
-    end     
+    end
   end
   
   def select
@@ -171,6 +229,7 @@ class SessionController < ApplicationController
     selected_items = params[:selected];
     selected_items.each{}
     @resourceset = selection_set.select(selected_items.map{})
+    @session.add_set(@resourceset)
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -187,13 +246,14 @@ class SessionController < ApplicationController
       format.js
     end    
   end
+  
   def trace_subset_domains
     set = Xset.load(params[:set])
     subset = set.get_subset(params[:subset])
 
 
     domains = set.trace_domains(subset)
-
+    # binding.pry
 
     target_json = Jbuilder.new do |json|
       json.array!(domains) do |local_domains|
@@ -215,11 +275,11 @@ class SessionController < ApplicationController
   
   def trace_item_domains
     set = Xset.load(params[:set])
-    item = set.get_item(params[:item])
-
+    item = set.get_item(params[:item].gsub(" ", "%20"))
+    # binding.pry
     domains = set.trace_domains(item)
 
-
+    # binding.pry
     target_json = Jbuilder.new do |json|
       json.array!(domains) do |local_domains|
         json.id local_domains.first
@@ -264,12 +324,14 @@ class SessionController < ApplicationController
   end
   
   def generate_jbuilder(xset)
+    # binding.pry
     json = Jbuilder.new do |set|
       set.set do
       	set.id xset.id
+        set.title xset.title
         set.pages_count xset.count_pages
       	set.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?  
-      	set.intention xset.intention
+      	set.intention xset.expression
       	set.size xset.size
         set.levels xset.count_levels
         set.generates = Jbuilder.new do |generated_set_json|
@@ -277,9 +339,6 @@ class SessionController < ApplicationController
             generated_set_json.id = generated_set.id
           end
         end
-
-
-
       	set.extension build_extension(xset.each_image(page: @page), xset)
       end
     end
@@ -289,14 +348,16 @@ class SessionController < ApplicationController
   def build_extension(images, xset, subset="")
     extension = []    
       
-
+    # binding.pry
     Jbuilder.new do |json|
 
       json.array!(images) do |item|
 
-
+        # binding.pry
         if(item.is_a? Xsubset)
+          # binding.pry
           to_jbuilder(json, item.key, xset, item.id)
+          # binding.pry
           json.children Jbuilder.new do |image_json|            
             image_json.array!(item.keys) do |key|
               relations = item[key]
@@ -312,6 +373,7 @@ class SessionController < ApplicationController
               end            
             end            
           end
+          # binding.pry
         else
           to_jbuilder(json, item, xset, subset)
         end
@@ -334,7 +396,7 @@ class SessionController < ApplicationController
 			json.inverse item.inverse if item.is_a?(Relation)	
 		else
 			json.id item.to_s
-
+      # binding.pry
 			json.text item.text
 			json.type "Xpair::Literal"
       if item.has_datatype?

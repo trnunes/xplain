@@ -29,7 +29,7 @@ XPAIR.projections.JstreePath = function(adapter){
 	this.adapter.setProjection(this);
 	this.path = [];
 
-	this.$div = null;
+	this.$div = $(".modal-body");
 	var this_projection = this;
 	this.init = function(){
 		if ($("#myModal .modal-body").hasClass("jstree")) {
@@ -63,7 +63,6 @@ XPAIR.projections.JstreePath = function(adapter){
 				'show_only_matches' : true
 			},
 		});
-		this_projection.$div = $(".modal-body");
 
 	},
 	
@@ -71,45 +70,60 @@ XPAIR.projections.JstreePath = function(adapter){
 		this.init();
 		this.registerBehavior();
 		$("#myModal").modal("show");
+		parameters.put('relations', []);
 	},
 	
 	
 	this.registerBehavior = function(){
 		this.$div.on("activate_node.jstree", function(e, data){			
 			var relation = data.node;			
-			var relations = [];
+			var relations = parameters.get('relations');
 			var parent_relation = this_projection.$div.jstree().get_parent(relation);
 
 			if(this_projection.$div.jstree().is_checked(relation)) {
-				if(this_projection.path.indexOf(relation.id) < 0){
-					this_projection.path.unshift(relation.id);
+				var checked_nodes = this_projection.$div.jstree().get_checked(true);
+				checked_nodes.splice(checked_nodes.indexOf(relation.id));
+				this_projection.$div.jstree().uncheck_node(checked_nodes);
+				
+				//removing previsously checked relations
+				//TODO correct this to accept multiple selection also.
+				this_projection.removeRelation(relations, checked_nodes);
+				
+				if(relations.indexOf(relation.li_attr.item) < 0){
+					relations.unshift(relation.li_attr);
 					while(parent_relation !== "#") {
 						this_projection.$div.jstree().check_node(parent_relation);
 						var parent_relation_node = this_projection.$div.jstree().get_node(parent_relation)
-						this_projection.path.unshift(parent_relation_node.id);
+						relations.unshift(parent_relation_node.li_attr);
 						parent_relation = this_projection.$div.jstree().get_parent(parent_relation);
 					}
 					var parent_relation = this_projection.$div.jstree().get_parent(relation);
 					var is_child = !(parent_relation === "#");
 					if(is_child){
-						this_projection.isPath = true;
-					}else{
-						this_projection.isPath = false;
+						parameters.put('path', true);
 					}				
 				}
-			} else {
-				if(this_projection.path.indexOf(relation.id) >= 0){
-					this_projection.path.splice(this_projection.path.indexOf(relation.id));
-				}				
 			}
 			
-			parameters.put("B", []);
-			parameters.put("isPath", this_projection.isPath)
-
-			for(var i in this_projection.path){
-				parameters.get("B").push($("#"+this_projection.path[i]));
-			}			
 		});
+		
+		this.removeRelation = function(relationsArray, relationsToRemove){
+			for(var i in relationsArray){
+				var index = this.getRelationIndex(relationsToRemove, relationsArray[i])
+				if(index >= 0){
+					relationsArray.splice(i);
+				}
+			}
+		},
+		
+		this.getRelationIndex = function(relationsArray, relationToSearch){
+			for(var i in relationsArray){
+				if((relationsArray[i].item == relationToSearch.item) && (relationsArray[i].inverse == relationToSearch.inverse)){
+					return i;
+				}
+			}
+			return -1;
+		},
 		
 		this.$div.on("before_open.jstree", function (e, data) {
 			e.stopPropagation();
@@ -127,7 +141,10 @@ XPAIR.projections.JstreePath = function(adapter){
 			if(checked_relation.children.length == 0) {
 				
 				var pivot = new Pivot(new Load(checked_relation.data.resultedFrom));
-				pivot.addRelation(checked_relation.data.item);				
+				pivot.addRelation(checked_relation.data);
+				pivot.limit = 20;
+				debugger;
+				pivot.isForward = !checked_relation.li_attr.inverse;
 				var findRelations = new FindRelations(pivot);
 				
 				findRelations.execute("json", function(data){
@@ -137,18 +154,7 @@ XPAIR.projections.JstreePath = function(adapter){
 					var relations_hash = new Hashtable();
 					var items = data.set.extension;
 					for(var i in items){
-						var item = items[i];
-						for(j in item.relations){
-							var relation = item.relations[j];
-							relation.values = [];
-							if (!relations_hash.containsKey(relation.id)){
-								relations_hash.put(relation.id, relation);
-							}
-						}
-					}
-					var relations = relations_hash.values();
-					for(var i in relations){
-						jsTreeAdapter.addItem(checked_relation, relations[i]);
+						jsTreeAdapter.addItem(checked_relation, items[i]);
 					}
 				});
 			}
@@ -237,6 +243,7 @@ XPAIR.projections.Jstree = function(adapter){
 			target_node_id = data.node.li_attr.item;
 			target_node_set = data.node.li_attr.set
 			union = new Union([new Load(setId), new Select(new Load(target_node_set), [target_node_id])]);
+			union.inplace = true;
 			union.execute("json", function(data){console.log(data)});
 			
 		});
@@ -304,7 +311,7 @@ XPAIR.projections.Jstree = function(adapter){
 		var facetRelationNode = $tree.jstree().get_node(facetRelationId);
 		
 		var currentSetId = this_projection.xset.getId();
-		debugger;
+		
 
 			var path = []
 			var facet = null;
@@ -485,6 +492,29 @@ XPAIR.projections.Jstree = function(adapter){
 	},
 	
 	this.createTreeContextMenu = function($treeView){
+		var selectSubmenu = {
+            "separator_before": false,
+            "separator_after": false,
+            "label": "Select",
+            "action": function (obj) { 
+				var unionsHash = new Hashtable();
+				$(".SELECTED").each(function(){
+					
+					var selected_node = $treeView.jstree().get_node($(this).attr("id"));
+					if(!unionsHash.containsKey(selected_node.li_attr.set)){
+						unionsHash.put(selected_node.li_attr.set, []);
+					}
+					unionsHash.get(selected_node.li_attr.set).push(selected_node.li_attr.item)									
+				});
+				var selectOperations = []
+				for (var i in unionsHash.keys()) {
+					var setId = unionsHash.keys()[i];
+					var selection = unionsHash.get(setId);
+					selectOperations.push(new Select(new Load(setId), selection))
+				}
+				new Union(selectOperations).execute("json");
+            }
+        };
 		
 		return {         
 		    "items": function($node) {
@@ -508,29 +538,7 @@ XPAIR.projections.Jstree = function(adapter){
 			        return {
 						"Trace": common_menu_options,
 
-			            "Select": {
-			                "separator_before": false,
-			                "separator_after": false,
-			                "label": "Select",
-			                "action": function (obj) { 
-								var unionsHash = new Hashtable();
-								$(".SELECTED").each(function(){
-									
-									var selected_node = $treeView.jstree().get_node($(this).attr("id"));
-									if(!unionsHash.containsKey(selected_node.li_attr.set)){
-										unionsHash.put(selected_node.li_attr.set, []);
-									}
-									unionsHash.get(selected_node.li_attr.set).push(selected_node.li_attr.item)									
-								});
-								var selectOperations = []
-								for (var i in unionsHash.keys()) {
-									var setId = unionsHash.keys()[i];
-									var selection = unionsHash.get(setId);
-									selectOperations.push(new Select(new Load(setId), selection))
-								}
-								new Union(selectOperations).execute("json");
-			                }
-			            },
+			            "Select": selectSubmenu,
 			            "Rename": {
 			                "separator_before": false,
 			                "separator_after": false,
@@ -560,6 +568,7 @@ XPAIR.projections.Jstree = function(adapter){
 			        };			
 				} else if(node.type === "Relation"){
 					return {
+						"Select": selectSubmenu,
 						"Trace": common_menu_options,
 			            "Applied To": {
 			                "separator_before": false,
@@ -576,10 +585,12 @@ XPAIR.projections.Jstree = function(adapter){
 			                "action": function (obj) { 
 								alert("Range");
 			                }
-			            }
+			            },
+						
 					};
 				} else if(node.type === "Type"){
 					return  {
+						"Select": selectSubmenu,
 						"Trace": common_menu_options,
 			            "instances": {
 			                "separator_before": false,
@@ -588,7 +599,7 @@ XPAIR.projections.Jstree = function(adapter){
 			                "action": function (obj) { 
 								console.log($node.data.item);
 								var type = $node.text;
-								debugger;
+								
 								var f = function(data){
 									var xset = new XPAIR.Xset(data.set);
 									xset.setIntention("Instances of: " + type);
@@ -609,6 +620,7 @@ XPAIR.projections.Jstree = function(adapter){
 					};
 				} else if(node.type === "Xpair::Literal"){
 					return  {
+						"Select": selectSubmenu,
 						"Trace": common_menu_options,
 					};
 				}
@@ -625,20 +637,12 @@ XPAIR.projections.Jstree = function(adapter){
 
 				var items = data.set.extension;
 				var relations_hash = new Hashtable();
-				for(i in items){
-					var item = items[i];
-					for(j in item.relations){
-						var relation = item.relations[j];
-						relation.values = [];
-						if(!relations_hash.containsKey(relation.id + relation.inverse)){
-							relations_hash.put(relation.id+relation.inverse, relation);
-						}
-					}					
-				}
-				data.set.extension = relations_hash.values();
-
 				var jstreeAdapter = new XPAIR.adapters.JstreeAdapter(new XPAIR.Xset(data.set));
 				var jstreePath = new XPAIR.projections.JstreePath(jstreeAdapter);
+				for(i in items){
+					jstreeAdapter.addItem("#", items[i]);
+				}
+				
 				jstreePath.show();
 			});			
 		}
@@ -714,6 +718,15 @@ XPAIR.projections.Jstree = function(adapter){
 						}
 					}
 				}
+				
+				// var expFunction = new Select(new Load(set_id), [item_to_open_id]);
+				//
+				// if(node_to_open.li_attr.type == "Relation"){
+				// 	new Pivot()
+				// } else {
+				//
+				// }
+				
 				var item_to_open_id = node_to_open.li_attr.item;
 				var set_id = node_to_open.li_attr.set;
 

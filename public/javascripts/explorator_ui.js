@@ -21,6 +21,7 @@ jQuery.fn.extend({
 		$(this).css("top", "75px");
 		$(this).find(".btn-group").show();
 		$(this).css("width", "350px");
+		$(this).css("height", "400px");
 		$(this).appendTo("#exploration_area");
     	
     }, //maximize a window
@@ -30,9 +31,11 @@ jQuery.fn.extend({
         //removes the element from the model and replace the interface with a new one.
 
         $(this).fadeOut();
+		XPAIR.graph.removeSet($(this).attr("id"));
+		
     }, //close an element
     ui_close: function(item){
-		debugger;
+		
 
     	$(this).find("._items_area").jstree().destroy();
 		$(this).remove();
@@ -73,6 +76,10 @@ function register_modal_actions(){
 	$("#define_path").unbind().click(function(e){
 		
 		var inputParams = parameters.get("A");
+		if(!inputParams){
+			alert("Select a set in the exploration area first!");
+			return;
+		}
 		for(var i=0; i<inputParams.length; i++){
 			var setId = $(inputParams[i]).attr("id");
 			XPAIR.currentSession.getProjections(setId)[0].showPathModal()();			
@@ -80,15 +87,32 @@ function register_modal_actions(){
 
 	});
 	
+	$("#faceted_filter").unbind().click(function(e){
+		var inputParams = parameters.get("A");
+		if(!inputParams){
+			alert("Select a set in the exploration area first!");
+			return;
+		}
+		
+
+		for(var i=0; i<inputParams.length; i++){
+			var setId = $(inputParams[i]).attr("id");
+			var facetsProj = new XPAIR.projections.JstreeFacets(XPAIR.currentSession.getSet(setId));
+			facetsProj.init();
+		}
+
+	});
+	
+	
 	$("#myModal").on("hide.bs.modal", function () {
 		
-		$("#selected_path_header").nextAll().remove();
-		$("#selected_path_header").remove();
-	    $("#pivot_group .dropdown-menu").append("<li id=\"selected_path_header\" class=\"dropdown-header\">Selected Path</li>");
-
-		for(var i in parameters.get("B")){
-			$("#pivot_group .dropdown-menu").append("<li class=\"dropdown-header\">"+$(parameters.get("B")).attr("item")+"</li>");
-		}
+		// $("#selected_path_header").nextAll().remove();
+		// $("#selected_path_header").remove();
+		// 	    $("#pivot_group .dropdown-menu").append("<li id=\"selected_path_header\" class=\"dropdown-header\">Selected Path</li>");
+		//
+		// for(var i in parameters.get("relations")){
+		// 	$("#pivot_group .dropdown-menu").append("<li class=\"dropdown-header\">"+$(parameters.get("B")).attr("item")+"</li>");
+		// }
 
 	});
 	
@@ -315,13 +339,14 @@ function register_ui_window_behaviour(){
 		
         $(this).unbind().click(function(){
 			$(this).hide();
-			$(this).parents('._WINDOW').find('._show').show();
-			$(this).parents('._WINDOW').first().attr("style", "");
-            $(this).parents('._WINDOW').find("._NO_MINIMIZE").nextAll().slideToggle();
-			$(this).parents('._WINDOW').css("top", "0px");
-			$(this).parents('._WINDOW').css("width", "150px");
-			$(this).parents('._WINDOW').find(".btn-group").hide();
-			$(this).parents('._WINDOW').appendTo(".container")
+			$(this).parents('.hideable').find('._show').show();
+			$(this).parents('.hideable').first().attr("style", "");
+            $(this).parents('.hideable').find("._NO_MINIMIZE").nextAll().slideToggle();
+			$(this).parents('.hideable').css("top", "0px");
+			$(this).parents('.hideable').css("width", "150px");
+			$(this).parents('.hideable').css("height", "50px");
+			$(this).parents('.hideable').find(".btn-group").hide();
+			$(this).parents('.hideable').appendTo(".container")
 
         });
 		
@@ -329,16 +354,17 @@ function register_ui_window_behaviour(){
 	
     //Add window close behaviour to the elements with _WINDOW annotation	
     $('._remove').each(function(item){
-        $(this).click(function(){
+        $(this).click(function(e){
 
-            $(this).parents('._WINDOW').first().ui_remove();
+            $(this).parents('.hideable').first().ui_remove();
+			e.stopPropagation();
         });
     });
 	
     $('._close').each(function(item){
         $(this).click(function(){
 			
-            $(this).parents('._WINDOW').first().ui_close();
+            $(this).parents('.hideable').first().ui_close();
         });
     });	
 	
@@ -362,8 +388,17 @@ function register_ui_selection_behaviour(){
 	
     $('.select').each(function(item){
 		var that_item = this;
-		
+
         $(that_item).unbind().click(function(event){
+			
+			nodeToFocus = ""
+			if($(this).hasClass('set')){
+				nodeToFocus = $(this).attr("id");
+			} else {
+				nodeToFocus = $(this).parents('._WINDOW').attr("id");
+			}
+			
+			XPAIR.graph.selectSet(nodeToFocus);
 			$('._draggable').each(function(){
 				if ($(this).data('ui-draggable')){
 					$(this).draggable("destroy");

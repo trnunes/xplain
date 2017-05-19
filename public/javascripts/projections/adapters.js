@@ -47,7 +47,7 @@ function PageState(){
 XPAIR.adapters.JstreeAdapter = function(xset){
 	this.projection = null;
 	this.xset = xset;
-	debugger;
+	
 	this.currentPage = this.xset.getCurrentPage();
 	this.xset.addObserver(this);
 	this.pagesHash = new Hashtable();
@@ -68,7 +68,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 	this.update = function(xset, newData, event){
 		
 		if(event == "pageChange"){
-			debugger;
+			
 			var pageState = new PageState();
 			pageState.savePageState(this.projection.getDiv());
 			this.pagesHash.put(xset.getPreviousPage(), pageState);
@@ -95,12 +95,13 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 			url = "/session/trace_item_domains.json?set="+ origin_set_id+ "&item=" + $(item).attr("item")
 		}
 		XPAIR.AjaxHelper.get(url, "json", function(data){
-			
+		
 			for(var i in data) {
 				var local_domains = data[i].domains;
 				var set_id = data[i].id
 				for( var j = 0; j < local_domains.length; j++){
 					var domain_item = local_domains[j]
+					debugger;
 					if (domain_item.type == "Xsubset"){
 						$($("#" + set_id).find("[subset='"+domain_item.id+"']")).addClass("SELECTED");
 					} else {
@@ -270,8 +271,8 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 		var $tree = this.projection.getDiv();
 		var jstreeItem = this.convertItem(xsetItem, true);
 		var children = jstreeItem.children
-
-
+		debugger;
+		$tree.jstree();
 		var nodeId = $tree.jstree().create_node(parentNode, jstreeItem, "last", null, false);
 		if (this.projectionMap.get(xsetItem.id) == null){
 			this.projectionMap.put(xsetItem.id, []);

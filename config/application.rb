@@ -63,8 +63,8 @@ module Wxpair
       graph << [RDF::URI("_:p3"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal2")]
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal1")]
       
-      graph << [RDF::URI("_:journal1"),  RDF::URI("_:releaseYear"), RDF::Literal("2005")]
-      graph << [RDF::URI("_:journal2"),  RDF::URI("_:releaseYear"), "2010"]
+      graph << [RDF::URI("_:journal1"),  RDF::URI("_:releaseYear"),RDF::Literal.new(2005)]
+      graph << [RDF::URI("_:journal2"),  RDF::URI("_:releaseYear"),RDF::Literal.new(2010)]
       
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:keywords"), RDF::URI("_:k1")]
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:keywords"), RDF::URI("_:k2")]
@@ -79,14 +79,14 @@ module Wxpair
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), 2010]     
     end
     # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
-    # papers_graph = "http://opencitations.net/sparql"
+    papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
     # server = RDFDataServer.new(papers_graph, method: "get", results_limit: 5000, items_limit: 25, use_select: false)
     
-    
-    papers_graph = "http://data.semanticweb.org/sparql"
 
+    # papers_graph = "http://us.patents.aksw.org/sparql"
 
-    server = RDFDataServer.new(papers_graph, results_limit: 7000, items_limit: 500, use_select: false)
+    Explorable.use_cache(true)
+    server = RDFDataServer.new(papers_graph, results_limit: 10000, items_limit: 500, use_select: false)
     # server.label_property = RDF::RDFS.label.to_s
     s = Xset.new do |s|
       s.id = 'default'
@@ -94,6 +94,7 @@ module Wxpair
     end
     
     s.save
+
 
   end
 end

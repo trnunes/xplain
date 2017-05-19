@@ -1,7 +1,7 @@
 
 <ul>
 	<%relations.each do |relation, values|%>
-		<li data-jstree='{"type":"<%=icon_type(relation)%>"}' class = "<%=relation.class.to_s%>"resource="<%=relation.to_s%>"><%=relation.to_s%><%= " of" if relation.inverse%>								
+		<li data-jstree='{"type":"<%=icon_type(relation)%>"}' class = "<%=relation.class.to_s%>"resource="<%=relation.to_s%>"><%=relation.to_s%>								
 			<ul>
 				<%values.each do |v|%>
 					<li data-jstree = '{"type":"<%=icon_type(v)%>"}' set = "<%=resourceset.id%>" class = "<%=v.class.to_s%>" resource="<%=v.to_s%>"><%=v.to_s%></li>

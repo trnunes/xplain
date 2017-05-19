@@ -19,6 +19,47 @@ XPAIR = {
 		$view.addClass(parameterId);
 		$(".SELECTED").removeClass("SELECTED");
 	},
+	convertParamValues: function(value){
+		expr = "";
+		debugger;
+		if(value.constructor.name == "Array"){
+
+			 expr += value.map(function(v){ 
+				 
+				if(v.constructor.name == "Array"){
+					return "[" + XPAIR.convertParamValues(v) + "]";
+				} else {
+					return XPAIR.getItemExpression(v);
+				}
+			}).join(", ");
+
+		} else{
+			expr = XPAIR.getItemExpression(value);
+		}
+		return expr;
+	},
+	
+	getItemExpression: function(paramValue){
+		var expr = "";
+		
+		if(paramValue.constructor.name == "Operation"){
+			
+			expr = paramValue.getExpression(); 
+			
+		} else if((typeof paramValue == "object")) {
+
+			if(paramValue.item_type == "Xpair::Literal" && paramValue.datatype){
+				expr = paramValue.item_type + ".new('"+paramValue.item.replace("#", "%23")+"','"+ paramValue.datatype.replace("#", "%23") +"')";
+			} else{
+				expr = paramValue.item_type + ".new('"+paramValue.item.replace("#", "%23")+"')";
+			}
+			
+		} else {
+			expr = "'" + paramValue + "'";
+		}
+		return expr;
+		
+	},
 	getOperation: function(operationName, setId){
 		if (operationName === "pivot"){
 
@@ -113,40 +154,15 @@ Operation.prototype.generateParamsExpr = function(){
 		
 
 		paramsExpr += paramName + ": ";
-		if (!(paramValues.constructor.name == "Array")){
-			paramValues = [paramValues]
-		}
 		
-		paramsExpr += paramValues.map(function(values){
-			var values_array = values;
-			if (!(values.constructor.name == "Array")){
-				values_array = [values]
-			}
-			var valuesExpr = values_array.map(function(value){
-				var expr = "";
-				
-				if(value.constructor.name == "Operation"){
-					expr = value.getExpression(); 
-				} else if((typeof value == "object")) {
-				
-					expr = value.item_type + ".new('"+value.item.replace("#", "%23")+"')";
-				} else {
-					expr = "'" + value + "'";
-				}
-				return expr;
-			}).join(",");
-			debugger;
-			if (values.constructor.name == "Array"){
-				valuesExpr = "["+valuesExpr+"]"
-			}
-			return valuesExpr;
-		}).join(",");
+		paramsExpr += XPAIR.convertParamValues(paramValues)
 		paramsExpr += ",";
 
 	});
 	return paramsExpr;
 	
 };
+
 
 Operation.prototype.execute = function(format, successFunction){
 	var that = this
@@ -168,58 +184,44 @@ Operation.prototype.execute = function(format, successFunction){
 	
 };
 
-
 function Pivot(inputFunction, level) {	
 	if(!level){
 		var level = 1;
 	}
 	this.level = level;
+	this.isPath = false;
 	this.path = [];
 	this.relations = [];
 	this.isForward = true;
+	this.limit = null;
 	this.inputFunction = inputFunction;
 
 	this.setParams = function(params){
-		var isPath = false;
-		if(params.containsKey("isPath")){
-			isPath = params.get("isPath");
+
+		if(params.containsKey("path")){
+			this.isPath = true;
 		}
 		
 		if(params.containsKey("relations")){
 			var targetRelations = params.get("relations");
-			
-			// if (targetRelations.length == 1) {
-			// 	var parentRelations = [];
-			//
-			// 	parentRelations = $(targetRelations[0]).parents("[item_type=Relation].SELECTED");
-			//
-			// 	parentRelations.push(targetRelations[0]);
-			// 	targetRelations = parentRelations
-			// 	isPath = true;
-			//
-			// }
-			
 		}
 		
 
 		for(var i=0; i< targetRelations.length; i++) {
-			var relationId = $(targetRelations[i]).attr("item");
-			if(isPath){
-				this.appendToPath(relationId);
-			} else {
-				this.addRelation(relationId);		
+			this.addRelation(targetRelations[i]);
+			if(targetRelations[i].inverse){
+				this.backward(true);
 			}
-		}
-	
-		if (targetRelations.length == 1 && eval($(targetRelations[0]).attr("inverse"))){
-			this.backward(true);
 		}
 	},
 	this.backward = function(boolean){
 		this.isForward = !boolean;
 	},
-	this.appendToPath = function(relationId){
-		this.path.push(relationId);
+	this.appendToPath = function(relation){
+		this.path.push(relation);
+		if(relation.inverse){
+			this.backward(true);
+		}
 	},
 	this.insertToPath = function(relationId){
 		this.path.unshift(relationId);
@@ -227,21 +229,42 @@ function Pivot(inputFunction, level) {
 	this.getPath = function(){
 		return this.path;
 	},
-	this.addRelation = function(relationId){
-		this.relations.push(relationId);
+	this.addRelation = function(relation){
+		this.relations.push(relation);
+		if(relation.inverse){
+			this.backward(true);
+		}
 	},
-	this.containsRelation = function(relationId){
-		return (this.path.indexOf(relationId) >= 0 || this.relations.indexOf(relationId) >= 0);
+	this.containsRelation = function(relation){
+		return (this.getPathRelationIndex(relation) >= 0 || this.getMultipleRelationIndex(relation) >= 0);
 	},
 	
-	this.removeRelation = function(relationId){
-		var index = this.path.indexOf(relationId);
+	this.getPathRelationIndex = function(relation){
+		for(var i in this.path){
+			if((this.path[i].item == relation.item) && (this.path[i].inverse == relation.inverse)){
+				return i;
+			}	
+		}
+		return -1;
+	},
+	
+	this.getMultipleRelationIndex = function(relation){
+		for(var i in this.relations){
+			if((this.relations[i].item == relation.item) && (this.relations[i].inverse == relation.inverse)){
+				return i;
+			}
+		}
+		return -1
+	},
+	
+	this.removeRelation = function(relation){
+		var index = this.getPathRelationIndex(relation);
 		if (index >= 0){
 			for(var i = 0; i <= index; i++) {
 				this.path.splice(i);
 			}			
 		} else {
-			index = this.relations.indexOf(relationId);
+			index = this.getMultipleRelationIndex(relation);
 			this.relations.splice(index);
 		}		
 	},
@@ -272,13 +295,19 @@ function Pivot(inputFunction, level) {
 		} else {
 			relations = this.relations;
 		}		
-		for(var i in relations) {
-			relation_expr += "'" + encodeURI(relations[i]).replace(/#/g, '%23') + "',"
-		}
-		if (isPath) {
-			relation_expr = "[[" + relation_expr + "]]"
+		debugger;
+		if(relations.length > 1){
+			relation_expr = "relations: [" + relations.map(function(r){return "'" + encodeURI(r.item).replace(/#/g, '%23') + "'"}).join() + "]";
 		} else {
-			relation_expr = "[" + relation_expr + "]"
+			relation_expr = "relations: '" + encodeURI(relations[0].item).replace(/#/g, '%23') + "'";
+		}
+		
+		if (this.isPath) {
+			relation_expr += ", path: true";
+		}
+		
+		if(this.limit){
+			relation_expr += ", limit: " + this.limit
 		}
 		return relation_expr;
 	},
@@ -321,7 +350,7 @@ function Merge(inputFunction, targetFunction){
 };
 Merge.prototype = new Operation();
 
-function FindRelations(inputFunction){
+function PivotGroup(inputFunction){
 	this.inputFunction = inputFunction;
 
 	this.getExpression = function(){
@@ -344,7 +373,40 @@ function FindRelations(inputFunction){
 	}
 	
 };
+Pivot.prototype = new Operation();
+
+function FindRelations(inputFunction, direction){
+	this.inputFunction = inputFunction;
+	this.direction = direction;
+
+	this.getExpression = function(){
+		var expression = ".relations";
+		debugger;
+		if(this.direction == "forward"){
+			expression = ".forward_relations"
+		}
+		expression += "(limit: 25)"
+
+		expression = this.inputFunction.getExpression() + expression;
+		return expression;
+	},
+	this.type = function(){
+		return "Relations";
+	},
+	this.validate = function(){
+		this.clearMessages();
+		if(this.inputFunction) {
+			return this.inputFunction.validate();
+		} else {
+			return false
+		}
+		
+		return true;
+	}
+	
+};
 FindRelations.prototype = new Operation();
+
 
 function Select(inputFunction, selection){
 	this.inputFunction = inputFunction;
@@ -432,16 +494,22 @@ function Refine(inputFunction){
 		this.functionParams.connector = connector;
 	},
 	this.equals = function(relations, values){
-		this.filter = "equals";
+		var operatorValues = []
+		for(var i in values){
+			operatorValues.push(["=", values[i]]);
+		}
+		this.compare(relations, operatorValues);
+		this.filter = "equals"
+	},
+	this.compare = function(relations, restrictions){
+		this.filter = "compare";
 		if((relations.length > 0) && (relations[0].constructor.name == "Operation")){
 			this.filter = "image_equals";
 		}
 		
 		this.functionParams.relations = [relations];
-		if(values.constructor.name == "Array"){
-			values = [values]
-		}
-		this.functionParams.values = values;
+		
+		this.functionParams.restrictions = restrictions
 	},
 	this.contains = function(relations, values){
 		this.filter = "contains_one";
@@ -494,16 +562,22 @@ function FacetedSearch(inputFunction){
 	this.facets = [];
 	this.connector = "AND";
 	
-	this.addFacet = function(relation, value, connector){
+	this.addFacet = function(relation, operator, value, connector){
 		
 		var added = false;
+
 		for(var i in this.facets){
-			debugger;
+			
 			if(this.equalFacets(this.facets[i][0], relation)){
-				this.facets[i][1].push(value);
+				
+				this.facets[i][1].push([operator, value]);
+				
 				if(connector){
 					this.facets[i].push(connector);
+				} else {
+					this.facets[i].push("AND");
 				}
+				
 				
 				added = true;
 			}
@@ -511,46 +585,84 @@ function FacetedSearch(inputFunction){
 		}
 		
 		if(!added){
-			this.facets.push([relation, [value]])
+			this.facets.push([relation, [[operator, value]]])
 		}
 		
 	},
 	
-	this.equalFacets = function(facet1, facet2){
-		debugger;
-		var relationComparable;
-		var relationToRemoveComparable;
-		if(facet1.constructor.name == "Operation"){
-			relationComparable = facet1.getExpression();
+	this.toHtml = function(){
+		return this.facets.map(function(facet){
+			var html = "";
+			var restrictionStr = "";
+			relation = facet[0];
+			restrictions = facet[1];
+			
+			if(!relation.constructor.name == "Array"){
+				relation = [relation];
+			}
+			var relationStr = relation.map(function(relation){return relation.item;}).join(" &rarr; ");
+			relationStr += " "
+			restrictionStr = relationStr;
+
+			html = restrictions.map(function(restriction){
+				var restriction_div = "";
+				restriction_div += "<td><span>" + relationStr + " "+ restriction[0] + " " + restriction[1].item + "<span class='close' facet=\""+relationStr+"\" facet_value=\""+restriction[1].item+"\">x</span></span>" + "</td>";
+				return restriction_div
+			}).join(" <td class=\"filter_connector\"><span >" + facet[2] + " </span></td>");
+
+			
+			// html += restrictions.map(function(restriction){
+			// 	var restriction_div = "<div class = \"filter_div\">";
+			//
+			// 	restriction_div += "<span>" + relationStr + " "+ restriction[0] + " " + restriction[1].item; + "</span>";
+			// 	restriction_div += "	<div style=\"float: right;\">";
+			// 	restriction_div += "		 <span id='close'>x</span>"
+			// 	restriction_div += "	</div>";
+			// 	restriction_div += "</div>";
+			// 	return restriction_div
+			// }).join(" <span class=\"filter_connector\">" + facet[2] + " </span>");
+
+			return "<tr>" + html + "</tr>";
+		});
+	},
+	this.getComparable = function(facet){
+		if(facet.constructor.name == "Operation"){
+			relationComparable = facet.getExpression();
+		} else if(facet.constructor.name == "Array") {
+			relationComparable = facet.map(function(r){return r.item}).join();
 		} else {
-			relationComparable = facet1.item
+			relationComparable = facet.item
 		}
-		if(facet2.constructor.name == "Operation"){
-			relationToRemoveComparable = facet2.getExpression();
-		} else{
-			relationToRemoveComparable = facet2.item
-		}
+		return relationComparable;
+	},
+	
+	this.equalFacets = function(facet1, facet2){
 		
+		var relationComparable = this.getComparable(facet1);
+		var relationToRemoveComparable = this.getComparable(facet2);
 		return (relationComparable == relationToRemoveComparable)
 	},
 	this.setConnector = function(connector){
 		this.connector = connector;
 	},
-	this.removeFacet = function(relationToRemove, valueToRemove){
+	this.removeFacet = function(relationToRemove, operatorToRemove, valueToRemove){
 		
 		for (var i in this.facets){
 			var relation = this.facets[i][0];
-			var values = this.facets[i][1];
+			var restrictions = this.facets[i][1];
 			var index = -1
-			for(var j in values){
-				if (values[j].item == valueToRemove.item){
+			for(var j in restrictions){
+				var operator = restrictions[j][0];
+				var value = restrictions[j][1];
+				debugger;
+				if (value.item == valueToRemove.item){
 					index = j;
 				}
 			}
 
 			if((this.equalFacets(relation, relationToRemove)) && (index >= 0)){
-				values.splice(index);
-				if(values.length == 0){
+				restrictions.splice(index);
+				if(restrictions.length == 0){
 					this.facets.splice(i);
 				}
 			}	
@@ -562,9 +674,14 @@ function FacetedSearch(inputFunction){
 		
 		for(var i in this.facets){
 			var facet = this.facets[i];
+			var relation = facet[0];
+			if(relation.constructor.name != "Array"){
+				relation = [relation]
+			} 
+			
 			var refineOp = new Refine(this.inputFunction);
-
-			refineOp.equals([facet[0]], facet[1]);
+			debugger;
+			refineOp.compare(relation, [facet[1]]);
 			if(facet[2]){
 				refineOp.setConnector(facet[2]);
 			}
@@ -601,12 +718,12 @@ FacetedSearch.prototype = new Operation();
 
 function Union(functions){
 	this.inputFunction = functions;
-	
+	this.inplace = false;
 	this.getExpression = function(){
 		if(this.validate()){
 			var union = this.inputFunction[0].getExpression();
 			for(var i=1; i < this.inputFunction.length; i++) {
-				union += ".union(" +this.inputFunction[i].getExpression()+")";
+				union += ".union(" +this.inputFunction[i].getExpression()+", inplace:"+this.inplace+")";
 			}			
 		} else {
 			alert("Not Valid Expression!");
@@ -738,7 +855,8 @@ function Group(inputFunction, level){
 		if(params.containsKey("groupingFunction")){
 			this.setFunction(params.get("groupingFunction"));
 		}
-		if(this.groupFunction == "by_relation"){
+		
+		if((this.groupFunction == "by_relation") || (this.groupFunction == "by_domain")){
 			if(params.containsKey('relations')){
 				var relationsArray = params.get('relations')
 				var paramValues = [];
@@ -982,7 +1100,9 @@ XPAIR.Xset = function(data, operation){
 			if(item.type) {
 				this_set.itemsHash.put(item.id, item);
 			}
+			
 			var children = item.children || [];
+			
 			while(children.length > 0){
 				var next_children = []
 				children.forEach(function(child){ 
@@ -1003,7 +1123,7 @@ XPAIR.Xset = function(data, operation){
 	};
 	this.populateItemsHash();
 	this.getView = function(){
-		debugger;
+		
 		if (this.$view == null){
 			this.createEmptyView();
 		}
@@ -1100,17 +1220,88 @@ XPAIR.Xset = function(data, operation){
 	},
 	
 	this.init_pagination_list = function(){
-		first_page = this.$view.find(".pagination").children()[0];
-		for(var i=2; i <= this.data.pages_count; i++){
-			page_view = $(first_page).clone();
-			$(page_view).find("a").text(i);
-			this.$view.find(".pagination").append(page_view);
+		first_page = this.$view.find(".pagination").children()[1];
+		console.log(this.data.pages_count)
+		if(this.data.pages_count <= 1){
+			this.$view.find(".pagination_div").remove();
+		} else {
+			var pagesList = []
+			if(this.data.pages_count >= 5){
+				for(var i=2; i<=5; i++){
+
+					page_view = $(first_page).clone();
+					$(page_view).find("a").text(i);
+					if(i == 3){
+						$(page_view).find("a").text("...");
+					} else if(i == 4){
+						$(page_view).find("a").text(this.data.pages_count - 1);
+					} else if(i == 5){
+						$(page_view).find("a").text(this.data.pages_count);
+					}				
+					pagesList.push(page_view)
+
+				}
+
+			} else{
+				for(var i=2; i <= this.data.pages_count; i++){
+					
+					page_view = $(first_page).clone();
+					$(page_view).find("a").text(i);
+					pagesList.push(page_view);
+				}				
+			}
+			var lastPage = first_page;
+			for(var i in pagesList){
+				$(pagesList[i]).insertAfter($(lastPage))
+				lastPage = pagesList[i];
+			}
+			
+			this.$view.find(".pagination li a").click(function(e){
+				
+
+				var pageNumber;
+				var activePageText = $(this).parents('li').siblings('.pg_active').text();
+				if($(this).attr("aria-label") == "Next"){
+					pageNumber = parseInt(activePageText) + 1;
+					debugger;
+					if(parseInt(activePageText) == this_set.data.pages_count){
+						return;
+					}
+					
+					if($(this).parents("ul").find("li a").filter(function(){return $(this).text() == ""+pageNumber}).length == 0){
+						$(this_set.$view.find(".pagination li a")[1]).html(pageNumber - 1);
+						$(this_set.$view.find(".pagination li a")[2]).html(pageNumber);
+					}
+				}else if($(this).attr("aria-label") == "Previous"){
+					debugger;
+					if(parseInt(activePageText) == 1){
+						return;
+					}
+					
+					pageNumber = parseInt(activePageText) - 1
+					if(pageNumber < this_set.data.pages_count - 2){
+						$(this_set.$view.find(".pagination li a")[1]).html(pageNumber);
+						$(this_set.$view.find(".pagination li a")[2]).html(pageNumber+1);
+					}
+					
+				} else {
+					if($(this).text() != "..."){
+						activePageText = $(this).text()
+						pageNumber = parseInt(activePageText);
+					}
+				}	
+
+					
+				this_set.renderPage(pageNumber);
+				
+				
+				this_set.$view.find(".pagination li").removeClass("pg_active")
+				$(this).parents("ul").find("li a").filter(function(){return $(this).text() == ""+pageNumber}).parents('li').addClass("pg_active")
+					
+			});
+			$(this_set.$view.find(".pagination li")[1]).addClass("pg_active");
+			
 		}
-		this.$view.find(".pagination li a").click(function(e){
-			this_set.renderPage( parseInt($(this).text()));
-			this_set.$view.find(".pagination li").removeClass("pg_active")
-			$(this).parents("li").addClass("pg_active");
-		});
 
 	},
 	
@@ -1138,6 +1329,25 @@ XPAIR.Xset = function(data, operation){
 		
 
 		this.$view.find("#size").html(data.size + " Items");
+		this.$view.find("#set_title").html(data.title);
+		this.$view.find("#set_title").click(function(e){
+			e.stopPropagation();
+			this_set.$view.find("#set_title").html("<input type=\"text\" id=\"set_title_input\">");
+			this_set.$view.find("#set_title_input").attr("value", this_set.data.title)
+			this_set.$view.find("#set_title_input").bind("enterKey",function(e){
+				
+				this_set.$view.find("#set_title").html($(this).val());
+				this_set.setTitle($(this).val());
+				
+			});
+			this_set.$view.find("#set_title_input").focus()
+			this_set.$view.find("#set_title_input").keyup(function(e){
+
+			    if(e.keyCode == 13){
+			        $(this).trigger("enterKey");
+			    }
+			});
+		});
 		
 		first_level = this.$view.find(".levels_list").children()[0]
 		for(var i=1; i < data.levels; i++){
@@ -1145,12 +1355,30 @@ XPAIR.Xset = function(data, operation){
 			level_view.find("label").html("<input type=\"radio\" name=\"filterradio\" class=\"param\" param=\"filter\" param_value=\"equals\" value=\""+(i+1)+"\"> Level" + (i+1));
 			this.$view.find(".levels_list").append(level_view);
 		}
-		this.$view.find("#project_button").click(function(){
-
-
-			var relation = $(".SELECTED").attr("item");
-			this_set.project(relation);
 		
+		this.$view.find("#visualize").click(function(e){
+
+			op =  new FindRelations(new Load(this_set.getId()), "forward");
+			op.execute("json", function(data){
+				debugger;
+				this_set.$view.find("#properties").empty();
+				for(var i in data.set.extension){
+					var r = data.set.extension[i];
+					if(!r.inverse){
+						this_set.$view.find("#properties").append("<li><a class=\"v_property\" tabindex=\"-1\" >"+r.id+"</a></li>");
+					}
+					
+				}
+				
+				this_set.$view.find(".v_property").click(function(e){
+					debugger;
+					var relation = this.text
+					this_set.project(relation);
+		
+				});
+				
+			});
+			
 		});
 		this.$view.find('._show').hide();
 
@@ -1161,7 +1389,7 @@ XPAIR.Xset = function(data, operation){
 			this.$view.insertBefore($('#exploration_area').find('.set').first());
 					
 		} else {
-			$("#exploration_area").append(this.$view);	
+			this.$view.insertAfter($('#graph_view'));
 					
 		}
 
@@ -1228,6 +1456,16 @@ XPAIR.Xset = function(data, operation){
 	this.getId = function(){
 		return this.data.id;
 	},
+	this.getTitle = function(){
+		
+		return this.data.title;
+	},
+	this.setTitle = function(title){
+		XPAIR.graph.updateNodeTitle(this.data.id, title);
+		this.data.title = title;
+		XPAIR.AjaxHelper.get("/session/update_title?set="+ this.getId()+ "&title=" + title, "json");
+		return this.data.title;
+	},
 	this.getExtension = function(){
 		return this.data.extension;
 	},
@@ -1254,10 +1492,10 @@ XPAIR.Xset = function(data, operation){
 			
 			return operationsString;
 		} else {
-			if(intention){
+			if(this.intention){
 				return this.intention;
 			} else {
-				return "Xset " + XPAIR.currentSession.getSetIndex(this);
+				""
 			}
 			
 		}

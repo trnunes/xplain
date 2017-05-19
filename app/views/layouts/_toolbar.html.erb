@@ -29,9 +29,15 @@
   		<li class="dropdown-header">Ranking Function</li>
   		<li>
 			<div class="radio">
-			  <label><input type="radio" name="rankradio" class="param" param="ranking_function" param_value="by_relation">By Relations</label>
+			  <label><input type="radio" name="rankradio" class="param" param="ranking_function" param_value="by_relation">By Image</label>
 			</div>
 		</li>
+  		<li>
+			<div class="radio">
+			  <label><input type="radio" name="rankradio" class="param" param="ranking_function" param_value="by_domain">By Domain</label>
+			</div>
+		</li>
+		
   		<li>
 			<div class="radio">
 			  <label><input type="radio" class="param" param="ranking_function" param_value="alpha_rank" name="rankradio">Sort</label>
@@ -60,8 +66,14 @@
 	      <span class="caret"></span>
 	  </button>
       <ul class="dropdown-menu" role="menu">
-  		<li><li><a id="define_path" >Define Path</a></li></li>
-      </ul>	  
+  		<li><li><a id="define_path" >Choose Relations</a></li></li>
+ 		<li>
+   			<div class="radio">
+   			  <label><input type="checkbox" name="conn" class="param" param="path" param_value="true">Is path</label>
+   			</div>			
+   		</li>
+		
+      </ul>  
     </div>
 	
 	<div class="btn-group">&nbsp&nbsp</div>
@@ -76,9 +88,15 @@
   		<li class="dropdown-header">Grouping Criteria</li>
   		<li>
 			<div class="radio">
-			  <label><input type="radio" name="groupradio" class="param" param="groupingFunction" param_value="by_relation">By Relation</label>
+			  <label><input type="radio" name="groupradio" class="param" param="groupingFunction" param_value="by_relation">By Image</label>
 			</div>
 		</li>
+  		<li>
+			<div class="radio">
+			  <label><input type="radio" name="groupradio" class="param" param="groupingFunction" param_value="by_domain">By Domain</label>
+			</div>
+		</li>
+		
   		<li>
 			<div class="radio">
 			  <label><input type="radio" class="param" param="groupingFunction" param_value="cluster" name="groupradio">Clustering</label>
@@ -126,11 +144,15 @@
   	  </button>
 	  <ul class="dropdown-menu">
 	       <li>			   
+			   <a id="faceted_filter" tabindex="-1" >Choose Filters</a>
+		   </li>
+		  
+	       <li>			   
 			   <a id="facetedRefine" tabindex="-1" >Faceted Refine</a>
 		   </li>
 		   
 	       <li class="dropdown-submenu">
-	         <a class="test" tabindex="-1" >Select Filter <span class="caret"></span></a>
+	         <a class="test" tabindex="-1" >Select Operator <span class="caret"></span></a>
 	         <ul class="dropdown-menu">				 
 	           <li>
 				<div class="radio">
@@ -153,7 +175,7 @@
 			   <!-- <a class="test" tabindex="-1" >Connector<span class="caret"></span></a>
 			   <ul class="dropdown-menu"> -->
 		   		<li role="separator" class="divider"></li>
-		   		<li class="dropdown-header">Connector</li>
+		   		
 		 		<li>
 		   			<div class="radio">
 		   			  <label><input type="radio" name="conn" class="param" param="connector" param_value="AND" checked = "true" >AND</label>
