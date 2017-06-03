@@ -18,11 +18,13 @@ jQuery.fn.extend({
 		
         $(this).first().attr("style", "");
 		$(this).find("._NO_MINIMIZE").nextAll().slideToggle();
-		$(this).css("top", "75px");
+		$(this).css("top", "5px");
 		$(this).find(".btn-group").show();
 		$(this).css("width", "350px");
-		$(this).css("height", "400px");
+		$(this).css("height", "450px");
 		$(this).appendTo("#exploration_area");
+		
+
     	
     }, //maximize a window
 	
@@ -73,49 +75,35 @@ function registerToolbarBehavior(){
 }
 
 function register_modal_actions(){
-	$("#define_path").unbind().click(function(e){
-		
-		var inputParams = parameters.get("A");
-		if(!inputParams){
-			alert("Select a set in the exploration area first!");
-			return;
-		}
-		for(var i=0; i<inputParams.length; i++){
-			var setId = $(inputParams[i]).attr("id");
-			XPAIR.currentSession.getProjections(setId)[0].showPathModal()();			
-		}
-
-	});
-	
-	$("#faceted_filter").unbind().click(function(e){
-		var inputParams = parameters.get("A");
-		if(!inputParams){
-			alert("Select a set in the exploration area first!");
-			return;
-		}
-		
-
-		for(var i=0; i<inputParams.length; i++){
-			var setId = $(inputParams[i]).attr("id");
-			var facetsProj = new XPAIR.projections.JstreeFacets(XPAIR.currentSession.getSet(setId));
-			facetsProj.init();
-		}
-
-	});
 	
 	
-	$("#myModal").on("hide.bs.modal", function () {
-		
-		// $("#selected_path_header").nextAll().remove();
-		// $("#selected_path_header").remove();
-		// 	    $("#pivot_group .dropdown-menu").append("<li id=\"selected_path_header\" class=\"dropdown-header\">Selected Path</li>");
-		//
-		// for(var i in parameters.get("relations")){
-		// 	$("#pivot_group .dropdown-menu").append("<li class=\"dropdown-header\">"+$(parameters.get("B")).attr("item")+"</li>");
-		// }
 
-	});
 	
+	
+	// $("#facetModal").on("hide.bs.modal", function () {
+	// 	if ($("#facetModal .modal-body").hasClass("jstree")) {
+	// 	  $("#facetModal .modal-body").jstree("destroy");
+	// 	}
+	// 	$('#relation_input input').val('');
+	// 	$('#relation_checkbox').prop('checked', false);;
+	// 	$('#select_comparator').val('=');
+	// 	// $("#selected_path_header").nextAll().remove();
+	// 	// $("#selected_path_header").remove();
+	// 	// 	    $("#pivot_group .dropdown-menu").append("<li id=\"selected_path_header\" class=\"dropdown-header\">Selected Path</li>");
+	// 	//
+	// 	// for(var i in parameters.get("relations")){
+	// 	// 	$("#pivot_group .dropdown-menu").append("<li class=\"dropdown-header\">"+$(parameters.get("B")).attr("item")+"</li>");
+	// 	// }
+	//
+	// });
+	
+}
+
+function clearFacetModal(){
+	$('.filters').empty();
+	$("#facetModal .modal-body").hide();
+	// $("#facetModal .values_select").empty();
+	$('#relation_checkbox').prop('checked', false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////	
@@ -251,6 +239,7 @@ function register_ui_window_behaviour(){
     //         ajax_create($(this).attr("exp"));
     //     });
     // });
+
 	
     $('._refresh').each(function(item){
         $(this).on ("click", function(){
@@ -346,7 +335,13 @@ function register_ui_window_behaviour(){
 			$(this).parents('.hideable').css("width", "150px");
 			$(this).parents('.hideable').css("height", "50px");
 			$(this).parents('.hideable').find(".btn-group").hide();
-			$(this).parents('.hideable').appendTo(".container")
+			$(this).parents('.hideable').appendTo(".container");
+			debugger;
+			var xset = XPAIR.currentSession.getSet($(this).parents(".set").attr('id'));
+			
+			$("#" + xset.getId()).attr('title', xset.getTitle()).tooltip('fixTitle').show('tooltip');
+			$("#" + xset.getId()).tooltip();
+			
 
         });
 		

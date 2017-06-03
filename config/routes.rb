@@ -2,6 +2,7 @@ Rails.application.routes.draw do
 
   get 'session/execute'
   get 'session/update_title'
+  get 'session/domain'
   post 'session/execute'
   get 'session/trace_subset_domains'
   get 'session/trace_item_domains'

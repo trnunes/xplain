@@ -28,18 +28,24 @@ class SessionController < ApplicationController
   
   def execute
 
-    @group_page = 1
-    @items_page = 1
+    @group_page = params[:page].to_i
+    @group_page = 1 if(@group_page == 0)
+    @items_page = params[:page].to_i
+    @items_page = 1 if(@items_page == 0) 
+    
     start = Time.now
     begin
       @resourceset = eval(params[:exp])
     rescue Exception => e
+      puts e.message
       puts e.backtrace
+      Filtering.clear()
     end
     # binding.pry
-    @resourceset.index.paginate_items(20)
+    @resourceset.index.paginate(20)
+
     @resourceset.save
-    @session.add_set(@resourceset)
+    # binding.pry
     
     respond_to do |format|
       format.js
@@ -54,8 +60,10 @@ class SessionController < ApplicationController
   
   def render_page
     @resourceset = Xset.load(params[:set])
-    @page = params[:page].to_i
-
+    
+    @items_page = params[:page].to_i
+    @items_page = 1 if(@items_page == 0)
+    @group_page = @items_page
     respond_to do |format|
       format.js
       format.json {render :json => generate_jbuilder(@resourceset)}
@@ -87,7 +95,7 @@ class SessionController < ApplicationController
     @resourceset = Xset.load("all_relations")
 
     if(@resourceset.nil?)
-      server = Xset.load('default').server
+      server = Xset.load('default_set').server
       @resourceset = Xset.new("all_relations", "relations") 
 
       server.relations.each do |relation|
@@ -95,9 +103,9 @@ class SessionController < ApplicationController
       end
       @resourceset.server = server
 
-      @resourceset.indexpaginate_items(20)
+      @resourceset.indexpaginate(20)
       @resourceset.id = "all_relations"
-      @session.add_set(@resourceset)
+      
     end
     # binding.pry
     @resourceset.title = "All Relations"
@@ -116,7 +124,7 @@ class SessionController < ApplicationController
     @group_page = 1
     
     if(@resourceset.nil?)
-      server = Xset.load('default').server
+      server = Xset.load('default_set').server
       
       @resourceset = Xset.new("all_types", "types")
       server.types.each do |item|
@@ -124,9 +132,9 @@ class SessionController < ApplicationController
       end
       @resourceset.server = server
 
-      @resourceset.index.paginate_items(20)
+      @resourceset.index.paginate(20)
       @resourceset.id = "all_types"
-      @session.add_set(@resourceset)
+      
     end
     @resourceset.title = "Types"
     respond_to do |format|
@@ -141,17 +149,18 @@ class SessionController < ApplicationController
   def search
     @items_page = 1
     @group_page = 1
-    server = Xset.load('default').server
+    server = Xset.load('default_set').server
     keywords = params[:keywords]
     @resourceset = Xset.new(SecureRandom.uuid, "search(\"#{keywords.inspect}\")")
-    server.search(keywords).each do |item|
-    # server.blaze_graph_search(keywords).each do |item|
+    # server.search(keywords).each do |item|
+    server.blaze_graph_search(keywords).each do |item|
       @resourceset.add_item item     
     end
     @resourceset.server = server
-    @resourceset.index.paginate_items(20)
-    @page = 1
-    @session.add_set(@resourceset)
+    @resourceset.index.paginate(20)
+    Explorable.exploration_session.add_set @resourceset
+    # binding.pry
+    
     respond_to do |format|
       if @resourceset.save
 
@@ -173,7 +182,7 @@ class SessionController < ApplicationController
     @resourceset = selection_set.pivot
     
     @resourceset.save
-    @session.add_set(@resourceset)
+    
     respond_to do |format|
       format.js
     end     
@@ -192,7 +201,7 @@ class SessionController < ApplicationController
   
   def instances
     start = Time.now
-    server = Xset.load('default').server
+    server = Xset.load('default_set').server
     type = Type.new(params[:type])
     type.add_server(server)
     @items_page = 1
@@ -204,10 +213,10 @@ class SessionController < ApplicationController
 
 
     # binding.pry
-    @resourceset.index.paginate_items(20)
+    @resourceset.index.paginate(20)
     # binding.pry
     @page = 1
-    @session.add_set(@resourceset)
+    
     finish = Time.now
 
     puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"     
@@ -228,7 +237,7 @@ class SessionController < ApplicationController
     selected_items = params[:selected];
     selected_items.each{}
     @resourceset = selection_set.select(selected_items.map{})
-    @session.add_set(@resourceset)
+    
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -244,6 +253,18 @@ class SessionController < ApplicationController
     respond_to do |format|
       format.js
     end    
+  end
+  
+  def domain
+    set = Xset.load(params[:set])
+    target_json = Jbuilder.new do |json|
+      json.array!(set.each_domain) do |domain_item|
+        to_jbuilder(json, domain_item, set)
+      end
+    end.target!
+    respond_to do |format|
+      format.json {render :json => target_json}
+    end
   end
   
   def trace_subset_domains
@@ -329,33 +350,55 @@ class SessionController < ApplicationController
       set.set do
       	set.id xset.id
         set.title xset.title
-        # set.pages_count xset.count_pages
+        set.pages_count xset.index.count_pages
       	set.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?  
-      	set.intention xset.expression
+      	set.intention xset.v_expression
       	set.size xset.each_item.size
       	set.extension build_subtree(xset.index, Jbuilder.new, xset)
       end
     end
+    # binding.pry
 
     json.target!
   end
   
+  def parse_indexed_items(json, entry, xset)
+    json.array!(entry.indexed_items(@items_page).sort{|i1, i2| i1.to_s <=> i2.to_s}) do |item|
+      to_jbuilder(json, item, xset)
+    end
+  end
+  
+  def parse_children(json, entry, xset)
+    json.array!(entry.children(@group_page).sort{|i1, i2| i1.to_s <=> i2.to_s}) do |child|
+      build_subtree(child, json, xset)
+    end
+  end
+  
   def build_subtree(parent, json, xset)
 
+
     to_jbuilder(json, parent.indexing_item, xset)  unless(parent.indexing_item == 'root')
-    
+    # binding.pry
     if(parent.children(@group_page).empty?)
-      
-        json.array!(parent.indexed_items) do |item|
-          to_jbuilder(json, item, xset)
-        end
-      
-    else
-      json.children Jbuilder.new do |child_json|
-        child_json.array!(parent.indexed_items(@items_page)) do |child|
-          build_subtree(child, child_json, xset)
+      if(parent.indexing_item == 'root')
+        parse_indexed_items(json, parent, xset)
+      else
+        json.children Jbuilder.new do |child_json|
+          parse_indexed_items(child_json, parent, xset)
         end
       end
+      # binding.pry
+    else
+      
+      if(parent.indexing_item == 'root')
+        parse_children(json, parent, xset)
+      else
+        json.children Jbuilder.new do |child_json|
+          parse_children(child_json, parent, xset)
+        end
+      end
+      # binding.pry
+
     end
     json
   end
@@ -401,6 +444,7 @@ class SessionController < ApplicationController
   	if(item.is_a?(Entity) || item.is_a?(SchemaRelation)|| item.is_a?(ComputedRelation) || item.is_a?(Type))
 
 	  	json.id item.id
+      # binding.pry
       if item.text.nil?
         json.text item.id
       else
@@ -418,7 +462,7 @@ class SessionController < ApplicationController
         json.datatype item.datatype
       end
 		end
-
+    json.expression item.expression
 
     if !subset_id.empty?
       json.subset subset_id
@@ -431,7 +475,22 @@ class SessionController < ApplicationController
     end
     
   	json.set xset.id
-  	json.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?
+    if !xset.resulted_from.nil?
+      resulted_from_array = []
+      resulted_from_set = xset.resulted_from
+      
+      while(!resulted_from_set.nil?)
+        resulted_from_array.unshift(resulted_from_set.id)
+        resulted_from_set = resulted_from_set.resulted_from
+      end
+      
+    	json.resultedFrom xset.resulted_from.id
+      json.resultedFromArray Jbuilder.new do |resulted_from_json|
+        resulted_from_json.array!(resulted_from_array) do |resulted_from|
+          resulted_from_json.id resulted_from
+        end
+      end
+    end
   end
 
 end

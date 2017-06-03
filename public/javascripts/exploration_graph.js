@@ -66,6 +66,7 @@ XPAIR.graph = new function(){
 			console.log(params);
 
 			var $setWindow = $("#" + params.nodes[0] + "._WINDOW");
+			$setWindow.ui_show();
 			$setWindow.attr("top", "0px");
 			$setWindow.attr("left", "0px");
 			$setWindow.insertBefore($('#exploration_area .set').first())

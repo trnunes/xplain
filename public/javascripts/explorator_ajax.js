@@ -3,16 +3,28 @@
  */
 var loading_text="Loading ..."
 XPAIR.AjaxHelper = {
-	execute: function(expression, successFunction, format) {
+	encondeUrl: function(url){
+	    codes =        ['%25', '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26', '%3D', '%2B',  '%2C', '%2F', '%3F', '%23', '%5B', '%5D'];
+	    replacements = [ "%",   '!',   '\\*',  "'",   "\\(", "\\)", ";",    ":",  "@",    "&",  "=",   "\\+",  ",",  "/",   "\\?", "#",   "\\[",  "\\]"];
+		
+		for (var i in replacements){
+			url = url.replace(new RegExp(replacements[i], 'g'), codes[i]);
+		}
+		return url;
+	},
+	execute: function(expression, successFunction, format, page) {
 		
 		var executeOperationUrl = "/session/execute";
 		if(format){
 			executeOperationUrl += "."+format;
 		}
-		executeOperationUrl += "?exp=" + expression;
-		
+		executeOperationUrl += "?exp=" + XPAIR.AjaxHelper.encondeUrl(expression);
+		if(page){
+			executeOperationUrl += "&page=" + page;
+		}
 		XPAIR.AjaxHelper.post(executeOperationUrl, format, successFunction);
 	},
+	
 	get: function(uri, format, success_function) {
 	    $('#loadwindow').show();
 		$.ajax({

@@ -101,7 +101,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 				var set_id = data[i].id
 				for( var j = 0; j < local_domains.length; j++){
 					var domain_item = local_domains[j]
-					debugger;
+					;
 					if (domain_item.type == "Xsubset"){
 						$($("#" + set_id).find("[subset='"+domain_item.id+"']")).addClass("SELECTED");
 					} else {
@@ -271,7 +271,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 		var $tree = this.projection.getDiv();
 		var jstreeItem = this.convertItem(xsetItem, true);
 		var children = jstreeItem.children
-		debugger;
+		;
 		$tree.jstree();
 		var nodeId = $tree.jstree().create_node(parentNode, jstreeItem, "last", null, false);
 		if (this.projectionMap.get(xsetItem.id) == null){

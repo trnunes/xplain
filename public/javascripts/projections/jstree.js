@@ -44,13 +44,16 @@ XPAIR.projections.JstreePath = function(adapter){
 			},
 			"checkbox" : {
 				"keep_selected_style" : false,
-				"three_state" : false
+				"three_state" : true
 			},
 			"types" : {
 				"Entity" : {
 					"icon" : "glyphicon glyphicon-folder-close"
 				},
-				"Relation" : {
+				"SchemaRelation" : {
+					"icon" : "glyphicon glyphicon-flash"
+				},
+				"ComputedRelation" : {
 					"icon" : "glyphicon glyphicon-flash"
 				},
 				"Xpair::Literal": {
@@ -63,6 +66,9 @@ XPAIR.projections.JstreePath = function(adapter){
 				'show_only_matches' : true
 			},
 		});
+		$("#myModal").on("hide.bs.modal", function(){
+			this_projection.buildPath();
+		});
 
 	},
 	
@@ -73,45 +79,71 @@ XPAIR.projections.JstreePath = function(adapter){
 		parameters.put('relations', []);
 	},
 	
-	
-	this.registerBehavior = function(){
-		this.$div.on("activate_node.jstree", function(e, data){			
-			var relation = data.node;			
-			var relations = parameters.get('relations');
-			var parent_relation = this_projection.$div.jstree().get_parent(relation);
-
-			if(this_projection.$div.jstree().is_checked(relation)) {
-				var checked_nodes = this_projection.$div.jstree().get_checked(true);
-				checked_nodes.splice(checked_nodes.indexOf(relation.id));
-				this_projection.$div.jstree().uncheck_node(checked_nodes);
-				
-				//removing previsously checked relations
-				//TODO correct this to accept multiple selection also.
-				this_projection.removeRelation(relations, checked_nodes);
-				
-				if(relations.indexOf(relation.li_attr.item) < 0){
-					relations.unshift(relation.li_attr);
-					while(parent_relation !== "#") {
-						this_projection.$div.jstree().check_node(parent_relation);
-						var parent_relation_node = this_projection.$div.jstree().get_node(parent_relation)
-						relations.unshift(parent_relation_node.li_attr);
-						parent_relation = this_projection.$div.jstree().get_parent(parent_relation);
-					}
-					var parent_relation = this_projection.$div.jstree().get_parent(relation);
-					var is_child = !(parent_relation === "#");
-					if(is_child){
-						parameters.put('path', true);
-					}				
-				}
+	this.buildPath = function(){
+		var checked_nodes = this_projection.$div.jstree().get_checked(true);
+		that = this_projection;
+		var leafNodes = [];
+		
+		checked_nodes.forEach(function(node){
+			var firstChild = that.$div.jstree().get_node(node.children[0])
+			var isLeafNode = (node.children.length == 1 && firstChild.text == "Relations");
+			debugger;
+			if (isLeafNode){
+				leafNodes.push(node);
 			}
-			
 		});
+		var paths = []
+		leafNodes.forEach(function(leafNode){
+			debugger;
+			parent_relation = that.$div.jstree().get_parent(leafNode);
+			var path = [new Relation(leafNode.li_attr)];
+			while(parent_relation !== "#") {
+				var parent_relation_node = that.$div.jstree().get_node(parent_relation);
+				path.unshift(new Relation(parent_relation_node.li_attr));
+				parent_relation = that.$div.jstree().get_parent(parent_relation);
+			}
+			paths.push(new PathRelation(path));
+		});
+		parameters.put("relations", paths);
+	},
+	this.registerBehavior = function(){
+	// 	this.$div.on("activate_node.jstree", function(e, data){
+	// 		var relation = data.node;
+	// 		var relations = parameters.get('relations');
+	// 		var parent_relation = this_projection.$div.jstree().get_parent(relation);
+	//
+	// 		if(this_projection.$div.jstree().is_checked(relation)) {
+	// 			var checked_nodes = this_projection.$div.jstree().get_checked(true);
+	// 			checked_nodes.splice(checked_nodes.indexOf(relation.id), 1);
+	// 			this_projection.$div.jstree().uncheck_node(checked_nodes);
+	//
+	// 			//removing previsously checked relations
+	// 			//TODO correct this to accept multiple selection also.
+	// 			this_projection.removeRelation(relations, checked_nodes);
+	//
+	// 			if(relations.indexOf(relation.li_attr.item) < 0){
+	// 				relations.unshift(relation.li_attr);
+	// 				while(parent_relation !== "#") {
+	// 					this_projection.$div.jstree().check_node(parent_relation);
+	// 					var parent_relation_node = this_projection.$div.jstree().get_node(parent_relation)
+	// 					relations.unshift(parent_relation_node.li_attr);
+	// 					parent_relation = this_projection.$div.jstree().get_parent(parent_relation);
+	// 				}
+	// 				var parent_relation = this_projection.$div.jstree().get_parent(relation);
+	// 				var is_child = !(parent_relation === "#");
+	// 				if(is_child){
+	// 					parameters.put('path', true);
+	// 				}
+	// 			}
+	// 		}
+	//
+	// 	});
 		
 		this.removeRelation = function(relationsArray, relationsToRemove){
 			for(var i in relationsArray){
 				var index = this.getRelationIndex(relationsToRemove, relationsArray[i])
 				if(index >= 0){
-					relationsArray.splice(i);
+					relationsArray.splice(i, 1);
 				}
 			}
 		},
@@ -141,7 +173,7 @@ XPAIR.projections.JstreePath = function(adapter){
 			if(checked_relation.children.length == 0) {
 				
 				var pivot = new Pivot(new Load(checked_relation.data.resultedFrom));
-				pivot.addRelation(checked_relation.data);
+				pivot.addRelation(new Relation(checked_relation.li_attr));
 				pivot.limit = 20;
 				debugger;
 				pivot.isForward = !checked_relation.li_attr.inverse;
@@ -198,13 +230,15 @@ XPAIR.projections.Jstree = function(adapter){
 		      "Type" : {
 		        "icon" : "glyphicon glyphicon-folder-close"
 		      },
-		      "Relation" : {
+		      "SchemaRelation" : {
+		        "icon" : "glyphicon glyphicon-flash"
+		      },
+		      "ComputedRelation" : {
 		        "icon" : "glyphicon glyphicon-flash"
 		      },
 			  "Xpair::Literal": {
 				  "icon": "glyphicon glyphicon-asterisk"
 			  }
-	  
 		    },
 		    "plugins" : [ "types", "checkbox", "contextmenu", "search", "dnd", "state"],
 		    "search" : {
@@ -566,7 +600,7 @@ XPAIR.projections.Jstree = function(adapter){
 							
 						}
 			        };			
-				} else if(node.type === "Relation"){
+				} else if(node.type === "SchemaRelation"){
 					return {
 						"Select": selectSubmenu,
 						"Trace": common_menu_options,

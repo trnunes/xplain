@@ -79,7 +79,7 @@ module Wxpair
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), 2010]     
     end
     # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
-    # papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
+    papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
     # server = RDFDataServer.new(papers_graph, method: "get", results_limit: 5000, items_limit: 25, use_select: false)
     
 
@@ -88,10 +88,10 @@ module Wxpair
     Explorable.use_cache(true)
     server = RDFDataServer.new(papers_graph, results_limit: 10000, items_limit: 500, use_select: false)
     # server.label_property = RDF::RDFS.label.to_s
-    s = Xset.new('default', '') 
+    s = Xset.new('default_set', '') 
     s.server = server
     
-    
+    Xpair::Namespace.new("uspat", "http://us.patents.aksw.org/")
     s.save
     
     test_set = Xset.new('test_set', '')

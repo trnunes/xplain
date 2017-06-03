@@ -24,14 +24,14 @@ XPAIR = {
 		debugger;
 		if(value.constructor.name == "Array"){
 
-			 expr += value.map(function(v){ 
-				 
+			 expr += "[" + value.map(function(v){
 				if(v.constructor.name == "Array"){
 					return "[" + XPAIR.convertParamValues(v) + "]";
 				} else {
 					return XPAIR.getItemExpression(v);
 				}
 			}).join(", ");
+			expr += "]"
 
 		} else{
 			expr = XPAIR.getItemExpression(value);
@@ -42,12 +42,11 @@ XPAIR = {
 	getItemExpression: function(paramValue){
 		var expr = "";
 		
-		if(paramValue.constructor.name == "Operation"){
+		if(paramValue.getExpression){
 			
 			expr = paramValue.getExpression(); 
 			
 		} else if((typeof paramValue == "object")) {
-
 			if(paramValue.item_type == "Xpair::Literal" && paramValue.datatype){
 				expr = paramValue.item_type + ".new('"+paramValue.item.replace("#", "%23")+"','"+ paramValue.datatype.replace("#", "%23") +"')";
 			} else{
@@ -109,8 +108,57 @@ XPAIR = {
 		}else{
 			return operations[0];
 		}	
-	}
+	},
+		
 }
+
+/**
+Exploration Model Classes
+**/
+function Item(itemObj){
+	this.itemObj = itemObj;
+	this.text = itemObj.text;
+	this.id = itemObj.item
+	this.getExpression = function(){
+		debugger;
+		if(itemObj.expression){
+			return itemObj.expression;
+		}
+		var expr = itemObj.item_type + ".new(\""+ itemObj.item +"\"";
+		if(itemObj.inverse != null){
+			expr += ", " + itemObj.inverse;
+		}
+		
+		if(itemObj.datatype != null){
+			expr += ", \"" + itemObj.datatype  + "\"";
+		}
+		expr += ")";
+		return expr.replace(/#/, "%23");
+	}
+};
+
+function PathRelation(relations){
+	this.relations = relations;
+	this.id = relations.map(function(r){ return r.id}).join(" , ");
+	this.getExpression = function(){
+		var exp = this.relations.map(function(relation){return relation.getExpression()}).join(", ");
+		return "PathRelation.new(["+exp+"])";
+	}
+};
+
+
+function Relation(data){
+	this.data = data;
+	this.id = data.item;
+	this.getExpression = function(){
+		var exp = data.item_type + ".new(\"" +data.item + "\"";
+		if(data.inverse != null){
+			exp += ", " + data.inverse;
+		}		
+		exp += ")";
+		return exp;
+	}
+};
 
 //TODO generalize the inputFunction param
 function Operation(){
@@ -164,18 +212,22 @@ Operation.prototype.generateParamsExpr = function(){
 };
 
 
-Operation.prototype.execute = function(format, successFunction){
+Operation.prototype.execute = function(format, successFunction, failure){
 	var that = this
+	debugger;
 	if(this.validate()){
+		
 		XPAIR.AjaxHelper.execute(this.getExpression(), successFunction || function(data){
 			debugger;
 			var xsetAdapter = new XPAIR.adapters.JstreeAdapter(new XPAIR.Xset(data.set, that));
 			new XPAIR.projections.Jstree(xsetAdapter).init();
-		}, format);		
+		}, format, this.page);		
 	} else {
 		for (var i in this.errorMessages){
 			alert(this.errorMessages[i]);
+
 		}
+		failure();
 		this.clearMessages();
 		return false;
 	}
@@ -261,11 +313,11 @@ function Pivot(inputFunction, level) {
 		var index = this.getPathRelationIndex(relation);
 		if (index >= 0){
 			for(var i = 0; i <= index; i++) {
-				this.path.splice(i);
+				this.path.splice(i, 1);
 			}			
 		} else {
 			index = this.getMultipleRelationIndex(relation);
-			this.relations.splice(index);
+			this.relations.splice(index, 1);
 		}		
 	},
 	//private
@@ -296,20 +348,14 @@ function Pivot(inputFunction, level) {
 			relations = this.relations;
 		}		
 		debugger;
-		if(relations.length > 1){
-			relation_expr = "relations: [" + relations.map(function(r){return "'" + encodeURI(r.item).replace(/#/g, '%23') + "'"}).join() + "]";
-		} else {
-			relation_expr = "relations: '" + encodeURI(relations[0].item).replace(/#/g, '%23') + "'";
-		}
+
+		relation_expr = "[" + relations.map(function(r){return r.getExpression()}).join(", ")+ "]";
 		
-		if (this.isPath) {
-			relation_expr += ", path: true";
-		}
 		
 		if(this.limit){
 			relation_expr += ", limit: " + this.limit
 		}
-		return relation_expr;
+		return "relations: " + relation_expr;
 	},
 	
 	this.getExpression = function(){
@@ -375,17 +421,17 @@ function PivotGroup(inputFunction){
 };
 Pivot.prototype = new Operation();
 
-function FindRelations(inputFunction, direction){
+function FindRelations(inputFunction, position){
 	this.inputFunction = inputFunction;
-	this.direction = direction;
+	this.position = position || "image";
 
 	this.getExpression = function(){
 		var expression = ".relations";
-		debugger;
+		
 		if(this.direction == "forward"){
 			expression = ".forward_relations"
 		}
-		expression += "(limit: 25)"
+		expression += "(limit: 25, position: '" +this.position+"')"
 
 		expression = this.inputFunction.getExpression() + expression;
 		return expression;
@@ -445,6 +491,8 @@ function Refine(inputFunction){
 	this.filter = null;
 	this.functionParams = {connector: 'AND'};
 	this.connector = "AND";
+	this.position = "image"
+	this.page
 	// this.filterParams = {};
 	this.relations = [];
 
@@ -455,6 +503,9 @@ function Refine(inputFunction){
 		relations = []
 		
 		var that = this;
+		if(params.containsKey("position")){
+			this.position = params["position"]
+		}
 		if(params.containsKey("filter")){
 			this.filter = params.get("filter");
 		}
@@ -502,14 +553,18 @@ function Refine(inputFunction){
 		this.filter = "equals"
 	},
 	this.compare = function(relations, restrictions){
-		this.filter = "compare";
+		this.filter = "relation_compare";
 		if((relations.length > 0) && (relations[0].constructor.name == "Operation")){
-			this.filter = "image_equals";
+			this.filter = "compare";
 		}
 		
 		this.functionParams.relations = [relations];
 		
 		this.functionParams.restrictions = restrictions
+	},
+	this.keywordMatch = function(keywords){
+		this.filter = "keyword_match";
+		this.functionParams.keywords = keywords;
 	},
 	this.contains = function(relations, values){
 		this.filter = "contains_one";
@@ -552,38 +607,151 @@ function Refine(inputFunction){
 	this.getExpression = function(){
 		var filterParams = this.generateParamsExpr();		
 		
-		return inputFunction.getExpression() + ".refine{|f|f."+this.filter+"("+filterParams+")}";
+		return inputFunction.getExpression() + ".refine(position: \""+this.position+"\"){|f|f."+this.filter+"("+filterParams+")}";
 	}
 };
 Refine.prototype = new Operation();
+
+function Restriction(operator, value, connector){
+	this.operator = operator;
+	this.value = value;
+	this.connector = connector;
+	
+	this.getComparatorExp = function(){
+		var comparatorExp = "f.op."
+		switch(this.operator){
+		case "=":
+			comparatorExp += "equal";
+			break;
+		case "<":
+			comparatorExp += "less_than";
+			break;
+			
+		case "<=":
+			comparatorExp += "less_than_equal";
+			break;
+			
+		case ">":
+			comparatorExp += "greater_than";
+			break;
+			
+		case ">=":
+			comparatorExp += "greater_than_equal";
+			break;
+			
+		default:
+			comparatorExp += this.operator;
+		}
+		return comparatorExp;
+	},
+	
+	this.getExpression = function(){
+		var expr = this.getComparatorExp();
+		expr += "(" + this.value.getExpression() + ")";
+		return expr;
+	}
+	
+	
+};
+
+function RelationRestriction(relation, operator, value, connector){
+	this.relation = relation;
+	this.restrictions = [];
+	this.connector = connector || "AND";
+		
+	if(operator && value){
+		this.addRestriction(operator, value)
+	}
+
+	this.addRestriction = function(operator, value){
+		var already_added = false
+		for(var i in this.restrictions){
+			if(this.restrictions[i].operator == operator && this.restrictions[i].value.getExpression() == value.getExpression()){
+				already_added = true;
+			}
+		}
+		if(!already_added){
+			this.restrictions.push({operator: operator, value: value})
+		}
+		
+	},
+	this.removeRestriction = function(operator, valueExpression){
+		for(var i in this.restrictions){
+			debugger;
+			if(this.restrictions[i].operator == operator && this.restrictions[i].value.getExpression() == valueExpression){
+				this.restrictions.splice(i, 1);
+			}
+		}
+	},
+	
+	this.getExpression = function(){
+		var restrictionExpr = ""
+		restrictionExpr = this.restrictions.map(function(restrictionClause){
+			
+			return "['"+restrictionClause.operator+ "', " + restrictionClause.value.getExpression()+"]"
+		}).join(", ");
+		return restrictionExpr
+	}
+};
+
+function CompositeRestrictionAnd(){
+	this.restrictions = []
+	
+	this.addRestriction = function(restriction){
+		
+	}
+};
 
 function FacetedSearch(inputFunction){
 	this.inputFunction = inputFunction;
 	this.facets = [];
 	this.connector = "AND";
+	this.simpleRestrictionsHash = new Hashtable();
+	this.restrictionsByRelationHash = new Hashtable();
+	this.position = "image";
 	
+	this.isEmpty = function(){
+		return (this.simpleRestrictionsHash.isEmpty() && this.restrictionsByRelationHash.isEmpty());
+	},
+	
+	this.addRestriction = function(restriction){
+		debugger;
+		if(restriction.constructor.name == "RelationRestriction"){
+			if(!this.restrictionsByRelationHash.containsKey(restriction.relation.getExpression())){
+				this.restrictionsByRelationHash.put(restriction.relation.getExpression(), restriction);
+			}
+			relationRestriction = this.restrictionsByRelationHash.get(restriction.relation.getExpression());
+			relationRestriction.addRestriction(restriction.operator, restriction.value);
+			relationRestriction.connector = restriction.connector;
+			
+		} else {
+			if(!this.simpleRestrictionsHash.containsKey(restriction.getExpression())){
+				this.simpleRestrictionsHash.put(restriction.getExpression(), restriction);
+				this.simpleRestrictionsHash.values().forEach(function(addedRes){addedRes.connector = restriction.connector})
+			}
+		}
+	},
 	this.addFacet = function(relation, operator, value, connector){
-		
 		var added = false;
 
 		for(var i in this.facets){
-			
+
 			if(this.equalFacets(this.facets[i][0], relation)){
-				
+
 				this.facets[i][1].push([operator, value]);
-				
+
 				if(connector){
 					this.facets[i].push(connector);
 				} else {
 					this.facets[i].push("AND");
 				}
-				
-				
+
+
 				added = true;
 			}
-			
+
 		}
-		
+
 		if(!added){
 			this.facets.push([relation, [[operator, value]]])
 		}
@@ -591,39 +759,34 @@ function FacetedSearch(inputFunction){
 	},
 	
 	this.toHtml = function(){
-		return this.facets.map(function(facet){
-			var html = "";
-			var restrictionStr = "";
-			relation = facet[0];
-			restrictions = facet[1];
-			
-			if(!relation.constructor.name == "Array"){
-				relation = [relation];
-			}
-			var relationStr = relation.map(function(relation){return relation.item;}).join(" &rarr; ");
-			relationStr += " "
-			restrictionStr = relationStr;
-
-			html = restrictions.map(function(restriction){
+		var html = "";
+		var that = this;
+		for(var i in this.restrictionsByRelationHash.keys()){
+			relationExpr = this.restrictionsByRelationHash.keys()[i];
+			facet = this.restrictionsByRelationHash.get(relationExpr);
+			relationExpr = facet.relation.id
+			facetHtml = facet.restrictions.map(function(restriction){
 				var restriction_div = "";
-				restriction_div += "<td><span>" + relationStr + " "+ restriction[0] + " " + restriction[1].item + "<span class='close' facet=\""+relationStr+"\" facet_value=\""+restriction[1].item+"\">x</span></span>" + "</td>";
-				return restriction_div
-			}).join(" <td class=\"filter_connector\"><span >" + facet[2] + " </span></td>");
-
-			
-			// html += restrictions.map(function(restriction){
-			// 	var restriction_div = "<div class = \"filter_div\">";
-			//
-			// 	restriction_div += "<span>" + relationStr + " "+ restriction[0] + " " + restriction[1].item; + "</span>";
-			// 	restriction_div += "	<div style=\"float: right;\">";
-			// 	restriction_div += "		 <span id='close'>x</span>"
-			// 	restriction_div += "	</div>";
-			// 	restriction_div += "</div>";
-			// 	return restriction_div
-			// }).join(" <span class=\"filter_connector\">" + facet[2] + " </span>");
-
-			return "<tr>" + html + "</tr>";
+				restriction_div += "<td><span>" + relationExpr + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator= \""+restriction.operator+"\" facet='"+facet.relation.getExpression()+"' facet_value='"+restriction.value.getExpression()+"'>x</span></span>" + "</td>";
+				debugger;
+				return restriction_div;
+			}).join(" <td class=\"filter_connector\"><span >" + facet.connector + " </span></td>");
+			html += "<tr>" + facetHtml + "</tr>";
+		}
+		
+		var simpleResTableCols = this.simpleRestrictionsHash.values().map(function(restriction){
+			var restriction_div = "";
+			restriction_div += "<td><span>" + that.position + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator=\""+restriction.operator+"\" facet_value='"+restriction.value.getExpression()+"'>x</span></span>" + "</td>";
+			debugger;
+			return restriction_div
 		});
+		var simpleResHtml =  ""
+		if(simpleResTableCols.length > 0){
+			simpleResHtml = simpleResTableCols.join(" <td class=\"filter_connector\"><span >" + this.simpleRestrictionsHash.values()[0].connector + " </span></td>");;
+		}
+		html += "<tr>" + simpleResHtml + "</tr>";
+		
+		return html;
 	},
 	this.getComparable = function(facet){
 		if(facet.constructor.name == "Operation"){
@@ -645,70 +808,98 @@ function FacetedSearch(inputFunction){
 	this.setConnector = function(connector){
 		this.connector = connector;
 	},
-	this.removeFacet = function(relationToRemove, operatorToRemove, valueToRemove){
-		
-		for (var i in this.facets){
-			var relation = this.facets[i][0];
-			var restrictions = this.facets[i][1];
-			var index = -1
-			for(var j in restrictions){
-				var operator = restrictions[j][0];
-				var value = restrictions[j][1];
-				debugger;
-				if (value.item == valueToRemove.item){
-					index = j;
-				}
-			}
-
-			if((this.equalFacets(relation, relationToRemove)) && (index >= 0)){
-				restrictions.splice(index);
-				if(restrictions.length == 0){
-					this.facets.splice(i);
-				}
-			}	
+	this.removeRelationRestriction = function(relationToRemove, operatorToRemove, valueToRemove){
+		restriction = this.restrictionsByRelationHash.get(relationToRemove);
+		restriction.removeRestriction(operatorToRemove, valueToRemove);
+		if (restriction.restrictions.length == 0){
+			this.restrictionsByRelationHash.remove(relationToRemove);
 		}
 	},
-	this.getExpression = function(){
-		var refineOperations = [];
-		var facetedSearch = null;
+	this.removeSimpleRestriction = function(operatorToRemove, valueToRemove){
+		restriction = new Restriction(operatorToRemove, new Item({expression: valueToRemove}));
 		
-		for(var i in this.facets){
-			var facet = this.facets[i];
-			var relation = facet[0];
-			if(relation.constructor.name != "Array"){
-				relation = [relation]
-			} 
-			
-			var refineOp = new Refine(this.inputFunction);
-			debugger;
-			refineOp.compare(relation, [facet[1]]);
-			if(facet[2]){
-				refineOp.setConnector(facet[2]);
-			}
-			
-			refineOperations.push(refineOp);
+		this.simpleRestrictionsHash.remove(restriction.getExpression());
+	},
+	
+	this.getExpression = function(){
+		var expr = ""
+		var connector = "AND"
+		var simpleRestrictionExpr = this.simpleRestrictionsHash.values().map(function(r){
+			connector = r.connector || "AND"
+			return r.getExpression();
+		}).join(", ");
+		
+		refineExpressions = [];
+		if(simpleRestrictionExpr != ""){
+			simpleRestrictionExpr = "refine(position: '"+this.position+"'){|f| f.compare(connector: \""+connector+"\", restrictions: ["+simpleRestrictionExpr+"])}"
+			refineExpressions.push(simpleRestrictionExpr);
 		}
 		
-		if(refineOperations.length > 1){
+		for( var i in this.restrictionsByRelationHash.keys()){
+			var key = this.restrictionsByRelationHash.keys()[i];
+			debugger;
+			expression = this.restrictionsByRelationHash.get(key).getExpression();
+			connector = this.restrictionsByRelationHash.get(key).connector || "AND"
+			refineExpression = "refine(position: '"+this.position+"'){|f| f.relation_compare(relations: ["+key+"], connector: \""+connector+"\", restrictions: ["+expression+"])}"
+			refineExpressions.push(refineExpression);
+		}
+		refineOperations = refineExpressions.map(function(r){return new Expression(inputFunction.getExpression() + "."+r)});
+		
+		var facetedSearch = refineOperations[0];
+
+		if(refineExpressions.length > 1){
 			if(this.connector == "AND"){
+				
 				facetedSearch = new Intersection(refineOperations);
 			} else {
 				facetedSearch = new Union(refineOperations);
-			}			
-		} else {
-			facetedSearch = refineOperations[0];
-			facetedSearch.setConnector(this.connector);
+			}
 		}
-			
+
 		return facetedSearch.getExpression();
+		
 	},
+	// this.getExpression = function(){
+	// 	var refineOperations = [];
+	// 	var facetedSearch = null;
+	//
+	// 	for(var i in this.facets){
+	// 		var facet = this.facets[i];
+	// 		var relation = facet[0];
+	// 		if(relation.constructor.name != "Array"){
+	// 			relation = [relation]
+	// 		}
+	//
+	// 		var refineOp = new Refine(this.inputFunction);
+	// 		debugger;
+	// 		refineOp.compare(relation, [facet[1]]);
+	// 		if(facet[2]){
+	// 			refineOp.setConnector(facet[2]);
+	// 		}
+	//
+	// 		refineOperations.push(refineOp);
+	// 	}
+	//
+	// 	if(refineOperations.length > 1){
+	// 		if(this.connector == "AND"){
+	// 			facetedSearch = new Intersection(refineOperations);
+	// 		} else {
+	// 			facetedSearch = new Union(refineOperations);
+	// 		}
+	// 	} else {
+	// 		facetedSearch = refineOperations[0];
+	// 		facetedSearch.setConnector(this.connector);
+	// 	}
+	//
+	// 	return facetedSearch.getExpression();
+	// },
 	
 	this.validate = function(){
 		this.clearMessages();
-		if(this.facets.length == 0){
-			this.addErrorMessage("Please select at least one value to filter!")
-			return false;
-		}
+		// if(this.facets.length == 0){
+		// 	this.addErrorMessage("Please select at least one value to filter!")
+		// 	return false;
+		// }
 		return true;
 	}
 	
@@ -798,7 +989,7 @@ function Difference(functions){
 Difference.prototype = new Operation();
 
 //TODO include a param that is the list of params for the chosen map function
-function Map(inputFunction, level){
+function Map(inputFunction){
 	if(!level){
 		var level = 1;
 	}
@@ -823,7 +1014,7 @@ function Map(inputFunction, level){
 			if(this.functionParams != null && this.functionParams.length > 0){
 				functionExpression += "(["+ this.functionParams.join(",")+"])"
 			}
-			expression += ".map(level:"+this.level+"){|f| f."+functionExpression+"}";
+			expression += ".map(){|f| f."+functionExpression+"}";
 			return expression;
 		}else {
 			alert("Not Valid Expression!");
@@ -922,6 +1113,7 @@ function Rank(inputFunction){
 	this.rankFunction = null;
 	this.functionParams = null;
 	this.order = null;
+	this.position = "image"
 	this.setParams = function(params){
 		functionParams = {}
 		
@@ -971,10 +1163,7 @@ function Rank(inputFunction){
 		}
 		
 		if(this.rankFunction == "by_relation"){
-			if(!this.functionParams.relations){
-				this.addErrorMessage("You must select at least one relation/relation set for ranking!");
-				return false;
-			} else if(this.functionParams.relations.length == 0){
+			if(!this.functionParams.relation){
 				this.addErrorMessage("You must select at least one relation/relation set for ranking!");
 				return false;
 			}
@@ -989,9 +1178,9 @@ function Rank(inputFunction){
 			rankParamsExp = this.generateParamsExpr();
 			var constructor = ""
 			if(this.order){
-				constructor = "{order: '" + this.order + "'}";
+				constructor = "{order: '" + this.order + "'";
 			}
-			
+			constructor += ", position: '" + this.position + "'}"
 		
 			return inputFunction.getExpression() + ".rank("+constructor+"){|gf|gf."+this.rankFunction+"("+rankParamsExp+")}";
 			
@@ -1012,10 +1201,11 @@ function Load(setId){
 	}
 }
 Load.prototype = new Operation();
-function Flatten(inputFunction){
+function Flatten(inputFunction, position){
 	this.inputFunction = inputFunction;
+	this.position = position || "image";
 	this.getExpression = function(){
-		return this.inputFunction.getExpression() + ".flatten"
+		return this.inputFunction.getExpression() + ".flatten(position: '"+this.position+"')"
 	},
 	this.validate = function(){
 		return true;
@@ -1035,7 +1225,7 @@ function Project(inputFunction, relation){
 	this.inputFunction = inputFunction;
 	this.relation = relation;
 	this.getExpression = function(){
-		return this.inputFunction.getExpression() + ".project(Relation.new('" + this.relation.replace("#", "%23") + "'))"
+		return this.inputFunction.getExpression() + ".project(SchemaRelation.new('" + this.relation.replace("#", "%23") + "'))"
 	},
 	this.validate = function(){
 		return true;
@@ -1084,7 +1274,12 @@ XPAIR.Xset = function(data, operation){
 		}
 	},
 	this.setData(data);
-	
+	this.isGroupedSet = function(){
+		if(!this.isEmpty()){
+			return this.data.extension[0].children;
+		}
+		return false;
+	},
 	this.addGenerates = function(generatedSet){
 		this.generates.push(generatedSet);
 	},
@@ -1160,11 +1355,21 @@ XPAIR.Xset = function(data, operation){
 		}	
 	},
 	
-	this. getLeafNodes = function(leafNodes, obj){
+	this.getImage = function(){
+		var items = new Hashtable();
+		debugger;
+		this.data.extension.forEach(function(item){
+			this_set.getLeafNodes(items, item);
+		});
+		return items.values();
+	}
+	this.getLeafNodes = function(leafNodes, obj){
+		console.log(obj.children)
 	    if(obj.children){
-	        obj.children.forEach(function(child){getLeafNodes(leafNodes,child)});
+	        obj.children.forEach(function(child){this_set.getLeafNodes(leafNodes,child)});
 	    } else{
-	        leafNodes.add(obj);
+			console.log("leaf: ", obj);
+	        leafNodes.put(obj.id, obj);
 	    }
 	},
 	
@@ -1307,7 +1512,7 @@ XPAIR.Xset = function(data, operation){
 	
 	this.renderPage = function(page){
 		XPAIR.AjaxHelper.get("/session/render_page.json?set=" + this.getId() + "&page=" + page, "json", function(data){
-			this_set.data.extension = data.extension;
+			this_set.data.extension = data.set.extension;
 			this_set.previousPage = this_set.page;
 			this_set.page = page;
 			this_set.notify(data.set, "pageChange");
@@ -1320,6 +1525,12 @@ XPAIR.Xset = function(data, operation){
 		});
 
 	},
+	this.domain = function(callback){
+		XPAIR.AjaxHelper.get("/session/domain.json?set=" + this.getId(), "json", function(data){
+			callback(data);
+		});
+		
+	}
 	this.createEmptyView = function(){
 		this.$view = $("#setViewTemplate").clone();
 		this.$view.attr({
@@ -1392,6 +1603,7 @@ XPAIR.Xset = function(data, operation){
 			this.$view.insertAfter($('#graph_view'));
 					
 		}
+		debugger;
 
 		register_ui_behaviour();
 
@@ -1463,43 +1675,20 @@ XPAIR.Xset = function(data, operation){
 	this.setTitle = function(title){
 		XPAIR.graph.updateNodeTitle(this.data.id, title);
 		this.data.title = title;
-		XPAIR.AjaxHelper.get("/session/update_title?set="+ this.getId()+ "&title=" + title, "json");
+		XPAIR.AjaxHelper.get("/session/update_title?set="+ this.getId()+ "&title=" + title, "json", function(data){});
+		$('[data-toggle="tooltip"]').attr("title", title);
 		return this.data.title;
 	},
 	this.getExtension = function(){
 		return this.data.extension;
 	},
+	this.isEmpty = function(){
+		return (this.data.extension.length == 0)
+	},
 	XPAIR.currentSession.addSet(this);
 	
 	this.getIntention = function(){
-		if(this.generatedByOperation){
-			var operationsString = "";
-			var expression = this.generatedByOperation.getExpression();
-			if(expression.indexOf("union") >= 0){
-				operationsString = "Union";
-			} else if(expression.indexOf("intersec") >= 0){
-				operationsString = "Intersection";
-			} else if(expression.indexOf("dif") >= 0){
-				operationsStringArray = "Diff";
-			} else {
-				var operationsStringArray = this.generatedByOperation.getExpression().split(".");
-			
-			
-				for(var i = 2; i < operationsStringArray.length; i++){
-					operationsString += operationsStringArray[i] + ".";
-				}				
-			}
-			
-			return operationsString;
-		} else {
-			if(this.intention){
-				return this.intention;
-			} else {
-				""
-			}
-			
-		}
-		 
+		 return this.data.intention
 	};
 	
 }

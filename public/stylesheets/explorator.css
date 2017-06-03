@@ -267,14 +267,14 @@ div.windowtoolbar div.filter:hover {
 /*format the window ui component*/ .window {
     font-family: Arial, Helvetica, sans-serif;
     float: left;
-    margin-left: 4px;
+    /* margin: 4px; */
     width: 350px;
     height: 450px;
     border: 4px solid #ffffff;
     /* text-align: center; */
     font-size: 14px;
     padding: 9px;
-    top: 75px;
+    top: 5px;
     position: relative;
     background-color: rgba(219, 217, 216, 0.71);
     overflow: auto;
@@ -283,16 +283,17 @@ div.windowtoolbar div.filter:hover {
 .graph_window {
     font-family: Arial, Helvetica, sans-serif;
     float: right;
-    margin-left: 14px;
+    margin-left: 5px;
     width: 500px;
     border: 2px solid #cccccc;
     /* text-align: center; */
     font-size: 14px;
     padding: 9px;
-    top: 80px;
+    top: 5px;
     position: relative;
     background-color: #fefefe;
-    height: 450px;
+    height: 480px;
+    margin-bottom: 5px;
 }
 .graph_container {
 	width: 100%;
@@ -301,7 +302,7 @@ div.windowtoolbar div.filter:hover {
 
 div._items_area {
 	overflow: auto;
-	height: 65%;
+	height: 60%;
 }
 div.windowmaximized {
     width: 350px;
@@ -344,6 +345,7 @@ div.windowtoolbar div._view {
 } .windowtitle {
     z-index: 9;
     position: absolute;
+    float: left;
 } #resname {
     height: 25px;
 } .winoperations {
@@ -520,7 +522,31 @@ span.tool:hover span.tip {
     color: #000;
     text-align: left;
 }
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
 
+/* Tooltip text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+ 
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
 /*
  *   Landmaks layout definition
  */ .landmarks {
@@ -656,7 +682,7 @@ input {
 }
 
 form {
-    height: 0px;
+    /* height: 0px; */
 }
 
 textarea {

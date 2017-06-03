@@ -32,7 +32,10 @@ XPAIR.projections.JstreeFacets = function(xset){
 				"Entity" : {
 					"icon" : "glyphicon glyphicon-folder-close"
 				},
-				"Relation" : {
+				"SchemaRelation" : {
+					"icon" : "glyphicon glyphicon-flash"
+				},
+				"ComputedRelation" : {
 					"icon" : "glyphicon glyphicon-flash"
 				},
 				"Xpair::Literal": {
@@ -47,26 +50,12 @@ XPAIR.projections.JstreeFacets = function(xset){
 		}).on("check_node.jstree", function(e, data) {
 			this_projection.handleRelationSelection(e, data);
 		});
+		this.registerBehavior();
+		$("#facetModal .modal-body").show();
 	},
 	
 	this.init = function(){
-		this.createTree($("#facetModal .modal-body"));
-		
-		var set_id = this_projection.xset.getId();
-		var findRelations = new FindRelations(new Load(set_id));
-		findRelations.execute("json", function(data){
-
-			var items = data.set.extension;
-			var relations_hash = new Hashtable();
-			var jstreeAdapter = new XPAIR.adapters.JstreeAdapter(new XPAIR.Xset(data.set));
-			this_projection.adapter = jstreeAdapter;
-			jstreeAdapter.setProjection(this_projection);
-			for(i in items){
-				jstreeAdapter.addItem("#", items[i]);
-			}
-			
-			this_projection.show();
-		});
+		// this.showRelationsTree();
 		parameters.put("FacetedRefine", true);
 		parameters.put("operation", "refine");
 		parameters.put("operator", "=");
@@ -83,9 +72,77 @@ XPAIR.projections.JstreeFacets = function(xset){
 			this_projection.nextPage();
 		});
 		
-				
+		$('#button_add_filter').unbind().click(function(e){
+			this_projection.add_filter();
+		});
+		$("input[param_value='image']").prop("checked", true);
+
+		$("#facetModal").modal("show");
+		$("#select_comparator").change(function(){
+			this_projection.handleOperatorChanged($(this).val());
+			
+		});
+		this.showImage();
 	},
 	
+	this.handleOperatorChanged = function(operator){
+		if(operator == "in"){
+			var setData = XPAIR.currentSession.sets.values().map(function(s){ return {id: 'Xset.load("' + s.getId() + '")', text: s.getTitle()}});
+			$('.values_select').select2('destroy');
+			$('.values_select').empty();
+			$('.values_select').select2({
+				data: setData,
+				placeholder: "Select a Set",
+				allowClear: true
+			});
+		}
+		
+	},
+	
+	this.hideRelationsTree = function(){
+		$("input[name='radio_pos']").prop('disabled', false);
+		$("#facetModal .modal-body").hide();
+		var $valuesList = $("#facetModal .facet_values #values_list");
+		// $valuesList.empty();
+		this.handlePositionChanged();
+		this.$div.jstree(true).uncheck_all();
+		this.selectedRelations = [];
+	},
+	this.showRelationsTree = function(){
+		// if ($("#facetModal .modal-body").hasClass("jstree")) {
+		//   $("#facetModal .modal-body").show();
+		//   return
+		// }
+		$("input[name='radio_pos']").prop('disabled', true);
+		this.createTree($("#facetModal .modal-body"));
+		
+		var set_id = this_projection.xset.getId();
+		
+		var findRelations = new Flatten(new FindRelations(new Load(set_id), this.getPosition()));
+		findRelations.execute("json", function(data){
+
+			var items = data.set.extension;
+			var relations_hash = new Hashtable();
+			var jstreeAdapter = new XPAIR.adapters.JstreeAdapter(new XPAIR.Xset(data.set));
+			this_projection.adapter = jstreeAdapter;
+			jstreeAdapter.setProjection(this_projection);
+			for(i in items){
+				if(items[i].resultedFromArray.length > 1){
+					items[i].resultedFrom = items[i].resultedFromArray[items[i].resultedFromArray.length - 2].id
+				}
+				
+				jstreeAdapter.addItem("#", items[i]);
+			}
+			
+			this_projection.$div.show();
+		});
+		
+	},
+	
+	this.getPosition = function(){
+		var position = $("input[name='radio_pos']:checked").attr('param_value');
+		return position;
+	},
 	this.handleRelationSelection = function(e, data){
 		debugger;
 		e.stopPropagation();
@@ -102,59 +159,99 @@ XPAIR.projections.JstreeFacets = function(xset){
 
 
 		var parentRelation = $tree.jstree().get_parent(facetRelationSelected);
-		// this.$div.jstree(true).disable_checkbox(facetRelationSelected);
-		// $tree.jstree(true).check_node(facetRelationSelected);
-		// this.$div.jstree(true).enable_checkbox(facetRelationSelected);
 
-		pivot = new Pivot(new Load(this.xset.getId()));
-		path.push(facetRelationSelected.li_attr);
+		pivot = new Pivot(new Flatten(new Load(this.xset.getId())));
+		path.push(new Relation(facetRelationSelected.li_attr));
 		
 		while(parentRelation !== "#") {
 			
 			facetRelationNode = $tree.jstree().get_node(parentRelation);
-			path.unshift(facetRelationNode.li_attr);
+			path.unshift(new Relation(facetRelationNode.li_attr));
 			parentRelation = $tree.jstree().get_parent(facetRelationNode);
 		}
 		
-		if(path.length > 1){
-			pivot.isPath = true;
-		}
-		for(var i in path){
-			pivot.addRelation(path[i]);
-		}
+
+		pivot.addRelation(new PathRelation(path));
+
+		var relations_str = path.map(function(r){return r.id}).join("/");
+		debugger;
+		$('#input_relation').val(relations_str);
 		this.selectedRelations = path;
 		pivot.execute("json", function(data){
-			this_projection.updateValuesList(data);
+			this_projection.updateValuesList(data.set.extension, data.set.id);
 		});
+		
 		
 	},
 	
-	this.updateValuesList = function(data){
-		var items = data.set.extension;
-		var $valuesList = $("#facetModal .facet_values #values_list");
-		$valuesList.empty();
-		$valuesList.attr("set", data.set.id)
+	this.updateValuesList = function(data, setId){
+		var items = data;
+		$('.values_select').val([]);
+		$('.values_select').attr("set", setId);
+		$('.values_select').select2({
+			ajax: {
+				transport: function(params, success, failure){
+				  debugger;
+				  if(!params.data.term){
+					  var load = new Load(setId);
+					  load.page = (params.data.page || 1)
+					  load.execute("json", function(data){
+						  success(data.set.extension);
+					  });
+
+					  return;
+				  }
+				  var r = new Refine(new Load(setId));
+				  r.position = this_projection.getPosition();
+				  r.page = (params.data.page || 1)
+				  r.keywordMatch([[params.data.term]]);
+				  var selectData = []
+				  r.execute("json", function(data){
+					  debugger;
+					  success(data.set.extension);
+				  });
+				},
+				processResults: function(data) {
+					var selectData = data.map(function(item){return {id: item.expression, text: item.text}});
+					return {
+					results: selectData,
+						pagination: {
+							more: !(selectData.length == 0)
+					    }
+					 };
+				},
+				escapeMarkup: function (markup) { return markup; },
+				placeholder: "Select a value",
+				allowClear: true,
+				minimumInputLength: 3,
+				cache: false,
+  
+			}
+		});
+
 		for(var i in items){
 			debugger;
+
+			$('.values_select').append(new Option(items[i].text, items[i].expression, true, true))
 			
+			// $valuesList.append("<li><label><input id=\""+items[i].id+"\" datatype=\""+items[i].datatype+"\" item_type=\""+items[i].type+"\" type=\"checkbox\">"+items[i].id+"</label></li>");
 			
-			$valuesList.append("<li><label><input id=\""+items[i].id+"\" datatype=\""+items[i].datatype+"\" item_type=\""+items[i].type+"\" type=\"checkbox\">"+items[i].id+"</label></li>");
-			
-			$valuesList.find("[id=\"" + items[i].id + "\"]").click(function(){
-				this_projection.handleFacetSelection(this);
-			});
+			// $valuesList.find("[id=\"" + items[i].id + "\"]").click(function(){
+			// 	this_projection.handleFacetSelection(this);
+			// });
 		}
+
 		
 
 	},
-	
+		
 	this.nextPage = function(){
 		var currentPage = parseInt($("#facetModal #current_page").text());
 		currentPage++;
 		var setId = $("#facetModal .facet_values #values_list").attr("set");
 		XPAIR.AjaxHelper.get("/session/render_page.json?set=" + setId + "&page=" + currentPage, "json", function(data){
 			$("#facetModal #current_page").html(currentPage);
-			this_projection.updateValuesList(data);
+			this_projection.updateValuesList(data.set.extension, data.set.id);
 		});
 	},
 	
@@ -164,43 +261,110 @@ XPAIR.projections.JstreeFacets = function(xset){
 		var setId = $("#facetModal .facet_values #values_list").attr("set");
 		XPAIR.AjaxHelper.get("/session/render_page.json?set=" + setId + "&page=" + currentPage, "json", function(data){
 			$("#facetModal #current_page").html(currentPage);
-			this_projection.updateValuesList(data);
+			this_projection.updateValuesList(data.set.extension, data.set.id);
 		});
 	},
 	
 	
 	this.handleFacetSelection = function(value){
-		debugger;
+		
 		if(value.checked) {
-			XPAIR.currentOperation.addFacet(this.selectedRelations, parameters.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id}, parameters.get('connector'));
+
+			$('#input_value').val(value.id)
+		} 
+	},
+	
+	this.remove_filter = function(){
+		XPAIR.currentOperation.removeFacet(this.selectedRelations, parameters.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id});
+	},
+	this.handlePositionChanged = function(){
+		var position = $("input[name='radio_pos']:checked").attr('param_value');
+		if(position == "domain"){
+			this.showDomain();
 		} else {
-			XPAIR.currentOperation.removeFacet(this.selectedRelations, parameters.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id});
+			this.showImage();
+		}
+	},
+	this.showDomain = function(){
+		this.xset.domain(function(data){
+			debugger;
+			this_projection.updateValuesList(data, this_projection.xset.getId());
+		});
+	},
+	this.showImage = function(){
+		this.updateValuesList(this.xset.getImage(), this.xset.getId());
+	},
+	
+	this.add_filter = function(){
+		$('#facet_conn').show();
+		var position = $("input[name='radio_pos']:checked").attr('param_value');
+		var booleanOperator = $("input[name='conn']:checked").attr('param_value');
+		var values = $('.values_select').select2('data');
+		if(values.length == 0){
+			return;
+		}
+		for(var i in values){
+			value = values[i];
+			var comparator = $($('#select_comparator').find(":selected")).val();
+			debugger;
+			var restriction = new Restriction();
+			if(this.selectedRelations.length > 0){
+				restriction = new RelationRestriction();
+			}
+			var relation = null;
+			if(this.selectedRelations.length > 1){
+				relation = new PathRelation(this.selectedRelations);
+				restriction.relation = relation;
+			} else {
+				relation = this.selectedRelations[0];
+				restriction.relation = relation;
+			}
+
+			restriction.operator = comparator;
+			restriction.connector = parameters.get("connector") || "AND";
+			restriction.value = new Item({expression: value.id, text: value.text});
+		
+			restriction.position = position
+				
+			XPAIR.currentOperation.addRestriction(restriction);
+			XPAIR.currentOperation.position = position;
+			
 		}
 		var filter_div = "";
-		filter_div += XPAIR.currentOperation.toHtml().join("<tr class=\"filter_connector\"><td><span>" + XPAIR.currentOperation.connector + "</span></td></tr>");
-		$('#facetModal .modal-header .filters').html("<table>" + filter_div + "</table>");
 		
+		filter_div += XPAIR.currentOperation.toHtml()//.join("<tr class=\"filter_connector\"><td><span>" + XPAIR.currentOperation.connector + "</span></td></tr>");
+		$('#facetModal .filters').html("<table>" + filter_div + "</table>");
+
 		$('span .close').click(function(e){
 			debugger;
-			var facet = $(this).attr("facet")
-			var path = facet.split(" → ").map(function(relationID){ return {item: relationID.trim()}});
-			var value = {item: $(this).attr("facet_value")}
-			XPAIR.currentOperation.removeFacet(path, "", value);
+			var facet = $(this).attr("facet");
+			var operator = $(this).attr("operator");
+			var value = $(this).attr("facet_value");
+			if(facet){
+				XPAIR.currentOperation.removeRelationRestriction(facet, operator, value);
+			} else{
+				XPAIR.currentOperation.removeSimpleRestriction(operator, value);
+			}
+			
 			var tableCell = $(this).parent().parent()
 			if($(tableCell).prev().hasClass("filter_connector")){
 				$(tableCell).prev().remove();
 			} else if($(tableCell).parent().prev().hasClass("filter_connector")) {
-				$(tableCell).parent().prev().remove();	
+				$(tableCell).parent().prev().remove();
 			}
 			if($(tableCell).next().hasClass("filter_connector")){
 				$(tableCell).next().remove();
 			} else if($(tableCell).parent().next().hasClass("filter_connector")) {
-				$(tableCell).parent().next().remove();	
+				$(tableCell).parent().next().remove();
 			}
-			
+
 			$(tableCell).remove();
-				
+			if(XPAIR.currentOperation.isEmpty()){
+				$('#facet_conn').hide();
+			}
+
 		});
+		
 	},
 	
 	this.show = function(){
@@ -226,9 +390,9 @@ XPAIR.projections.JstreeFacets = function(xset){
 			}
 
 			if(checked_relation.children.length == 0) {
-				
-				var pivot = new Pivot(new Load(checked_relation.data.resultedFrom));
-				pivot.addRelation(checked_relation.data);
+				debugger;
+				var pivot = new Pivot(new Flatten(new Load(checked_relation.li_attr.resultedFrom)));
+				pivot.addRelation(new Relation(checked_relation.li_attr));
 				pivot.limit = 20
 
 				debugger;
@@ -242,7 +406,12 @@ XPAIR.projections.JstreeFacets = function(xset){
 					var relations_hash = new Hashtable();
 					var items = data.set.extension;
 					for(var i in items){
+						if(items[i].resultedFromArray.length > 1){
+							items[i].resultedFrom = items[i].resultedFromArray[items[i].resultedFromArray.length - 2].id
+						}
+							
 						jsTreeAdapter.addItem(checked_relation, items[i]);
+						
 					}
 				});
 			}

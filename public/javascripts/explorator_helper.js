@@ -25,7 +25,7 @@ function init_all(){
     curlbracket();
 }
 function jstree_icon_type(item) {
-	if (item.type === "Relation") {
+	if (item.type === "SchemaRelation") {
 		return "relation";
 	} else if (item.type === "Entity" || item.type === "Type") {
 		return "entity";

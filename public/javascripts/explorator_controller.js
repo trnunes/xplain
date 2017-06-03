@@ -180,20 +180,35 @@ function setupRefineControls(){
 	$("#facetedRefine").click(function(){
 
 		XPAIR.currentSession.getProjections($("._WINDOW.A").attr("id"))[0].activateFacetedFiltering();
+
 	});
 	$("[name=filterradio]").click(function(){
 		XPAIR.addParameter("relation", $(".SELECTED"));
 	})
 }
 //These are the operations applyed over sets
+function startOperation(widget){
+	setParameter(widget);
+	$(".active").removeClass("active");
+	var operationId = $(widget).attr("operation");
+	parameters.put("operation", operationId);
+	$(widget).addClass("active");
+	var inputParams = parameters.get("A");
+	if(inputParams.length == 0){
+		alert("Choose at least one item/set to execute the operation!");
+		return;
+	}
+	if(!$(widget).hasClass("set_operation")){
+		var setId = $(inputParams[0]).attr("id");
+		var operationName = $(widget).attr("operation");
+		var operationController = eval("new XPAIR.controllers."+operationName+"Controller(XPAIR.currentSession.getSet(setId));");
+		operationController.init();
+	}
+}
 function cmd_set(){
 	
 	$(".operation").click(function(){
-		setParameter(this);
-		$(".active").removeClass("active");
-		var operationId = $(this).attr("operation");
-		parameters.put("operation", operationId);
-		$(this).addClass("active");
+		startOperation(this);
 	});
 	
 	
@@ -211,52 +226,98 @@ function cmd_set(){
 			debugger;
 			$('.filter_comparator_active').removeClass('filter_comparator_active');
 			$(this).addClass('filter_comparator_active');
-			
 		}
 		
 	});	
-	setupRefineControls();
+	// setupRefineControls();
+	//
+	// $("#rank_criteria").unbind().click(function(e){
+	// 	var inputParams = parameters.get("A");
+	// 	if(inputParams.length == 0){
+	// 		alert("Choose a set to rank!");
+	// 		return;
+	// 	}
+	//
+	// 	var setId = $(inputParams[0]).attr("id");
+	//
+	// 	var rankController = new XPAIR.controllers.RankController(XPAIR.currentSession.getSet(setId));
+	//
+	// 	rankController.init();
+	// });
+	//
+	// $("#faceted_filter").unbind().click(function(e){
+	// 	var inputParams = parameters.get("A");
+	// 	if(inputParams.length == 0){
+	// 		alert("Choose a set to refine!");
+	// 		return;
+	// 	}
+	//
+	// 	var setId = $(inputParams[0]).attr("id");
+	//
+	// 	var refineController = new XPAIR.controllers.RefineController(XPAIR.currentSession.getSet(setId));
+	//
+	// 	refineController.init();
+	// });
+	//
+	// $("[operation='Pivot']").unbind().click(function(e){
+	// 	var inputParams = parameters.get("A");
+	// 	if(inputParams.length == 0){
+	// 		alert("Choose a set to pivot!");
+	// 		return;
+	// 	}
+	//
+	// 	var setId = $(inputParams[0]).attr("id");
+	//
+	// 	var pivotController = new XPAIR.controllers.PivotController(XPAIR.currentSession.getSet(setId));
+	// 	debugger;
+	//
+	// 	pivotController.init();
+	// });
+	
+	
+	
     $('._equal').unbind().each(function(item){
         $(this).on("click", function(){
 
 			parameters.put('B', $('.SELECTED'));
 
-            
-            if (parameters.get('operation') == 'union') {
-                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
-            }
-            else if (parameters.get('operation') == 'intersect') 
-                XPAIR.currentOperation = new SemanticExpression('A').intersection('B').expression;
-            else if (parameters.get('operation') == 'diff') 
-                XPAIR.currentOperation = new SemanticExpression('A').difference('B').expression;
-			else if (parameters.get('operation') == 'pivot') {
-				XPAIR.currentOperation = new SemanticExpression('A').pivot('B').expression;				
-			}else if (parameters.get('operation') == 'union') {
-                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
-			}else if (parameters.get('operation') == 'refine') {
-				XPAIR.currentOperation = new SemanticExpression('A').refine().expression;
-			} else if (parameters.get('operation') == 'group') {
-				XPAIR.currentOperation = new SemanticExpression('A').group('B').expression;
-			} else if (parameters.get('operation') == 'rank') {
-				XPAIR.currentOperation = new SemanticExpression('A').rank('B').expression;
-			} else if (parameters.get('operation') == 'map') {
-				XPAIR.currentOperation = new SemanticExpression('A').map('B').expression;
-			} else if (parameters.get('operation') == 'merge') {
-				XPAIR.currentOperation = new SemanticExpression('A').merge('B').expression
-			} else if (parameters.get('operation') == 'flatten') {
-				XPAIR.currentOperation = new SemanticExpression('A').flatten().expression;
-			}			
-            else {//spo
-                if (validation_spo()) 
-                    return;
-                parameters.put(item.id, Element.exp(item));
-                var view = 'subject_view';
-                if (parameters.get(':s') != undefined && parameters.get(':p') != undefined && parameters.get(':o') == undefined) {
-                    view = 'object_view';
-                }
+            if(!XPAIR.currentOperation){
+	            if (parameters.get('operation') == 'union') {
+	                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
+	            }
+	            else if (parameters.get('operation') == 'intersect') 
+	                XPAIR.currentOperation = new SemanticExpression('A').intersection('B').expression;
+	            else if (parameters.get('operation') == 'diff') 
+	                XPAIR.currentOperation = new SemanticExpression('A').difference('B').expression;
+				else if (parameters.get('operation') == 'pivot') {
+					XPAIR.currentOperation = new SemanticExpression('A').pivot('B').expression;				
+				}else if (parameters.get('operation') == 'union') {
+	                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
+				}else if (parameters.get('operation') == 'refine') {
+					XPAIR.currentOperation = new SemanticExpression('A').refine().expression;
+				} else if (parameters.get('operation') == 'group') {
+					XPAIR.currentOperation = new SemanticExpression('A').group('B').expression;
+				} else if (parameters.get('operation') == 'rank') {
+					XPAIR.currentOperation = new SemanticExpression('A').rank('B').expression;
+				} else if (parameters.get('operation') == 'map') {
+					XPAIR.currentOperation = new SemanticExpression('A').map('B').expression;
+				} else if (parameters.get('operation') == 'merge') {
+					XPAIR.currentOperation = new SemanticExpression('A').merge('B').expression
+				} else if (parameters.get('operation') == 'flatten') {
+					XPAIR.currentOperation = new SemanticExpression('A').flatten().expression;
+				}			
+	            else {//spo
+	                if (validation_spo()) 
+	                    return;
+	                parameters.put(item.id, Element.exp(item));
+	                var view = 'subject_view';
+	                if (parameters.get(':s') != undefined && parameters.get(':p') != undefined && parameters.get(':o') == undefined) {
+	                    view = 'object_view';
+	                }
                 
-                XPAIR.calculate(new SemanticExpression().spo(':s', ':p', ':o', ':r') + "&view=" + view);
+	                XPAIR.calculate(new SemanticExpression().spo(':s', ':p', ':o', ':r') + "&view=" + view);
                 
+	            }
             }
 			
 			if(XPAIR.currentOperation.execute("json")){
@@ -300,9 +361,10 @@ function clear(){
 	for(var i in projections){
 		projections[i].getAdapter().clear();
 	}
-	$("#facetModal .facet_values ul").empty();
+	
 	$('.filter_comparator_active').removeClass('filter_comparator_active')
 	XPAIR.currentOperation = null;
+	clearFacetModal();
 }
 
 function removeCSS(item){
@@ -542,6 +604,7 @@ SemanticExpression.prototype.pivot = function(param){
 			if($(parameters.get('B')[i]).attr("inverse")){
 				relation.inverse = eval($(parameters.get('B')[i]).attr("inverse"));
 			}
+			relation.item_type = $(parameters.get('B')[i]).attr("item_type")
 			
 			parameters.get('relations').push(relation);
 		}
@@ -625,8 +688,8 @@ SemanticExpression.prototype.map = function(param){
 		var paramExp = ""
 		if($(this).hasClass("set")){
 			paramExp = $(this).attr("exp")
-		} else if($(this).attr("item_type") == "Relation"){
-			paramExp = "Relation.new('"+$(this).attr("item")+"')"
+		} else if($(this).attr("item_type") == "SchemaRelation"){
+			paramExp = "SchemaRelation.new('"+$(this).attr("item")+"')"
 		} else if($(this).attr("item_type") == "Item"){
 			paramExp = "Item.new('"+$(this).attr("item")+"')"
 		} else if($(this).attr("item_type") == "Xpair::Literal"){
