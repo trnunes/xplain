@@ -62,7 +62,7 @@ XPAIR.graph = new function(){
 		var container = $('#graph_view .graph_container')[0]
 		this.graph = new vis.Network(container, data, this.options);
 	    this.graph.on("click", function (params) {
-			
+			debugger;
 			console.log(params);
 
 			var $setWindow = $("#" + params.nodes[0] + "._WINDOW");
@@ -71,7 +71,7 @@ XPAIR.graph = new function(){
 			$setWindow.attr("left", "0px");
 			$setWindow.insertBefore($('#exploration_area .set').first())
 			
-			$setWindow.fadeIn();
+			// $setWindow.fadeIn();
 			$('.SELECTED').removeClass("SELECTED");
 			$setWindow.addClass('SELECTED');
 			

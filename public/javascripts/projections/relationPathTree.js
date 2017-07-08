@@ -114,9 +114,9 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 			var firstChild = that.$treeDiv.jstree().get_node(node.children[0])
 			var isLeafNode = (node.children.length == 1 && firstChild.text == "Relations");
 
-			if (isLeafNode){
+			// if (isLeafNode){
 				leafNodes.push(node);
-			}
+			// }
 		});
 		var paths = []
 		leafNodes.forEach(function(leafNode){

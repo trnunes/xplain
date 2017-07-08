@@ -242,9 +242,34 @@ XPAIR.projections.Jstree = function(adapter){
 		    },
 		    "plugins" : [ "types", "checkbox", "contextmenu", "search", "dnd", "state"],
 		    "search" : {
-		                 'case_sensitive' : false,
-		                 'show_only_matches' : true
-		            },
+                'case_sensitive' : false,
+                'show_only_matches' : true,
+				'ajax':{
+					url: 'session/refine.json?set=' + this_projection.xset.getId(),
+					
+					data: function(str) {
+					  return { "set": this_projection.xset.getId(),"search_str" : str };
+					},
+					
+					success: function(data){
+						debugger;
+						return data.set.extension.map(function(item){
+							
+							var nodeid = $(this_projection.getDiv()).find("[item='"+item.id+"']").attr("id");
+							if(!nodeid){
+								debugger;
+								item.resultedFrom =  this_projection.xset.data.resultedFrom;
+								item.set = this_projection.xset.getId();
+								return this_projection.adapter.addItem("#", item);
+							}
+						});
+					}
+					
+				}
+				
+		
+		
+            },
 			"contextmenu": this.createTreeContextMenu($div)
 		}).on("check_node.jstree uncheck_node.jstree", function(e, data) {
 			
@@ -252,13 +277,17 @@ XPAIR.projections.Jstree = function(adapter){
 		})
 		
 	    var to = false;
-	    $('.search-input').keyup(function () {
+	    $("#" + this_projection.xset.getId() + ' .search-input').keyup(function () {
+			debugger;
 	      if(to) { 
 			  clearTimeout(to); 
 		  }
 	      to = setTimeout(function () {
-	        var v = $('.search-input').val();
-	        $div.jstree(true).search(v);
+	        var v = $("#" + this_projection.xset.getId() + ' .search-input').val();
+			if((v.length > 2) || (!v.length)){
+				$div.jstree(true).search(v);
+			}
+	        
 	      }, 250);
 	    });
 		this.adapter.populate();
@@ -274,9 +303,9 @@ XPAIR.projections.Jstree = function(adapter){
 		$div.on("copy_node.jstree", function (e, data) {
 			
 			var setId = this_projection.xset.getId();
-			target_node_id = data.node.li_attr.item;
+			target_node_id = data.node.li_attr;
 			target_node_set = data.node.li_attr.set
-			union = new Union([new Load(setId), new Select(new Load(target_node_set), [target_node_id])]);
+			union = new Union([new Load(setId), new Select(new Load(target_node_set), [new Item(target_node_id)])]);
 			union.inplace = true;
 			union.execute("json", function(data){console.log(data)});
 			
@@ -538,7 +567,7 @@ XPAIR.projections.Jstree = function(adapter){
 					if(!unionsHash.containsKey(selected_node.li_attr.set)){
 						unionsHash.put(selected_node.li_attr.set, []);
 					}
-					unionsHash.get(selected_node.li_attr.set).push(selected_node.li_attr.item)									
+					unionsHash.get(selected_node.li_attr.set).push(new Item(selected_node.li_attr));
 				});
 				var selectOperations = []
 				for (var i in unionsHash.keys()) {
@@ -761,11 +790,11 @@ XPAIR.projections.Jstree = function(adapter){
 				//
 				// }
 				
-				var item_to_open_id = node_to_open.li_attr.item;
+				var item_to_open_id = node_to_open.li_attr;
 				var set_id = node_to_open.li_attr.set;
 
 				//exploration expression
-				var findRelations = new FindRelations(new Select(new Load(set_id), [item_to_open_id]));
+				var findRelations = new FindRelations(new Select(new Load(set_id), [new Item(item_to_open_id)]));
 				
 				findRelations.execute("json", tree_update_function);
 			}

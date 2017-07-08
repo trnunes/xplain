@@ -188,9 +188,30 @@ function setupRefineControls(){
 }
 //These are the operations applyed over sets
 function startOperation(widget){
+	if(parameters.get("operation")){
+		if(operationId == $(widget).attr("operation")){
+			return;
+		}
+		
+		var operationId = parameters.get("operation");
+		var inputParams = parameters.get("A");
+		var newSelected = $('.SELECTED')
+		clear();
+		if(newSelected.length){
+			newSelected.addClass("SELECTED");
+			parameters.put("A", newSelected);
+		} else {
+			inputParams.addClass("SELECTED");
+			parameters.put("A", inputParams);
+		}
+		
+		parameters.put('operation', operationId)
+	}
+
 	setParameter(widget);
 	$(".active").removeClass("active");
 	var operationId = $(widget).attr("operation");
+	
 	parameters.put("operation", operationId);
 	$(widget).addClass("active");
 	var inputParams = parameters.get("A");
@@ -293,6 +314,8 @@ function cmd_set(){
 					XPAIR.currentOperation = new SemanticExpression('A').pivot('B').expression;				
 				}else if (parameters.get('operation') == 'union') {
 	                XPAIR.currentOperation = new SemanticExpression('A').union('B').expression;
+				}else if (parameters.get('operation') == 'join') {
+	                XPAIR.currentOperation = new SemanticExpression('A').join('B').expression;
 				}else if (parameters.get('operation') == 'refine') {
 					XPAIR.currentOperation = new SemanticExpression('A').refine().expression;
 				} else if (parameters.get('operation') == 'group') {
@@ -362,7 +385,7 @@ function clear(){
 		projections[i].getAdapter().clear();
 	}
 	
-	$('.filter_comparator_active').removeClass('filter_comparator_active')
+	$('.filter_comparator_active').removeClass('filter_comparator_active');
 	XPAIR.currentOperation = null;
 	clearFacetModal();
 }
@@ -476,15 +499,23 @@ function cmd_semantic(){
     $('#search').unbind().click(function(){
         ajax_keyword_search();
     });    
+	$("#seachbykeyword").unbind().keyup(function(e){
+		debugger;
+	    if(e.keyCode == 13)
+	    {
+	        ajax_keyword_search();
+			$(this).val("");
+	    }
+	});
     
-    $('id_form_keyword').onsubmit = function(){
-        if ($F('seachbykeyword').indexOf('http://') != -1) 
-            XPAIR.calculate(new SemanticExpression().go($F('seachbykeyword')));
-        else 
-        
-            XPAIR.calculate(new SemanticExpression().search($F('seachbykeyword')));
-        return false;
-    };
+    // $('id_form_keyword').onsubmit = function(){
+    //     if ($F('seachbykeyword').indexOf('http://') != -1)
+    //         XPAIR.calculate(new SemanticExpression().go($F('seachbykeyword')));
+    //     else
+    //
+    //         XPAIR.calculate(new SemanticExpression().search($F('seachbykeyword')));
+    //     return false;
+    // };
     
     
     //Add a listener for the facet create form. 
@@ -592,6 +623,26 @@ SemanticExpression.prototype.difference = function(param){
 
     return this;
 };
+
+SemanticExpression.prototype.join = function(param){
+    var setsToUnite = parameters.get(param);
+    if (setsToUnite == undefined) 
+        return this;
+    //The parameter could be only one element or several.
+
+    if (!(Object.prototype.toString.call(setsToUnite) === '[object Array]')) {
+		setsToUnite = [setsToUnite];
+    }
+	
+    setsToUnite = setsToUnite.map(function(selectedSet){
+        return new Load($(selectedSet).attr('id'));
+    });
+	setsToUnite.push(this.expression)
+	var union = new Join(setsToUnite);
+	this.expression = union;
+    return this;
+};
+
 
 SemanticExpression.prototype.pivot = function(param){
 

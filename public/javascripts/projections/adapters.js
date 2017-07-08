@@ -282,6 +282,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 		// if((children.length >= 1 && children.length <=10) && (children[0].text != "Relations")){
 		// 	$tree.jstree().open_node(nodeId);
 		// }
+		return nodeId;
 	},
 	
 	this.updateItem = function(itemToUpdate){		

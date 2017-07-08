@@ -17,7 +17,11 @@ jQuery.fn.extend({
 		$(this).find('._hide').show();
 		
         $(this).first().attr("style", "");
-		$(this).find("._NO_MINIMIZE").nextAll().slideToggle();
+		debugger;
+		if(!$(this).find("._NO_MINIMIZE").next().is(":visible")){
+			$(this).find("._NO_MINIMIZE").nextAll().slideToggle();
+		}
+		
 		$(this).css("top", "5px");
 		$(this).find(".btn-group").show();
 		$(this).css("width", "350px");
@@ -338,10 +342,13 @@ function register_ui_window_behaviour(){
 			$(this).parents('.hideable').appendTo(".container");
 			debugger;
 			var xset = XPAIR.currentSession.getSet($(this).parents(".set").attr('id'));
+			$("._WINDOW").tooltip({title: xset.getTitle()});
 			
-			$("#" + xset.getId()).attr('title', xset.getTitle()).tooltip('fixTitle').show('tooltip');
-			$("#" + xset.getId()).tooltip();
-			
+			$("#" + xset.getId()).attr('data-original-title', xset.getTitle())
+
+			$("._WINDOW").off("hover").hover(function(){
+				$(this).tooltip("show");
+			}, function(){$(this).tooltip("hide");});
 
         });
 		
@@ -379,6 +386,38 @@ function select_page(view, page) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////SELECTION BEHAVIOURS//////////////////////////////////////////////////////
+function register_ui_selection_behaviour2(){
+	$('.select').unbind().each(function(){
+		$(this).unbind().click(function(event){
+			var $currentSelection = $('.SELECTED');
+			if(event.shiftKey){
+				if($currentSelection.length){
+					var isBeforeCurrentSelection = ($currentSelection.prevAll("#" + $(this).attr("id")).length > 0)
+					if(isBeforeCurrentSelection){
+						$currentSelection.prevUntil($(this)).addClass("SELECTED");
+					} else {
+						$currentSelection.nextUntil($(this)).addClass("SELECTED");
+					}
+				}
+				
+			} else if(event.ctrlKey){
+				$(this).addClass("SELECTED");
+				
+			} else{
+				$(this).removeClass("SELECTED");
+				$(this).addClass("SELECTED");
+			}
+		});
+	});
+}
+
+function handleSetSelection($view){
+	
+}
+
+function handleListItemSelection($view){
+	
+}
 function register_ui_selection_behaviour(){
 	
     $('.select').each(function(item){
@@ -428,15 +467,14 @@ function register_ui_selection_behaviour(){
 				            event.stopPropagation();
 				return;
             }
-        
+			debugger;
             if (!(event.ctrlKey || event.shiftKey)) {
                 //remove the selection from all elements on the interface
                 $('.SELECTED').removeClass('SELECTED');
                 //add selection to this element
                 $(that_item).addClass('SELECTED');
             }
-            //When a shift + click event happens
-            else {
+            else if(event.shiftKey){
 				console.log("SHIFT PRESSED " +$(that_item).attr("id") )
                 //If it was selected before, deselect. 
                 if ($(that_item).hasClass('SELECTED')) {
@@ -451,6 +489,9 @@ function register_ui_selection_behaviour(){
                 if ($(that_item).parents('._WINDOW.SELECTED').size() > 0) {
                     $(that_item).removeClass('SELECTED');
                 }
+            } else if(event.ctrlKey){
+				console.log("controll pressed")
+            	$(that_item).addClass('SELECTED');
             }
             //Deselect all element selected inside another one.
             $(that_item).children('.SELECTED').removeClass('SELECTED');

@@ -236,11 +236,10 @@ Operation.prototype.execute = function(format, successFunction, failure){
 	
 };
 
-function Pivot(inputFunction, level) {	
-	if(!level){
-		var level = 1;
-	}
-	this.level = level;
+function Pivot(inputFunction, isVisual) {	
+	
+	this.isVisual = isVisual || false;
+	
 	this.isPath = false;
 	this.path = [];
 	this.relations = [];
@@ -359,13 +358,18 @@ function Pivot(inputFunction, level) {
 	},
 	
 	this.getExpression = function(){
+		
+		var prefix = "";
+		if(this.isVisual){
+			prefix = "v_";
+		}
 
 		var setExpr = this.inputFunction.getExpression();
 		var pivotExpr = "";
 		if (this.isForward) {
-			pivotExpr = ".pivot_forward(";
+			pivotExpr = "."+prefix+"pivot_forward(";
 		}else {
-			pivotExpr = ".pivot_backward(";
+			pivotExpr = "."+prefix+"pivot_backward(";
 		}
 		pivotExpr += this.getRelationExpr();
 
@@ -421,12 +425,18 @@ function PivotGroup(inputFunction){
 };
 Pivot.prototype = new Operation();
 
-function FindRelations(inputFunction, position){
+function FindRelations(inputFunction, position, isVisual){
+	this.isVisual = isVisual || false;
 	this.inputFunction = inputFunction;
 	this.position = position || "image";
 
 	this.getExpression = function(){
-		var expression = ".relations";
+		var prefix = "";
+		if(this.isVisual){
+			prefix = "v_";
+		}
+	
+		var expression = "."+prefix+"relations";
 		
 		if(this.direction == "forward"){
 			expression = ".forward_relations"
@@ -459,13 +469,8 @@ function Select(inputFunction, selection){
 	this.selection = selection;
 	
 	this.getExpression = function(){
-		var selectionExpr = "[";
-		for(var i in this.selection){
-			selectionExpr += "Entity.new('"+this.selection[i].replace("#", "%23")+"'),"
-		}
-		selectionExpr += "]"
 		
-		var expression = this.inputFunction.getExpression() + ".select_items("+selectionExpr+")";
+		var expression = this.inputFunction.getExpression() + ".select_items(["+this.selection.map(function(i){return i.getExpression()}).join(",")+"])";
 		return expression;
 	},
 	this.type = function(){
@@ -485,7 +490,8 @@ function Select(inputFunction, selection){
 };
 Select.prototype = new Operation();
 
-function Refine(inputFunction){
+function Refine(inputFunction, isVisual){
+	this.isVisual = isVisual || false
 	this.inputFunction = inputFunction;
 	this.params = parameters;
 	this.filter = null;
@@ -605,9 +611,14 @@ function Refine(inputFunction){
 			
 	},
 	this.getExpression = function(){
+		var prefix = "";
+		if(this.isVisual){
+			prefix = "v_";
+		}
+		
 		var filterParams = this.generateParamsExpr();		
 		
-		return inputFunction.getExpression() + ".refine(position: \""+this.position+"\"){|f|f."+this.filter+"("+filterParams+")}";
+		return inputFunction.getExpression() + "."+prefix+"refine(position: \""+this.position+"\"){|f|f."+this.filter+"("+filterParams+")}";
 	}
 };
 Refine.prototype = new Operation();
@@ -702,7 +713,8 @@ function CompositeRestrictionAnd(){
 	}
 };
 
-function FacetedSearch(inputFunction){
+function FacetedSearch(inputFunction, isVisual){
+	this.isVisual = isVisual || false;
 	this.inputFunction = inputFunction;
 	this.facets = [];
 	this.connector = "AND";
@@ -822,6 +834,11 @@ function FacetedSearch(inputFunction){
 	},
 	
 	this.getExpression = function(){
+		var prefix = "";
+		if(this.isVisual){
+			prefix = "v_";
+		}
+		
 		var expr = ""
 		var connector = "AND"
 		var simpleRestrictionExpr = this.simpleRestrictionsHash.values().map(function(r){
@@ -831,7 +848,7 @@ function FacetedSearch(inputFunction){
 		
 		refineExpressions = [];
 		if(simpleRestrictionExpr != ""){
-			simpleRestrictionExpr = "refine(position: '"+this.position+"'){|f| f.compare(connector: \""+connector+"\", restrictions: ["+simpleRestrictionExpr+"])}"
+			simpleRestrictionExpr = prefix + "refine(position: '"+this.position+"'){|f| f.compare(connector: \""+connector+"\", restrictions: ["+simpleRestrictionExpr+"])}"
 			refineExpressions.push(simpleRestrictionExpr);
 		}
 		
@@ -840,7 +857,7 @@ function FacetedSearch(inputFunction){
 			debugger;
 			expression = this.restrictionsByRelationHash.get(key).getExpression();
 			connector = this.restrictionsByRelationHash.get(key).connector || "AND"
-			refineExpression = "refine(position: '"+this.position+"'){|f| f.relation_compare(relations: ["+key+"], connector: \""+connector+"\", restrictions: ["+expression+"])}"
+			refineExpression = prefix + "refine(position: '"+this.position+"'){|f| f.relation_compare(relations: ["+key+"], connector: \""+connector+"\", restrictions: ["+expression+"])}"
 			refineExpressions.push(refineExpression);
 		}
 		refineOperations = refineExpressions.map(function(r){return new Expression(inputFunction.getExpression() + "."+r)});
@@ -934,7 +951,7 @@ function Union(functions){
 Union.prototype = new Operation();
 
 function Intersection(functions){
-	this.functions = functions;
+	this.inputFunction = functions;
 	
 	this.getExpression = function(){
 		if(this.validate()){
@@ -951,7 +968,7 @@ function Intersection(functions){
 		
 	this.validate = function(){
 		this.clearMessages();
-		if(this.functions.length == 0){
+		if(this.inputFunction.length == 0){
 			this.addErrorMessage("Please select at least one set to intersect!");
 			return false;
 		}
@@ -962,7 +979,7 @@ function Intersection(functions){
 Intersection.prototype = new Operation();
 
 function Difference(functions){
-	this.functions = functions;
+	this.inputFunction = functions;
 	
 	this.getExpression = function(){
 		if(this.validate()){
@@ -978,7 +995,7 @@ function Difference(functions){
 	},
 	this.validate = function(){
 		this.clearMessages();
-		if(this.functions.length == 0){
+		if(this.inputFunction.length == 0){
 			this.addErrorMessage("Please select at least one set to diff!");
 			return false;
 		}
@@ -988,15 +1005,43 @@ function Difference(functions){
 };
 Difference.prototype = new Operation();
 
+function Join(functions){
+	this.inputFunction = functions;
+	this.inplace = false;
+	this.getExpression = function(){
+		if(this.validate()){
+			var join = this.inputFunction[0].getExpression();
+			for(var i=1; i < this.inputFunction.length; i++) {
+				join += ".join(" +this.inputFunction[i].getExpression()+", inplace:"+this.inplace+")";
+			}			
+		} else {
+			alert("Not Valid Expression!");
+		}
+		return join;
+	},
+		
+	this.validate = function(){
+		this.clearMessages();
+		if(this.inputFunction.length == 0){
+			this.addErrorMessage("Please select at least one set to join!");
+			return false;
+		}
+		return true;
+	}
+};
+Join.prototype = new Operation();
+
+
 //TODO include a param that is the list of params for the chosen map function
-function Map(inputFunction){
+function Map(inputFunction, isVisual){
+	this.isVisual = isVisual || false
 	if(!level){
 		var level = 1;
 	}
 	this.inputFunction = inputFunction;
 	this.mapFunction = null;
 
-	this.level = level;
+	
 	
 	this.setFunction = function(mapFunction){
 		this.mapFunction = mapFunction;
@@ -1038,8 +1083,8 @@ function Group(inputFunction, level){
 	}
 	
 	this.inputFunction = inputFunction;
-	this.level = level;
 	
+	this.imageSetExpression = null;
 	this.setParams = function(params){
 		groupParams = {}
 		
@@ -1102,8 +1147,12 @@ function Group(inputFunction, level){
 		
 		groupParamsExp = this.generateParamsExpr();
 		
-		return inputFunction.getExpression() + ".group{|gf|gf."+this.groupFunction+"("+groupParamsExp+")}";
-		
+		var groupExpr = inputFunction.getExpression() + ".group";
+		if(this.imageSetExpression){
+			groupExpr += "(image_set: " + this.imageSetExpression + ")"
+		}
+		groupExpr += "{|gf|gf."+this.groupFunction+"("+groupParamsExp+")}";
+		return groupExpr;
 	}
 }
 Group.prototype = new Operation();
@@ -1201,11 +1250,16 @@ function Load(setId){
 	}
 }
 Load.prototype = new Operation();
-function Flatten(inputFunction, position){
+function Flatten(inputFunction, position, isVisual){
+	this.isVisual = isVisual || false;
 	this.inputFunction = inputFunction;
 	this.position = position || "image";
 	this.getExpression = function(){
-		return this.inputFunction.getExpression() + ".flatten(position: '"+this.position+"')"
+		var prefix = "";
+		if(this.isVisual){
+			prefix = "v_"
+		}
+		return this.inputFunction.getExpression() + "."+prefix+"flatten(position: '"+this.position+"')"
 	},
 	this.validate = function(){
 		return true;
@@ -1569,7 +1623,7 @@ XPAIR.Xset = function(data, operation){
 		
 		this.$view.find("#visualize").click(function(e){
 
-			op =  new FindRelations(new Load(this_set.getId()), "forward");
+			op =  new Flatten(new FindRelations(new Load(this_set.getId())));
 			op.execute("json", function(data){
 				debugger;
 				this_set.$view.find("#properties").empty();
@@ -1609,6 +1663,15 @@ XPAIR.Xset = function(data, operation){
 
 
 		this.registerProjectBehavior()
+		
+
+		// $("#" + this.getId()).tooltip({title: this.getTitle()});
+
+		// $("[data-toggle='tooltip']").tooltip('destroy');
+		// $("[data-toggle='tooltip']").tooltip();
+		// $("#" + this.getId()).attr('data-original-title', this.getTitle())
+		
+		
 
 		return this.$view;
 	},
@@ -1676,7 +1739,7 @@ XPAIR.Xset = function(data, operation){
 		XPAIR.graph.updateNodeTitle(this.data.id, title);
 		this.data.title = title;
 		XPAIR.AjaxHelper.get("/session/update_title?set="+ this.getId()+ "&title=" + title, "json", function(data){});
-		$('[data-toggle="tooltip"]').attr("title", title);
+		$("#" + this.getId()).attr("data-original-title", title);
 		return this.data.title;
 	},
 	this.getExtension = function(){

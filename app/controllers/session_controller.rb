@@ -36,6 +36,9 @@ class SessionController < ApplicationController
     start = Time.now
     begin
       @resourceset = eval(params[:exp])
+      if(@resourceset.intention.class != Explorable::Rank)
+        # @resourceset.natural_sort!
+      end
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -43,7 +46,7 @@ class SessionController < ApplicationController
     end
     # binding.pry
     @resourceset.index.paginate(20)
-
+    
     @resourceset.save
     # binding.pry
     
@@ -103,7 +106,7 @@ class SessionController < ApplicationController
       end
       @resourceset.server = server
 
-      @resourceset.indexpaginate(20)
+      @resourceset.index.paginate(20)
       @resourceset.id = "all_relations"
       
     end
@@ -144,6 +147,20 @@ class SessionController < ApplicationController
         format.json {render :json => generate_jbuilder(@resourceset)}
       end
     end     
+  end
+  
+  def refine
+    input = Xset.load(params[:set])
+    @resourceset = input.v_refine{|gf| gf.keyword_match(keywords: [params[:str]])}
+    respond_to do |format|
+      if @resourceset.save
+
+        format.js { render :file => "/session/execute.js.erb" }
+        format.json {render :json => generate_jbuilder(@resourceset)}
+      end
+    end     
+    
+    
   end
   
   def search
@@ -363,13 +380,24 @@ class SessionController < ApplicationController
   end
   
   def parse_indexed_items(json, entry, xset)
-    json.array!(entry.indexed_items(@items_page).sort{|i1, i2| i1.to_s <=> i2.to_s}) do |item|
+    items = entry.indexed_items(@items_page)
+    # binding.pry
+    if(xset.intention.class != Explorable::Rank)
+      items = items.sort{|i1, i2| i1.to_s <=> i2.to_s}
+    end
+    
+    json.array!(items) do |item|
       to_jbuilder(json, item, xset)
     end
   end
   
   def parse_children(json, entry, xset)
-    json.array!(entry.children(@group_page).sort{|i1, i2| i1.to_s <=> i2.to_s}) do |child|
+    items = entry.children(@group_page)
+    # binding.pry
+    if(xset.intention.class != Explorable::Rank)
+      items = items.sort{|i1, i2| i1.to_s <=> i2.to_s}
+    end
+    json.array!(items) do |child|
       build_subtree(child, json, xset)
     end
   end

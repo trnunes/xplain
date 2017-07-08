@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
 
   get 'session/execute'
+  get 'session/refine'
   get 'session/update_title'
   get 'session/domain'
   post 'session/execute'

@@ -84,13 +84,14 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.registerBehavior = f
 
 
 XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected = function(branch){
-	pivot = new Pivot(new Flatten(new Load(this_controller.xset.getId()), this_controller.getSelectedPosition()));
+	pivot = new Pivot(new Flatten(new Load(this_controller.xset.getId()), this_controller.getSelectedPosition(), true), true);
 	pivot.addRelation(branch);
 	debugger;
 	if(this_controller.valuesLimit){
 		pivot.limit = this_controller.valuesLimit;
 	}
 	pivot.execute("json", function(data){
+		debugger;
 		this_controller.updateValuesList(data.set.extension, data.set.id);
 	});
 };
@@ -98,7 +99,9 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected
 XPAIR.controllers.AbstractRelationsTreeController.prototype.handlePositionChanged = function(){
 	if(this.getSelectedPosition() == "domain"){
 		this.showDomain();
+		$(this.viewSelector + " #by_image_div").show();
 	} else {
+		$(this.viewSelector + " #by_image_div").hide();
 		this.showImage();
 	}
 };
@@ -108,12 +111,12 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.getSelectedPosition 
 };
 
 XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened = function(relation){
-	var pivot = new Pivot(new Flatten(new Load(relation.li_attr.resultedFrom)));
+	var pivot = new Pivot(new Flatten(new Load(relation.li_attr.resultedFrom), "image", true), true);
 	pivot.addRelation(new Relation(relation.li_attr));
 	pivot.limit = 15;
 
-	var findRelations = new FindRelations(pivot);
-	
+	var findRelations = new FindRelations(pivot, true);
+	debugger;
 	findRelations.execute("json", function(data){
 
 		var jsTreeAdapter = this_controller.tree.adapter
@@ -121,8 +124,9 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened =
 		var relations_hash = new Hashtable();
 		var items = data.set.extension;
 		for(var i in items){
-			if(items[i].resultedFromArray.length > 1){
-				items[i].resultedFrom = items[i].resultedFromArray[items[i].resultedFromArray.length - 2].id
+			debugger;
+			if(items[i].resultedFromArray.length > 0){
+				items[i].resultedFrom = items[i].resultedFromArray[items[i].resultedFromArray.length - 1].id
 			}	
 			jsTreeAdapter.addItem(relation, items[i]);
 		}
@@ -134,7 +138,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree = 
 	debugger;
 	this.tree.createTree($(this.treeDivSel));
 	var position = this.getSelectedPosition();
-	var findRelations = new Flatten(new FindRelations(new Load(this.xset.getId()), position));
+	var findRelations = new Flatten(new FindRelations(new Load(this.xset.getId()), position, true), "image", true);
 	this.tree.loadData(findRelations);
 	debugger;
 	this.tree.onBranchSelected(this.handleBranchSelected);
@@ -157,7 +161,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = f
 
 				  return;
 			  }
-			  var r = new Refine(new Load(setId));
+			  var r = new Refine(new Load(setId), true);
 			  r.position = this_controller.getSelectedPosition();
 			  r.page = (params.data.page || 1);
 			  r.keywordMatch([params.data.term]);
@@ -223,6 +227,22 @@ XPAIR.controllers.RankController = function(xset){
 	},
 	
 	
+	this.registerControllerBehavior = function(){
+		$(this.rankFunctionSel).change(function(e){
+			debugger;
+			if($(this).attr("param_value") == "by_image"){
+				$(this_controller.valuesListSel).select2('destroy');
+				$(this_controller.valuesListSel).empty();
+				$(this_controller.valuesListSel).select2({
+					data: this_controller.xset.getImage(),
+					placeholder: "Select a Set",
+					allowClear: true
+				});
+				
+			}	
+		});
+	},
+	
 	this.buildOperation = function(){
 		var rank = new Rank(new Load(this.xset.getId()));
 		rank.order = $(this.orderRadiosSel + ":checked").attr("param_value") || "ASC"
@@ -258,6 +278,7 @@ XPAIR.controllers.RefineController = function(xset){
 		if(!XPAIR.currentOperation){
 			XPAIR.currentOperation = new FacetedSearch(new Load(this.xset.getId()));
 		}
+		$(this.selectComparatorSel).val("=");
 
 		$(this.connectorsDivSel).hide();
 	},
@@ -395,6 +416,9 @@ XPAIR.controllers.GroupController = function(xset){
 	var this_controller = this;
 	this.operatorSel = this.viewSelector + " input[name='radio_strategy']";
 	this.valuesLimit = 10;
+	this.setSel = this.viewSelector + " #image_select";
+	this.restrictGroupsCheckSel = this.viewSelector + " #restrict_groups_check";
+	this.imageSelectDivSel = this.viewSelector + " #image_select_div";
 	
 	this.initController = function(){
 		this.treeParams.allowMultipleSelection = true;
@@ -403,22 +427,62 @@ XPAIR.controllers.GroupController = function(xset){
 			XPAIR.currentOperation = new Group(new Load(this.xset.getId()));
 		}
 		
+		$(this.setSel).empty();
+		$(this.setSel).select2();
+		$(this.restrictGroupsCheckSel).prop("checked", false);
+		
+		$(this.imageSelectDivSel).hide();
+		
+		
 	},
 	
 	this.registerControllerBehavior = function(){
 		$(this.operatorSel).change(function(){
 			this_controller.handleOperatorChanged($(this));
 		});
+		debugger;
+		$(this.restrictGroupsCheckSel).change(function(){
+			debugger;
+			if(this.checked){
+				$(this_controller.imageSelectDivSel).show();
+				this_controller.populateSetSelector();
+			} else {
+				$(this_controller.imageSelectDivSel).hide();
+			}
+		});
+		
 	},
 	
 	this.handleOperatorChanged = function($operator){
 		XPAIR.currentOperation.groupFunction = $operator.attr("param_value");
+		
 	},
+	this.populateSetSelector = function(){
+
+		var setData = XPAIR.currentSession.sets.values().map(function(s){ return {id: 'Xset.load("' + s.getId() + '")', text: s.getTitle()}});
+		$(this.setSel).select2('destroy');
+		$(this.setSel).empty();
+		$(this.setSel).select2({
+			data: setData,
+			placeholder: "Select a Set",
+			allowClear: true
+		});
+
+	}
 	
 	this.buildOperation = function(){
 		if(XPAIR.currentOperation.groupFunction == "by_relation"){
-			debugger;
+
 			XPAIR.currentOperation.functionParams = {relations: this.selectedRelations};
+			debugger;
+			if($(this.restrictGroupsCheckSel).prop("checked")){
+				var restrictionSet = $(this.setSel).select2('data');
+				if(restrictionSet.length){
+					XPAIR.currentOperation.imageSetExpression = restrictionSet[0].id;
+				}
+				
+			}
+			
 		}
 		
 		return XPAIR.currentOperation;

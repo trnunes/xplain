@@ -118,7 +118,7 @@ function checkEnter(e, input){
     }
     
     if (characterCode == 13) {
-        filterResources(input)
+        // filterResources(input)
         return false
     }
     else {

@@ -79,7 +79,9 @@ module Wxpair
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), 2010]     
     end
     # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
-    papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
+    # papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
+    papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/kb/sparql"
+
     # server = RDFDataServer.new(papers_graph, method: "get", results_limit: 5000, items_limit: 25, use_select: false)
     
 
@@ -91,7 +93,6 @@ module Wxpair
     s = Xset.new('default_set', '') 
     s.server = server
     
-    Xpair::Namespace.new("uspat", "http://us.patents.aksw.org/")
     s.save
     
     test_set = Xset.new('test_set', '')
@@ -107,7 +108,33 @@ module Wxpair
     test_set.add_item Entity.new("_:p10")
     test_set.server = server
     test_set.save
-
+    # module Xpair::Visualization
+    #
+    #   label_for_type "uspat:ontology/Patent", "uspat:property/inventionTitle"
+    #   label_for_image "uspat:property/international-classification", "uspat:property/class"
+    #   label_for_image "uspat:property/applicant", "foaf:lastName"
+    # end
+    Xpair::Namespace.new("uspat", "http://us.patents.aksw.org/")
+    Xpair::Namespace.new("fabio", "http://purl.org/spar/fabio/")
+    Xpair::Namespace.new("cito", "http://purl.org/spar/cito/")
+    Xpair::Namespace.new("c4o", "http://purl.org/spar/c4o/")
+    Xpair::Namespace.new("biro", "http://purl.org/spar/biro/")
+    Xpair::Namespace.new("spardatacite", "http://purl.org/spar/datacite/")
+    Xpair::Namespace.new("sparpro", "http://purl.org/spar/pro/")
+    Xpair::Namespace.new("prismstandard", "http://prismstandard.org/namespaces/basic/2.0/")
+    Xpair::Namespace.new("sparpro", "http://purl.org/spar/pro/")
+    Xpair::Namespace.new("frbr", "http://purl.org/vocab/frbr/core#")
+    Xpair::Namespace.new("w3iont", "https://w3id.org/oc/ontology/")
+    
+    module Xpair::Visualization
+      label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "http://purl.org/dc/terms/title"
+      label_for_type "http://purl.org/spar/fabio/Expression", "http://purl.org/dc/terms/title"
+      label_for_type "http://purl.org/spar/fabio/JournalArticle", "http://purl.org/dc/terms/title"
+      label_for_type "foaf:Agent", "foaf:name"
+      label_for_type "http://purl.org/spar/fabio/Book", "http://purl.org/dc/terms/title"
+      label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "http://purl.org/dc/terms/title"
+    end
+    
 
   end
 end
