@@ -41,7 +41,7 @@ XPAIR = {
 	
 	getItemExpression: function(paramValue){
 		var expr = "";
-		
+		debugger;
 		if(paramValue.getExpression){
 			
 			expr = paramValue.getExpression(); 
@@ -158,6 +158,16 @@ function Relation(data){
 		exp += ")";
 		return exp;
 	}
+};
+
+function XsetExpr(setId){
+	this.id = setId;
+	
+	this.getExpression = function(){
+		var expr = "Xset.load('" + this.id.replace(/#/, "%23") + "')";
+		return expr;
+	}
+	
 };
 
 //TODO generalize the inputFunction param

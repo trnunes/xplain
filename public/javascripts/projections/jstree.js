@@ -794,7 +794,17 @@ XPAIR.projections.Jstree = function(adapter){
 				var set_id = node_to_open.li_attr.set;
 
 				//exploration expression
-				var findRelations = new FindRelations(new Select(new Load(set_id), [new Item(item_to_open_id)]));
+				debugger;
+				if(node_to_open.li_attr.item_type == "SchemaRelation"){
+					debugger;
+					var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr
+					set_id = $tree.jstree().get_node(node_to_open.parent).li_attr.set
+					var findRelations = new Pivot(new Select(new Load(set_id), [new Item(item_id)]));
+					findRelations.relations = [new Relation(node_to_open.li_attr)]
+				} else {
+					var findRelations = new FindRelations(new Select(new Load(set_id), [new Item(item_to_open_id)]));
+				}
+				
 				
 				findRelations.execute("json", tree_update_function);
 			}

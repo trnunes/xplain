@@ -1,7 +1,24 @@
 var XPAIR = XPAIR || {};
 XPAIR.graph = new function(){
 	var that = this;
-    this.options = {};
+    this.options = { 
+        physics: {
+          stabilization: false
+        },
+        configure: {
+          filter:function (option, path) {
+			  // debugger;
+            if ((path.indexOf('physics') !== -1) && (option == 'enabled')) {
+              return true;
+            }
+            return false;
+          },
+          container: $('#config')[0],
+		  showButton: false
+        },
+		
+		
+	  };
 		
 	this.nodeColor = {border: '#AFAFAF', background: '#AFAFAF', highlight:{border: '#3fe2f5', background: '#3fe2f5'}}
 

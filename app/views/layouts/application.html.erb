@@ -36,6 +36,14 @@
 	
 
   <%= csrf_meta_tags %>
+  <style type="text/css">
+ 
+    #config {
+      float:left;
+      width: 400px;
+      height: 600px;
+    }
+  </style>
 </head>
 <body>
 <div>
@@ -92,7 +100,7 @@
 					   <label><input type="radio" class = "param" param = "grouping_function" param_value = "clustering" name="radio_strategy">Clustering</label>
 					 </div> -->
 				 </div>
-            </div>
+
 				<div>
 		            <div class="modal-body">
 					</div>
@@ -132,6 +140,11 @@
 				  </div>
 				</div>
 			</form>
+ 		   <div class="modal-footer">
+ 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+			   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
+ 	       </div>
+			
         </div>
         <!-- /.modal-content -->
     </div>
@@ -146,8 +159,16 @@
                  <h4 class="modal-title">Grouping Strategy</h4>
 				 <div class="form-group" >
 					 <div class="radio">
-					   <label><input type="radio" class = "relation_tree_activator param" param = "grouping_function" param_value = "by_relation" name="radio_strategy" checked>By Relation</label>
+					   <label><input type="radio" class = "relation_tree_activator param" param = "grouping_function" param_value = "by_relation" name="radio_strategy" checked>By Schema Relation</label>
 					 </div>
+					 <div class="radio">
+					   <label><input type="radio" class = "param related_set_activator" param = "grouping_function" param_value = "by_relation" name="radio_strategy">By Related Set</label>
+					 </div>
+					 
+					 <div class="radio">
+					   <label><input type="radio" class = "param by_domain_act" param = "grouping_function" param_value = "by_domain" name="radio_strategy">By Domain</label>
+					 </div>
+					 
 					 <div class="radio">
 					   <label><input type="radio" class = "param" param = "grouping_function" param_value = "user_defined" name="radio_strategy">Define Custom Operator</label>
 					 </div>
@@ -156,20 +177,32 @@
 					   <label><input type="radio" class = "param" param = "grouping_function" param_value = "clustering" name="radio_strategy">Clustering</label>
 					 </div> -->
 				 </div>
-				 <div class="form-group" >
+				 <!-- <div class="form-group" >
 
 					 <div class="checkbox">
 					   <label><input type="checkbox" id = "restrict_groups_check">Restrict Groups by Set</label>
 					 </div>
-				 </div>
+				 </div> -->
 				 
             </div>
 				<div>
+					
 		            <div class="modal-body">
 					</div>
 				</div>
 					
 				<form class="form-horizontal">
+				<div class="related_sets_div">
+  					<div class="form-group">
+  					  <label class="control-label col-sm-2" for="pwd">Choose Related Set</label>
+  					  <div class="col-sm-10">
+  						 <select class="form-control related_sets_select">
+  						   <option value="sm"><a>None</a></option>
+  						 </select>
+  					  </div>
+  					</div>
+				</div>
+					
   				  <div class="form-group" id ="image_select_div">
   				    <label class="control-label col-sm-2" for="pwd">Select Restriction Set</label>
   				    <div class="col-sm-10"> 
@@ -180,7 +213,7 @@
   				  </div>
 					
 					  <div class="form-group">
-					    <label class="control-label col-sm-2" for="pwd">Values Preview</label>
+					    <label class="control-label col-sm-2" for="pwd">Groups Preview</label>
 					    <div class="col-sm-10"> 
 						   <select class="form-control values_select">
 						     <option value="sm"><a>Grouping Values</a></option>
@@ -188,6 +221,10 @@
 					    </div>
 					  </div>
 				</form>
+	 		   <div class="modal-footer">
+	 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+				   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
+	 	       </div>
         </div>
         <!-- /.modal-content -->
     </div>
@@ -226,6 +263,11 @@
 					    </div>
 					  </div>
 				</form>
+ 	 		   <div class="modal-footer">
+ 	 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+ 				   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
+ 	 	       </div>
+				
         </div>
         <!-- /.modal-content -->
     </div>
@@ -311,6 +353,11 @@
 				    </div>
 				  </div>
 				</form>
+ 	 		   <div class="modal-footer">
+ 	 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+ 				   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
+ 	 	       </div>
+				
         </div>
         <!-- /.modal-content -->
     </div>
@@ -368,6 +415,11 @@
 					    </div>
 					  </div>
 				</form>
+ 	 		   <div class="modal-footer">
+ 	 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+ 				   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
+ 	 	       </div>
+				
         </div>
         <!-- /.modal-content -->
     </div>

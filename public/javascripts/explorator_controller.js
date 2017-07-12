@@ -222,7 +222,9 @@ function startOperation(widget){
 	if(!$(widget).hasClass("set_operation")){
 		var setId = $(inputParams[0]).attr("id");
 		var operationName = $(widget).attr("operation");
-		var operationController = eval("new XPAIR.controllers."+operationName+"Controller(XPAIR.currentSession.getSet(setId));");
+		debugger;
+		var operationController = XPAIR.activeControllers.get(operationName) || eval("new XPAIR.controllers."+operationName+"Controller(XPAIR.currentSession.getSet(setId));");
+
 		operationController.init();
 	}
 }
@@ -298,7 +300,9 @@ function cmd_set(){
 	
 	
     $('._equal').unbind().each(function(item){
+		debugger;
         $(this).on("click", function(){
+			debugger;
 
 			parameters.put('B', $('.SELECTED'));
 
@@ -388,6 +392,7 @@ function clear(){
 	$('.filter_comparator_active').removeClass('filter_comparator_active');
 	XPAIR.currentOperation = null;
 	clearFacetModal();
+	XPAIR.activeControllers = new Hashtable();
 }
 
 function removeCSS(item){

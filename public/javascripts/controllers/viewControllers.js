@@ -1,3 +1,8 @@
+XPAIR.activeControllers = new Hashtable()
+XPAIR.getController = function(operationName){
+	XPAIR.activeControllers.get(operationName);
+};
+
 XPAIR.controllers = XPAIR.controllers || {};
 
 XPAIR.controllers.AbstractRelationsTreeController = function(){};
@@ -7,6 +12,9 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	this.setIdOfValuesList = "";
 	
 	this.treeDivSel = this.viewSelector + " .modal-body";
+	this.relatedSetsDiv = this.viewSelector + " .related_sets_div"
+	this.relatedSetsSel = this.viewSelector + " .related_sets_select"
+	this.relatedSetAct = this.viewSelector + " .related_set_activator"
 	this.valuesListSel = this.viewSelector + " .values_select";
 	this.positionRadiosSel = this.viewSelector +" input[name='radio_pos']";
 	this.positionDivSel = this.viewSelector + " #position";
@@ -17,8 +25,38 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	this.registerBehavior();
 	this_controller = this;
 
-	$(this.viewSelector).off('hide.bs.modal').on("hide.bs.modal", function(){
+	// $(this.viewSelector).off('hide.bs.modal').on("hide.bs.modal", function(){
+	// 	if(this.tree){
+	// 		debugger;
+	// 		this_controller.selectedRelations = this.tree.getSelection();
+	// 		this.tree.hide();
+	// 	}
+	//
+	// });
+	
+	$(this.viewSelector + " .clear").click(function(){
+
+		debugger;
+		if(this_controller.tree){
+			debugger;
+			this_controller.selectedRelations = this_controller.tree.getSelection();
+			this_controller.tree.hide();
+		}
+		$(this_controller.valuesListSel).select2();
+		$(this_controller.valuesListSel).select2('val', null);
+		$(this_controller.valuesListSel).empty();
+		$(this_controller.relatedSetsDiv).hide();
+		clear();
+
+	});
+	
+	$(this_controller.viewSelector + " .exec").click(function(){
 		this_controller.dismiss();
+		if(XPAIR.currentOperation.execute("json")){
+			clear();
+			XPAIR.activeControllers = new Hashtable();
+			$(this_controller.viewSelector).parents('.modal').modal('hide');
+		}
 	});
 
 	$(this.viewSelector +  " #image").prop("checked", true);
@@ -27,12 +65,15 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	} else {
 		$(this.positionDivSel).hide();
 	}
+	
+	
 	if($(this.treeActivatorRadioSel).length){
-		$(this.treeActivatorRadioSel).prop("checked", false);
-		this.handlePositionChanged();
+		// $(this.treeActivatorRadioSel).prop("checked", false);
+		// this.handlePositionChanged();
 	} else {
 		this.loadRelationsTree();
 	}
+	$(this_controller.relatedSetsDiv).hide();
 
 	$(this.viewSelector).modal("show");
 	this.initController();
@@ -61,16 +102,34 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.registerBehavior = f
 	debugger;
 	$(this.treeActivatorRadioSel).unbind().change(function() {
 		debugger;
+		$(this_controller.valuesListSel).select2();
+		$(this_controller.valuesListSel).select2('data', null);
+		$(this_controller.valuesListSel).empty();
         if(this.checked && $(this).hasClass("relation_tree_activator")) {
 			if(this_controller.tree){
 				this_controller.tree.restore();
 			} else{
+				
 				this_controller.loadRelationsTree();
 			}
+			$(this_controller.relatedSetsDiv).hide()
+			
         } else {
 			if(this_controller.tree){
 				this_controller.tree.hide();
 				this_controller.handlePositionChanged();
+			}
+			if($(this).hasClass("related_set_activator")){
+				this_controller.showRelatedSetsList();
+			} else if($(this).hasClass("by_domain_act")){
+				if(this_controller.xset.getResultedFrom()){
+					if(this_controller.xset.getResultedFrom().length > 0){
+						var dset = XPAIR.currentSession.getSet(this_controller.xset.getResultedFrom()[0]);
+						this_controller.updateValuesList(dset.data.extension, dset.getId());
+					}
+				}
+			} else {
+				$(this_controller.relatedSetsDiv).hide();
 			}
         }
     });
@@ -96,13 +155,19 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected
 	});
 };
 
+
 XPAIR.controllers.AbstractRelationsTreeController.prototype.handlePositionChanged = function(){
+	debugger;
 	if(this.getSelectedPosition() == "domain"){
 		this.showDomain();
 		$(this.viewSelector + " #by_image_div").show();
 	} else {
 		$(this.viewSelector + " #by_image_div").hide();
 		this.showImage();
+	}
+	
+	if(this_controller.positionChanged){
+		this_controller.positionChanged(this.getSelectedPosition());
 	}
 };
 
@@ -134,6 +199,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened =
 };
 
 XPAIR.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree = function(){
+	$(this.relatedSetsDiv).hide();
 	this.tree = this.tree || new XPAIR.projections.RelationPathTree(this.xset, $(this.treeDivSel), this.treeParams);
 	debugger;
 	this.tree.createTree($(this.treeDivSel));
@@ -145,9 +211,44 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree = 
 	this.tree.onBranchOpened(this.handleBranchOpened);
 };
 
+XPAIR.controllers.AbstractRelationsTreeController.prototype.showRelatedSetsList = function(){
+	debugger;
+	$(this.relatedSetsDiv).show();
+	var sets = XPAIR.currentSession.sets.values();
+	var relatedSets = []
+	for(var i in sets){
+		var s = sets[i];
+		if(s.getResultedFrom() && s.getResultedFrom()[0] == this_controller.xset.getId()){
+			relatedSets.push(s);
+		}
+	}
+	
+	var setData = relatedSets.map(function(s){ return {id: s.getId(), text: s.getTitle()}});
+	if(setData.length > 0){
+		debugger;
+		$(this_controller.viewSelector + ' .values_select').val(relatedSets[0].data.extension[0]);
+		this_controller.updateValuesList(relatedSets[0].data.extension, setData[0].id)
+		
+	}
+	
+
+	$(this_controller.relatedSetsSel).empty();
+	$(this_controller.relatedSetsSel).select2({
+		data: setData,
+		placeholder: "Select a Set",
+		allowClear: true
+	});
+	
+	$(this_controller.relatedSetsSel).on('change', function(){
+		this_controller.updateValuesList(XPAIR.currentSession.getSet(this.value).data.extension, XPAIR.currentSession.getSet(this.value).getId())
+	});
+	
+};
+
 XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = function(data, setId){
 	var items = data;
 	$(this.viewSelector + ' .values_select').val([]);
+	$(this.viewSelector + ' .values_select').empty();
 	this.setIdOfValuesList = setId;
 	$(this.viewSelector + ' .values_select').select2({
 		ajax: {
@@ -173,6 +274,11 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = f
 			
 			processResults: function(data) {
 				var selectData = data.map(function(item){return {id: item.expression, text: item.text}});
+				if(selectData.length > 0){
+					debugger;
+					$(this.viewSelector + ' .values_select').select2('val', selectData[0])
+				}
+				
 				return {
 				results: selectData,
 					pagination: {
@@ -194,6 +300,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = f
 	for(var i in items){
 		$(this.viewSelector + ' .values_select').append(new Option(items[i].text, items[i].expression, true, true));
 	}
+	debugger;
 };
 
 XPAIR.controllers.AbstractRelationsTreeController.prototype.showDomain = function(){
@@ -224,6 +331,7 @@ XPAIR.controllers.RankController = function(xset){
 		$(this.viewSelector + " #alpha_rank").prop("checked", true);
 		$(this.viewSelector + " #asc").prop("checked", true);
 		$(this.viewSelector +  " #image").prop("checked", true);
+		$(this_controller.viewSelector + " [param_value=by_image]").parent().hide();
 	},
 	
 	
@@ -252,6 +360,14 @@ XPAIR.controllers.RankController = function(xset){
 			rank.functionParams = {relation: this.selectedRelations[0]}
 		}		
 		return rank;
+	},
+	
+	this.positionChanged = function(position){
+		if(position == "image"){
+			$(this_controller.viewSelector + " [param_value=by_image]").parent().hide();
+		} else {
+			$(this_controller.viewSelector + " [param_value=by_image]").parent().show();
+		}
 	}
 	
 };
@@ -404,7 +520,7 @@ XPAIR.controllers.PivotController = function(xset){
 	
 	this.buildOperation = function(){
 		debugger;
-		XPAIR.currentOperation.relations = this.selectedRelations;
+		XPAIR.currentOperation.relations = this_controller.selectedRelations;
 		return XPAIR.currentOperation;
 	}	
 };
@@ -432,6 +548,8 @@ XPAIR.controllers.GroupController = function(xset){
 		$(this.restrictGroupsCheckSel).prop("checked", false);
 		
 		$(this.imageSelectDivSel).hide();
+		
+		XPAIR.activeControllers.put('Group', this);
 		
 		
 	},
@@ -472,8 +590,16 @@ XPAIR.controllers.GroupController = function(xset){
 	
 	this.buildOperation = function(){
 		if(XPAIR.currentOperation.groupFunction == "by_relation"){
+			
+			var relations = this.selectedRelations
+			if(this.selectedRelations.length == 0){
+				if($(this.relatedSetsSel).select2('data')[0]){
+					relations = [new XsetExpr($(this.relatedSetsSel).select2('data')[0].id)];
+				}
+			}
+				
 
-			XPAIR.currentOperation.functionParams = {relations: this.selectedRelations};
+			XPAIR.currentOperation.functionParams = {relations: relations};
 			debugger;
 			if($(this.restrictGroupsCheckSel).prop("checked")){
 				var restrictionSet = $(this.setSel).select2('data');
@@ -481,6 +607,14 @@ XPAIR.controllers.GroupController = function(xset){
 					XPAIR.currentOperation.imageSetExpression = restrictionSet[0].id;
 				}
 				
+			}
+			
+		} else if(XPAIR.currentOperation.groupFunction == "by_domain"){
+			debugger;
+			if(this.xset.getResultedFrom()){
+				if(this.xset.getResultedFrom().length > 0){
+					XPAIR.currentOperation.functionParams = {domain_set: new XsetExpr(this.xset.getResultedFrom()[0])};
+				}
 			}
 			
 		}
@@ -501,14 +635,27 @@ XPAIR.controllers.MapController = function(xset){
 		XPAIR.currentOperation = new Map(new Load(this.xset.getId()));
 		$(this.functionDefinitionFormSel).hide();
 		
-		$(this.viewSelector).on("hide.bs.modal", function(){
-			this_controller.dismiss();
-		});
+
 		$(this.functionsRadioSel).unbind().change(function(e){
+			debugger;
 			this_controller.handleFunctionChange($(this));
+		});
+		XPAIR.activeControllers.put('Map', this);
+		$(this.viewSelector + " .clear").click(function(){
+			clear();
+		});
+	
+		$(this_controller.viewSelector + " .exec").click(function(){
+			this_controller.dismiss();
+			debugger;
+			if(XPAIR.currentOperation.execute("json")){
+				clear();
+				$(this_controller.viewSelector).parents('.modal').modal('hide');
+			}
 		});
 		
 		$(this.viewSelector).modal("show");
+		
 		
 	},
 	
@@ -525,10 +672,10 @@ XPAIR.controllers.MapController = function(xset){
 	},
 	
 	this.dismiss = function(){
-		var selectedFunction = $(this.functionsRadioSel + ":checked").attr("param_value");
+		var selectedFunction = $(this_controller.functionsRadioSel + ":checked").attr("param_value");
 		XPAIR.currentOperation.mapFunction = selectedFunction;
 		if(selectedFunction == "user_defined"){
-			this.handleUserDefinedFunctionFormSubmit();
+			this_controller.handleUserDefinedFunctionFormSubmit();
 		}
 	}
 	
