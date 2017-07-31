@@ -2,6 +2,7 @@
  * @author samuraraujo
  */
 var loading_text="Loading ..."
+XPAIR.activeRequests = [];
 XPAIR.AjaxHelper = {
 	encondeUrl: function(url){
 	    codes =        ['%25', '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26', '%3D', '%2B',  '%2C', '%2F', '%3F', '%23', '%5B', '%5D'];
@@ -27,23 +28,30 @@ XPAIR.AjaxHelper = {
 	
 	get: function(uri, format, success_function) {
 	    $('#loadwindow').show();
-		$.ajax({
+		XPAIR.activeRequests.push($.ajax({
 			type: 'GET',
 			url: uri,
 			format: format,
+			
 			success: function(data, status, jqrequest){
 				
 
 				$('#loadingtext').innerHTML = loading_text;
 	            $('#loadwindow').hide();			
 				success_function(data);
+			},
+			error: function(data, status, jqrequest){
+				$('#loadwindow').hide();
+
+				console.log(data);
+				clear();
 			}
-		});	
+		}));
 	},
 	
 	post: function(uri, format, success_function) {
 	    $('#loadwindow').show();
-		$.ajax({
+		XPAIR.activeRequests.push($.ajax({
 			type: 'POST',
 			url: uri,
 			format: format,
@@ -53,8 +61,13 @@ XPAIR.AjaxHelper = {
 				$('#loadingtext').innerHTML = loading_text;
 	            $('#loadwindow').hide();			
 				success_function(data);
+			},
+			error: function(data, status, jqrequest){
+				$('#loadwindow').hide();			
+				console.log(data);
+				clear();
 			}
-		});	
+		}));	
 	}	
 	
 }

@@ -669,7 +669,11 @@ XPAIR.projections.Jstree = function(adapter){
 									var xsetAdapter = new XPAIR.adapters.JstreeAdapter(xset);
 									new XPAIR.projections.Jstree(xsetAdapter).init();									
 								}
-								XPAIR.AjaxHelper.get('/session/instances.json?type=' + $node.data.item.replace("#", "%23"), "json", f);
+								
+								var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Item($node.li_attr)]));
+								pivot.addRelation(new Relation({item: "rdf:type", item_type: "SchemaRelation", inverse: true}))
+								pivot.execute("json");
+								
 			                }
 			            },
 			            "relations": {

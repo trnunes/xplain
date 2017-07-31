@@ -1597,6 +1597,7 @@ XPAIR.Xset = function(data, operation){
 	}
 	this.createEmptyView = function(){
 		this.$view = $("#setViewTemplate").clone();
+		this.$view.find('#windowtitlemin').hide();
 		this.$view.attr({
 			"id": data.id,
 			"exp": "Xset.load('"+data.id+"')",
@@ -1605,6 +1606,7 @@ XPAIR.Xset = function(data, operation){
 
 		this.$view.find("#size").html(data.size + " Items");
 		this.$view.find("#set_title").html(data.title);
+		this.$view.find("#titlemin").html(data.title);
 		this.$view.find("#set_title").click(function(e){
 			e.stopPropagation();
 			this_set.$view.find("#set_title").html("<input type=\"text\" id=\"set_title_input\">");
@@ -1612,6 +1614,7 @@ XPAIR.Xset = function(data, operation){
 			this_set.$view.find("#set_title_input").bind("enterKey",function(e){
 				
 				this_set.$view.find("#set_title").html($(this).val());
+				this_set.$view.find("#titlemin").html($(this).val())
 				this_set.setTitle($(this).val());
 				
 			});

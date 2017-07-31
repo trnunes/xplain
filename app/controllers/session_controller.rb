@@ -1,3 +1,4 @@
+require 'timeout'
 class SessionController < ApplicationController
   before_action :load_current_session
   
@@ -35,9 +36,14 @@ class SessionController < ApplicationController
     
     start = Time.now
     begin
+      # begin
+      #   status = Timeout::timeout(10) {@resourceset = eval(params[:exp])}
+      # rescue Timeout::Error
+      #   render {:json=>'This is taking way too long.'}
+      # end
       @resourceset = eval(params[:exp])
       if(@resourceset.intention.class != Explorable::Rank)
-        # @resourceset.natural_sort!
+        @resourceset.natural_sort!
       end
     rescue Exception => e
       puts e.message
@@ -176,6 +182,7 @@ class SessionController < ApplicationController
     @resourceset.server = server
     @resourceset.index.paginate(20)
     Explorable.exploration_session.add_set @resourceset
+    @resourceset.natural_sort!
     # binding.pry
     
     respond_to do |format|
@@ -225,10 +232,14 @@ class SessionController < ApplicationController
     @group_page = 1
     
     @resourceset = Xset.new('instances', "pivot(select(type), \"typeOf\")")
-    @resourceset.index.indexed_items = type.instances
+
+    @resourceset.resulted_from = Xset.load(params[:set])
+
+    type.instances.each{|t| @resourceset.add_item t}
     @resourceset.server = server
 
-
+    @resourceset = @resourceset.select_items([type]).pivot(relations: [SchemaRelation.new(Xpair::Namespace.expand_uri("rdf:type"), true)])
+    Explorable.exploration_session.add_set @resourceset
     # binding.pry
     @resourceset.index.paginate(20)
     # binding.pry
@@ -383,9 +394,9 @@ class SessionController < ApplicationController
     items = entry.indexed_items(@items_page)
     # binding.pry
     if(xset.intention.class != Explorable::Rank)
-      items = items.sort{|i1, i2| i1.to_s <=> i2.to_s}
+      items = items.sort{|i1, i2| i1.text <=> i2.text}
     end
-    
+    # binding.pry
     json.array!(items) do |item|
       to_jbuilder(json, item, xset)
     end

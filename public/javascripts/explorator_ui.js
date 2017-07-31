@@ -21,7 +21,8 @@ jQuery.fn.extend({
 		if(!$(this).find("._NO_MINIMIZE").next().is(":visible")){
 			$(this).find("._NO_MINIMIZE").nextAll().slideToggle();
 		}
-		
+		$(this).find('#windowtitlemin').hide();
+		$(this).find('#windowtitlemax').show();
 		$(this).css("top", "5px");
 		$(this).find(".btn-group").show();
 		$(this).css("width", "350px");
@@ -335,6 +336,8 @@ function register_ui_window_behaviour(){
 			$(this).parents('.hideable').find('._show').show();
 			$(this).parents('.hideable').first().attr("style", "");
             $(this).parents('.hideable').find("._NO_MINIMIZE").nextAll().slideToggle();
+			$(this).parents('.hideable').find('#windowtitlemin').show();
+			$(this).parents('.hideable').find('#windowtitlemax').hide();
 			$(this).parents('.hideable').css("top", "0px");
 			$(this).parents('.hideable').css("width", "150px");
 			$(this).parents('.hideable').css("height", "50px");

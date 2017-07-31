@@ -50,7 +50,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 
 	});
 	
-	$(this_controller.viewSelector + " .exec").click(function(){
+	$(this_controller.viewSelector + " .exec").off("click").click(function(){
 		this_controller.dismiss();
 		if(XPAIR.currentOperation.execute("json")){
 			clear();
@@ -330,8 +330,8 @@ XPAIR.controllers.RankController = function(xset){
 		debugger;
 		$(this.viewSelector + " #alpha_rank").prop("checked", true);
 		$(this.viewSelector + " #asc").prop("checked", true);
-		$(this.viewSelector +  " #image").prop("checked", true);
-		$(this_controller.viewSelector + " [param_value=by_image]").parent().hide();
+		$(this.viewSelector +  " #domain").prop("checked", true);
+		// $(this_controller.viewSelector + " [param_value=by_image]").parent().hide();
 	},
 	
 	

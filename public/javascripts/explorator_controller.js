@@ -395,6 +395,14 @@ function clear(){
 	XPAIR.activeControllers = new Hashtable();
 }
 
+function cancel(){
+	for(var i in XPAIR.activeRequests){
+		XPAIR.activeRequests[i].abort();
+	}
+	// XPAIR.activeRequests = [];
+	$('#loadwindow').hide();
+}
+
 function removeCSS(item){
     $('.' + item).removeClass(item);
 }

@@ -125,7 +125,12 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 			var path = [new Relation(leafNode.li_attr)];
 			while(parent_relation !== "#") {
 				var parent_relation_node = that.$treeDiv.jstree().get_node(parent_relation);
-				path.unshift(new Relation(parent_relation_node.li_attr));
+				if(parent_relation_node.li_attr.inverse){
+					path.push(new Relation(parent_relation_node.li_attr));
+				}else{
+					path.unshift(new Relation(parent_relation_node.li_attr));
+				}
+				
 				parent_relation = that.$treeDiv.jstree().get_parent(parent_relation);
 			}
 			paths.push(new PathRelation(path));
@@ -204,15 +209,32 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 		var parentRelation = this.$treeDiv.jstree().get_parent(facetRelationSelected);
 
 		path.push(new Relation(facetRelationSelected.li_attr));
+
+		
 		
 		while(parentRelation !== "#") {
 			
 			facetRelationNode = this.$treeDiv.jstree().get_node(parentRelation);
-			path.unshift(new Relation(facetRelationNode.li_attr));
+			debugger;
+			if(facetRelationNode.li_attr.inverse && this.allInverse(path)){
+				path.push(new Relation(facetRelationNode.li_attr));
+			}else{
+				path.unshift(new Relation(facetRelationNode.li_attr));
+			}
+			
 			parentRelation = this.$treeDiv.jstree().get_parent(facetRelationNode);
 		}
 
 		this.notify("onBranchSelected", new PathRelation(path));
 		
+	},
+	this.allInverse = function(path){
+		var allInv = true;
+		path.forEach(function(r){
+			if(!(r.data.inverse)){
+				allInv = false;
+			}
+		});
+		return allInv
 	}
 }

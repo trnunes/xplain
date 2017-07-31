@@ -1,6 +1,7 @@
 var XPAIR = XPAIR || {};
 XPAIR.graph = new function(){
 	var that = this;
+	
     this.options = { 
         physics: {
           stabilization: false
@@ -13,7 +14,6 @@ XPAIR.graph = new function(){
             }
             return false;
           },
-          container: $('#config')[0],
 		  showButton: false
         },
 		
@@ -58,15 +58,33 @@ XPAIR.graph = new function(){
 	},
 	
 	this.removeSet = function(xsetId){
-		
+		that = this;		
 		this.nodes.remove(xsetId);
-		edges = this.edges.get({
+
+		var toEdges = this.edges.get({
 		  filter: function (item) {
 		    return (item.to == xsetId);
 		  }
 		});
+		var fromEdges = this.edges.get({
+		  filter: function (item) {
+		    return (item.from == xsetId);
+		  }
+		});
+		debugger;
+		fromEdges.forEach(function(edge){
+			that.edges.add({
+				from: 1,
+				to: edge.to,
+				label: edge.label,
+				arrows: 'to'
+				
+			});
+			
+			
+		});
 
-		this.edges.remove(edges);
+		this.edges.remove(toEdges);
 
 	},
 

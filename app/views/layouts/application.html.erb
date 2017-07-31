@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Xpair</title>
+  <title>XPlain</title>
 	<%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
     <%= stylesheet_link_tag    'wxpair', media: 'all', 'data-turbolinks-track' => true %>
 	<%= stylesheet_link_tag    'explorator', media: 'all', 'data-turbolinks-track' => true %>
@@ -371,25 +371,30 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                  <h4 class="modal-title">Ranking Strategy</h4>
 				 <div class="form-group" id="position">
-					 <label>Position</label>
-					 <div class="radio">
-					   <label><input type="radio" id="domain" class = "param" param = "position" param_value = "domain" name="radio_pos">Grouping Items</label>
-					 </div>
-					 <div class="radio">
-					   <label><input type="radio" id="image" class = "param" param = "position" param_value = "image" name="radio_pos" checked>Grouped Items</label>
-					 </div>					 
+					 <!-- <label>Position</label>
+					 <div class="radio"> -->
+					   <!-- <label><input type="radio" id="domain" class = "param" param = "position" param_value = "domain" name="radio_pos" checked>Grouping Items</label>
+					 </div> -->
+					 <!-- <div class="radio">
+					   <label><input type="radio" id="image" class = "param" param = "position" param_value = "image" name="radio_pos" >Grouped Items</label>
+					 </div>					  -->
 				 </div>
 				 <div class="form-group" >
 					 <label>Strategy</label>
 					 <div class="radio">
 					   <label><input type="radio" id = "alpha_rank" class = "param" param = "ranking_function" param_value = "alpha_rank" name="radio_strategy" checked>Sort</label>
 					 </div>
-					 <div class="radio" id = "by_image_div">
-					   <label><input type="radio" id = "by_image" class = "param" param = "ranking_function" param_value = "by_image" name="radio_strategy" checked>By Image</label>
+					 <div class="radio">
+					   <label><input type="radio" class="relation_tree_activator param" id="relation_radio" param = "ranking_function" param_value = "by_relation" name="radio_strategy">By Schema Relation</label>
 					 </div>
 					 <div class="radio">
-					   <label><input type="radio" class="relation_tree_activator param" id="relation_radio" param = "ranking_function" param_value = "by_relation" name="radio_strategy">By Relation</label>
+					   <label><input type="radio" class="relation_tree_activator param" id="relation_radio" param = "ranking_function" param_value = "by_relation" name="radio_strategy">By a Related Set</label>
 					 </div>
+					 
+					 <div class="radio" id = "by_image_div">
+					   <label><input type="radio" id = "by_image" class = "param" param = "ranking_function" param_value = "by_image" name="radio_strategy" checked>By Nested Items</label>
+					 </div>
+					 
 				 </div>
 				 <div class="form-group" id="rank_order">
 					 <div class="radio">
