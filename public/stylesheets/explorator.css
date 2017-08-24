@@ -343,7 +343,7 @@ div.windowtoolbar div._view {
     background-color: rgba(153, 153, 153, 0.63);
     margin-bottom: 3px;
 } .windowtitle {
-    z-index: 9;
+    /* z-index: 9; */
     position: absolute;
     float: left;
 } #resname {

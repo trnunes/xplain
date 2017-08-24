@@ -9,6 +9,7 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 	this.$treeDiv = $treeDiv;
 	this.eventsTable = new Hashtable();
 	this.params = params;
+	this.currentSelection = [];
 	var this_projection = this;
 	this.getDiv = function(){
 		return this.$treeDiv;
@@ -106,36 +107,39 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 	},
 	
 	this.getSelection = function(){
-		var checked_nodes = this_projection.$treeDiv.jstree().get_checked(true);
-		that = this_projection;
-		var leafNodes = [];
+		debugger;
+		return this.currentSelection;
 		
-		checked_nodes.forEach(function(node){
-			var firstChild = that.$treeDiv.jstree().get_node(node.children[0])
-			var isLeafNode = (node.children.length == 1 && firstChild.text == "Relations");
-
-			// if (isLeafNode){
-				leafNodes.push(node);
-			// }
-		});
-		var paths = []
-		leafNodes.forEach(function(leafNode){
-			debugger;
-			parent_relation = that.$treeDiv.jstree().get_parent(leafNode);
-			var path = [new Relation(leafNode.li_attr)];
-			while(parent_relation !== "#") {
-				var parent_relation_node = that.$treeDiv.jstree().get_node(parent_relation);
-				if(parent_relation_node.li_attr.inverse){
-					path.push(new Relation(parent_relation_node.li_attr));
-				}else{
-					path.unshift(new Relation(parent_relation_node.li_attr));
-				}
-				
-				parent_relation = that.$treeDiv.jstree().get_parent(parent_relation);
-			}
-			paths.push(new PathRelation(path));
-		});
-		return paths;
+		// var checked_nodes = this_projection.$treeDiv.jstree().get_checked(true);
+		// that = this_projection;
+		// var leafNodes = [];
+		//
+		// checked_nodes.forEach(function(node){
+		// 	var firstChild = that.$treeDiv.jstree().get_node(node.children[0])
+		// 	var isLeafNode = (node.children.length == 1 && firstChild.text == "Relations");
+		//
+		// 	// if (isLeafNode){
+		// 		leafNodes.push(node);
+		// 	// }
+		// });
+		// var paths = []
+		// leafNodes.forEach(function(leafNode){
+		// 	debugger;
+		// 	parent_relation = that.$treeDiv.jstree().get_parent(leafNode);
+		// 	var path = [new Relation(leafNode.li_attr)];
+		// 	while(parent_relation !== "#") {
+		// 		var parent_relation_node = that.$treeDiv.jstree().get_node(parent_relation);
+		// 		if(parent_relation_node.li_attr.inverse){
+		// 			path.push(new Relation(parent_relation_node.li_attr));
+		// 		}else{
+		// 			path.unshift(new Relation(parent_relation_node.li_attr));
+		// 		}
+		//
+		// 		parent_relation = that.$treeDiv.jstree().get_parent(parent_relation);
+		// 	}
+		// 	paths.push(new PathRelation(path));
+		// });
+		// return paths;
 	},
 	
 	this.hide = function(){
@@ -224,6 +228,7 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 			
 			parentRelation = this.$treeDiv.jstree().get_parent(facetRelationNode);
 		}
+		this.currentSelection = [new PathRelation(path)];
 
 		this.notify("onBranchSelected", new PathRelation(path));
 		

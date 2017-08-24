@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   post 'refine/index'
   post 'session/index'
   get 'session/new'
+  get 'session/help'
   get 'welcome/index'
   root 'welcome#index'
   

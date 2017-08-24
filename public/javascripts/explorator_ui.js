@@ -244,7 +244,15 @@ function register_ui_window_behaviour(){
     //         ajax_create($(this).attr("exp"));
     //     });
     // });
-
+	$(".help_btn").unbind().click(function(){
+		if ($('#' + $(this).attr("operation") + "_help").is(':empty')){
+			XPAIR.AjaxHelper.get("/session/help?operation=" + $(this).attr("operation"));
+		}else{
+			$('#' + $(this).attr("operation") + "_help").empty();
+			
+		}
+		
+	});
 	
     $('._refresh').each(function(item){
         $(this).on ("click", function(){

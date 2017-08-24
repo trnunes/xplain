@@ -188,8 +188,10 @@ function setupRefineControls(){
 }
 //These are the operations applyed over sets
 function startOperation(widget){
+
 	if(parameters.get("operation")){
 		if(operationId == $(widget).attr("operation")){
+
 			return;
 		}
 		
@@ -231,6 +233,8 @@ function startOperation(widget){
 function cmd_set(){
 	
 	$(".operation").click(function(){
+		debugger;
+		$(".help").empty();
 		startOperation(this);
 	});
 	

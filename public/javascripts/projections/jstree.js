@@ -599,7 +599,7 @@ XPAIR.projections.Jstree = function(adapter){
 				};
 				if (node.type === "Entity"){
 			        return {
-						"Trace": common_menu_options,
+						// "Trace": common_menu_options,
 
 			            "Select": selectSubmenu,
 			            "Rename": {
@@ -617,48 +617,92 @@ XPAIR.projections.Jstree = function(adapter){
 			                "action": function (obj) { 
 			                    tree.delete_node($node);
 			                }
-			            },
-						"Trace_Image": {
-			                "separator_before": false,
-			                "separator_after": false,
-			                "label": "Trace Images",
-			                "action": function (obj) { 
-								var item = this_projection.xset.getItem($(obj.reference.parents()[0]).attr("item"));								
-			                    this_projection.xset.traceImage(item);
-			                }
-							
-						}
+			            }
+						// "Trace_Image": {
+						// 			                "separator_before": false,
+						// 			                "separator_after": false,
+						// 			                "label": "Trace Images",
+						// 			                "action": function (obj) {
+						// 		var item = this_projection.xset.getItem($(obj.reference.parents()[0]).attr("item"));
+						// 			                    this_projection.xset.traceImage(item);
+						// 			                }
+						//
+						// }
 			        };			
 				} else if(node.type === "SchemaRelation"){
 					return {
 						"Select": selectSubmenu,
-						"Trace": common_menu_options,
 			            "Applied To": {
 			                "separator_before": false,
 			                "separator_after": false,
-			                "label": "Relation Of",
+			                "label": "Domain",
 			                "action": function (obj) { 
-								alert("Relations of");
+						        var tree = $treeView.jstree(true);
+								var node = $treeView.jstree().get_node($node.id);
+								debugger;
+								var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Relation($node.li_attr)]));
+								pivot.addRelation(new Relation({item: "xplain:domain", item_type: "SchemaRelation"}));
+								pivot.execute("json");
 			                }
 			            },
 			            "Range": {
 			                "separator_before": false,
 			                "separator_after": false,
-			                "label": "Range",
+			                "label": "Images",
 			                "action": function (obj) { 
-								alert("Range");
+						        var tree = $treeView.jstree(true);
+								var node = $treeView.jstree().get_node($node.id);
+								debugger;
+								var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Relation($node.li_attr)]));
+								pivot.addRelation(new Relation({item: "xplain:range", item_type: "SchemaRelation"}));
+								pivot.execute("json");
 			                }
 			            },
+			            "Group": {
+			                "separator_before": false,
+			                "separator_after": false,
+			                "label": "Group set by",
+			                "action": function (obj) { 
+						        var tree = $treeView.jstree(true);
+								var node = $treeView.jstree().get_node($node.id);
+								debugger;	
+								var group = new Group(new Load(this_projection.xset.getId()));
+								group.groupFunction = "by_relation"
+								var relations = [new Relation(node.li_attr)];
+								group.functionParams = {relations: relations};
+								group.execute("json");
+			                }
+			            },
+			            "Count": {
+			                "separator_before": false,
+			                "separator_after": false,
+			                "label": "Count related items",
+			                "action": function (obj) { 
+						        var tree = $treeView.jstree(true);
+								var node = $treeView.jstree().get_node($node.id);
+								debugger;
+								var pivot = new Pivot(new Load(this_projection.xset.getId()));
+								pivot.addRelation(new Relation(node.li_attr));
+								var group = new Group(pivot);
+								group.groupFunction = "by_domain"
+								var relations = [new Relation(node.li_attr)];
+								group.functionParams = {domain_set: new XsetExpr(this_projection.xset.getId())};
+								var map = new Map(group);
+								map.mapFunction = "count";
+								map.execute("json");
+			                }
+			            },
+						
 						
 					};
 				} else if(node.type === "Type"){
 					return  {
 						"Select": selectSubmenu,
-						"Trace": common_menu_options,
+						// "Trace": common_menu_options,
 			            "instances": {
 			                "separator_before": false,
 			                "separator_after": false,
-			                "label": "Items",
+			                "label": "Items of this type",
 			                "action": function (obj) { 
 								console.log($node.data.item);
 								var type = $node.text;
@@ -673,7 +717,6 @@ XPAIR.projections.Jstree = function(adapter){
 								var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Item($node.li_attr)]));
 								pivot.addRelation(new Relation({item: "rdf:type", item_type: "SchemaRelation", inverse: true}))
 								pivot.execute("json");
-								
 			                }
 			            },
 			            "relations": {
@@ -681,7 +724,9 @@ XPAIR.projections.Jstree = function(adapter){
 			                "separator_after": false,
 			                "label": "Relations for this type",
 			                "action": function (obj) { 
-								alert("Relations");
+								var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Item($node.li_attr)]));
+								pivot.addRelation(new Relation({item: "xplain:ofType", item_type: "SchemaRelation"}));
+								pivot.execute("json");
 			                }
 			            }
 					};

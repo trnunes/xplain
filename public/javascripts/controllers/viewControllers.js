@@ -46,6 +46,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 		$(this_controller.valuesListSel).select2('val', null);
 		$(this_controller.valuesListSel).empty();
 		$(this_controller.relatedSetsDiv).hide();
+		$(".help").empty();
 		clear();
 
 	});
@@ -60,6 +61,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	});
 
 	$(this.viewSelector +  " #image").prop("checked", true);
+	$(".help").empty();
 	if(this.xset.isGroupedSet()){
 		$(this.positionDivSel).show();
 	} else {
@@ -73,6 +75,8 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	} else {
 		this.loadRelationsTree();
 	}
+	debugger;
+	$(this.viewSelector + " .relation_tree_activator").prop("checked", false)
 	$(this_controller.relatedSetsDiv).hide();
 
 	$(this.viewSelector).modal("show");
@@ -300,6 +304,12 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = f
 	for(var i in items){
 		$(this.viewSelector + ' .values_select').append(new Option(items[i].text, items[i].expression, true, true));
 	}
+	if(items.length > 0){
+		$(this.viewSelector + ' .values_select').val(items[0].expression);
+		$(this.viewSelector + ' .values_select').trigger('change.select2');
+	}
+	
+	
 	debugger;
 };
 

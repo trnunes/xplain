@@ -1,0 +1,40 @@
+<div class="modal fade" id="help_modal"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                 <h4 class="modal-title">Help</h4>
+            </div>
+			<div>
+				<nav class="navbar navbar-default">
+				  <div class="container-fluid">
+				    <ul class="nav navbar-nav">
+				      <li class="active"><a onclick="tabClicked('demo_videos');">Demos</a></li>
+				      <li><a onclick="tabClicked('set_operations');">Set Operations</a></li>
+				      <li><a onclick="tabClicked('rank');">Rank</a></li>
+					  <li><a onclick="tabClicked('pivot');">Pivot</a></li>
+				      <li><a onclick="tabClicked('group');">Group</a></li>
+					  <li><a onclick="tabClicked('map');">Map</a></li>
+					  <li><a onclick="tabClicked('refine');">Filter</a></li>
+				    </ul>
+				  </div>
+				</nav>
+				
+	            <div id="help_body" class="modal-body">
+					<%= render :partial => '/session/demo_videos_help' %>
+
+				</div>
+			</div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<script>
+	function tabClicked(action){
+		XPAIR.AjaxHelper.get('/session/help?div=help_body&operation=' + action); 
+		$('.active').removeClass('active'); 
+		$(this).parent().addClass('active')
+	}
+	
+</script>

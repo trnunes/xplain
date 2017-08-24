@@ -26,7 +26,7 @@ XPAIR.AjaxHelper = {
 		XPAIR.AjaxHelper.post(executeOperationUrl, format, successFunction);
 	},
 	
-	get: function(uri, format, success_function) {
+	get: function(uri, format, success_function = function(){}) {
 	    $('#loadwindow').show();
 		XPAIR.activeRequests.push($.ajax({
 			type: 'GET',

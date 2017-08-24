@@ -95,6 +95,8 @@ module Wxpair
     
     s.save
     
+    Persistable.set_session_repository server
+    
     test_set = Xset.new('test_set', '')
     test_set.add_item Entity.new("_:paper1")
     test_set.add_item Entity.new("_:p2")
