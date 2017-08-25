@@ -72,7 +72,7 @@ class SessionController < ApplicationController
       Filtering.clear()
     end
     # binding.pry
-    #Xpair::Session.load(session[:current_session]).save_expression(params[:exp])
+    Xpair::Session.load(session[:current_session]).save_expression(params[:exp])
     # binding.pry
     @resourceset.index.paginate(20)
     
@@ -141,7 +141,7 @@ class SessionController < ApplicationController
     end
     # binding.pry
     @resourceset.title = "All Relations"
-    #Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').find_relations()")
+    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').find_relations()")
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -169,7 +169,7 @@ class SessionController < ApplicationController
       @resourceset.id = "all_types"
       
     end
-    #Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').pivot(SchemaRelation.new(\"rdf:type\"))")
+    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').pivot(SchemaRelation.new(\"rdf:type\"))")
     @resourceset.title = "Types"
     respond_to do |format|
       if @resourceset.save
@@ -209,7 +209,7 @@ class SessionController < ApplicationController
     Explorable.exploration_session.add_set @resourceset
     @resourceset.natural_sort!
     # binding.pry
-    #Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').refine{|f| f.keyword_match(\"#{keywords.inspect}\")}")
+    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').refine{|f| f.keyword_match(\"#{keywords.inspect}\")}")
     respond_to do |format|
       if @resourceset.save
 
@@ -269,7 +269,7 @@ class SessionController < ApplicationController
     @resourceset.index.paginate(20)
     # binding.pry
     @page = 1
-    #Xpair::Session.load(session[:current_session]).save_expression("Xset.load('#{@resourceset.id}').select_items([Type.new(\"#{params[:type]}\")]).pivot(relations: [SchemaRelation.new(\"rdf:type\"), true)])")
+    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('#{@resourceset.id}').select_items([Type.new(\"#{params[:type]}\")]).pivot(relations: [SchemaRelation.new(\"rdf:type\"), true)])")
     finish = Time.now
 
     puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"     
