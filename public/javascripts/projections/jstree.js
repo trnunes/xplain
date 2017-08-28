@@ -252,14 +252,14 @@ XPAIR.projections.Jstree = function(adapter){
 					},
 					
 					success: function(data){
-						debugger;
+						$('#loadwindow').hide();
 						return data.set.extension.map(function(item){
-							
+
 							var nodeid = $(this_projection.getDiv()).find("[item='"+item.id+"']").attr("id");
 							if(!nodeid){
-								debugger;
 								item.resultedFrom =  this_projection.xset.data.resultedFrom;
 								item.set = this_projection.xset.getId();
+								
 								return this_projection.adapter.addItem("#", item);
 							}
 						});
@@ -278,13 +278,19 @@ XPAIR.projections.Jstree = function(adapter){
 		
 	    var to = false;
 	    $("#" + this_projection.xset.getId() + ' .search-input').keyup(function () {
-			debugger;
+
 	      if(to) { 
 			  clearTimeout(to); 
 		  }
 	      to = setTimeout(function () {
+			  
 	        var v = $("#" + this_projection.xset.getId() + ' .search-input').val();
 			if((v.length > 2) || (!v.length)){
+				if(v.length){
+					$('#loadwindow').show();
+				}
+				
+							debugger;
 				$div.jstree(true).search(v);
 			}
 	        

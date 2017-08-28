@@ -78,6 +78,8 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	debugger;
 	$(this.viewSelector + " .relation_tree_activator").prop("checked", false)
 	$(this_controller.relatedSetsDiv).hide();
+	$(this.viewSelector + ' .values_select').val([]);
+	$(this.viewSelector + ' .values_select').empty();
 
 	$(this.viewSelector).modal("show");
 	this.initController();
