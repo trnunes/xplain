@@ -80,7 +80,7 @@ module Wxpair
     end
     # papers_graph = RDF::Graph.load("./datasets/semanticlancet.ttl")
     # papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/uspat/sparql"
-    papers_graph = "http://192.168.0.15:3000/blazegraph/namespace/kb/sparql"
+    papers_graph = "http://localhost:3000/blazegraph/namespace/kb/sparql"
 
     # server = RDFDataServer.new(papers_graph, method: "get", results_limit: 5000, items_limit: 25, use_select: false)
     
