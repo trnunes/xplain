@@ -132,7 +132,7 @@ module Wxpair
       label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "http://purl.org/dc/terms/title"
       label_for_type "http://purl.org/spar/fabio/Expression", "http://purl.org/dc/terms/title"
       label_for_type "http://purl.org/spar/fabio/JournalArticle", "http://purl.org/dc/terms/title"
-      label_for_type "foaf:Agent", "foaf:name"
+      label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
       label_for_type "http://purl.org/spar/biro/BibliographicReference", "http://purl.org/spar/c4o/hasContent"
       label_for_type "http://purl.org/spar/fabio/Book", "http://purl.org/dc/terms/title"
       label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "http://purl.org/dc/terms/title"
