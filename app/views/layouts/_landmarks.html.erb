@@ -7,49 +7,9 @@
   		<li><a id = "all_types"  >All Data Types</a></li>
   		<li><a id = "all_relations" >All Relations</a></li>
 		<li><a  onclick ="$('#graph_view').show()">Show Graph View</a></li>
-		<li><a  onclick ="XPAIR.AjaxHelper.get('/session/help')">Help</a></li>
+		<li><a  onclick ="XPAIR.AjaxHelper.get('/help/index')">Help</a></li>
       </ul>
     </div>
-
-	
-    <!-- <div id="mainmenu">
-        <ul>
-            <li>
-                <h2>MENU &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<img class="arrow" src="/images/arrow_video_down_white_2.png" width="13" height="13"></h2>
-                <ul>
-                    <div>
-                        <a onclick ="ajax_request('/repository/index')">Repositories</a>
-                    </div>
-
-                    <div>
-                        <a id = "items" class = "_new" exp= "Xset.load('default')">All Items</a>
-                    </div>
-
-                    <div>
-                        <a id = "Types" class = "_new" onclick="ajax_request('session/all_types')">All Types</a>
-                    </div>
-                    <div>
-                        <a id = "Relations" class = "_new" onclick= "ajax_request('session/all_relations')">All Relations</a>
-                    </div>
-                    <div>
-                        <a onclick ="$('qcontainer').show()">Query</a>
-                    </div>
-					 <div>
-                        <a href="/application/reset">Reset Session</a>
-                    </div>
-					  <div>
-                        <a onclick ="ajax_request('/application/index')">Sessions</a>
-                    </div>
-					 <div>
-                        <a onclick ="ajax_request('/css/')">CSS</a>
-                    </div>
-                    <div>
-                        <a href = "http://www.tecweb.inf.puc-rio.br/explorator/" target = "_blank">Help</a>
-                    </div>
-                </ul>
-            </li>
-        </ul>
-    </div> -->
     <%= render :partial => '/layouts/toolbar' %>
 
 	&nbsp;

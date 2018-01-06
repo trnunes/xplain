@@ -18,11 +18,9 @@ Rails.application.routes.draw do
   get 'session/get_level'
   get 'session/search'
   get 'session/project'
-  get 'refine/index'
-  post 'refine/index'
   post 'session/index'
   get 'session/new'
-  get 'session/help'
+  get 'help/index'
   get 'welcome/index'
   root 'welcome#index'
   

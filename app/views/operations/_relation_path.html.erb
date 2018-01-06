@@ -1,0 +1,44 @@
+<div class="modal fade" id="pathModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                 <h4 class="modal-title">Relations Selection</h4>
+				 <div class="form-group" id="position">
+					 <label>Position</label>
+					 <div class="radio">
+					   <label><input type="radio" id="domain" class = "param" param = "position" param_value = "domain" name="radio_pos">Grouping Items</label>
+					 </div>
+					 <div class="radio">
+					   <label><input type="radio" id="image" class = "param" param = "position" param_value = "image" name="radio_pos" checked>Grouped Items</label>
+					 </div>					 
+				 </div>
+				<div>
+		            <div class="modal-body">
+					</div>
+				</div>
+			</div>
+					
+				<form class="form-horizontal">
+					  <div class="form-group">
+					    <label class="control-label col-sm-2" for="pwd">Values Preview</label>
+					    <div class="col-sm-10"> 
+						   <select class="form-control values_select">
+						     <option value="sm"><a>Values</a></option>
+						   </select>
+					    </div>
+					  </div>
+				</form>
+				<div id = "pivot_help" class="help">
+				</div>
+ 	 		   <div class="modal-footer">
+ 	 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+ 				   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
+				   <button type="button" id="pivot_btn" class="btn btn-default help_btn" operation="pivot" >Help</button>
+ 	 	       </div>
+				
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

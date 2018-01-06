@@ -21,7 +21,7 @@
 				</nav>
 				
 	            <div id="help_body" class="modal-body">
-					<%= render :partial => '/session/demo_videos_help' %>
+					<%= render :partial => '/help/demo_videos_help' %>
 
 				</div>
 			</div>
@@ -32,7 +32,7 @@
 </div>
 <script>
 	function tabClicked(action){
-		XPAIR.AjaxHelper.get('/session/help?div=help_body&operation=' + action); 
+		XPAIR.AjaxHelper.get('/help/index?div=help_body&operation=' + action); 
 		$('.active').removeClass('active'); 
 		$(this).parent().addClass('active')
 	}
