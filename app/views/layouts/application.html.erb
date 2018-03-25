@@ -15,15 +15,24 @@
 	
 	<script type="text/javascript" src="/javascripts/jshashtable-master/hashtable.js"></script>
     <script type="text/javascript" src="/javascripts/uuid.js"></script>
-    <script type="text/javascript" src="/javascripts/explorator_ui.js"></script>
-	<script type="text/javascript" src="/javascripts/operations_controller.js"></script>
+	<script type="text/javascript" src="/javascripts/xplain_ui.js"></script>
+    <!-- <script type="text/javascript" src="/javascripts/explorator_ui.js"></script> -->
+	<!-- <script type="text/javascript" src="/javascripts/operations_controller.js"></script> -->
+	<script type="text/javascript" src="/javascripts/exploration_operations.js"></script>
+    <script type="text/javascript" src="/javascripts/xplain_controller.js"></script>
     <script type="text/javascript" src="/javascripts/explorator_ajax.js"></script>
     <script type="text/javascript" src="/javascripts/explorator_helper.js"></script>
     <script type="text/javascript" src="/javascripts/explorator_controller.js"></script>
-	<script type="text/javascript" src="/javascripts/projections/jstree.js"></script>
-	<script type="text/javascript" src="/javascripts/projections/adapters.js"></script>
-	<script type="text/javascript" src="/javascripts/projections/facetTree.js"></script>
-	<script type="text/javascript" src="/javascripts/projections/relationPathTree.js"></script>
+	<script type="text/javascript" src="/javascripts/set_controller.js"></script>
+
+	<script type="text/javascript" src="/javascripts/abstract_widgets/widget.js"></script>
+	<script type="text/javascript" src="/javascripts/abstract_widgets/set.js"></script>
+	<script type="text/javascript" src="/javascripts/abstract_widgets/workspace.js"></script>
+	<script type="text/javascript" src="/javascripts/set_view.js"></script>
+	<script type="text/javascript" src="/javascripts/jstree_view/jstree_view.js"></script>
+	<script type="text/javascript" src="/javascripts/jstree_view/jstree_relation_paths_view.js"></script>
+	<script type="text/javascript" src="/javascripts/twgrid_view/grid.js"></script>
+	<script type="text/javascript" src="/javascripts/accordion_view/accordion_view.js"></script>
 	
 	<script type="text/javascript" src="/javascripts/controllers/viewControllers.js"></script>
 	
@@ -53,10 +62,10 @@
 		<%= render :partial => 'layouts/landmarks'%>
 
 		<div id="exploration_area" style="position: fixed;top: 75px;overflow: auto;width: 100%;height:85%">	
-			<%= render :partial => 'session/graph_div'%>
+			<%= render :partial => 'session/graph_div' %>
 		</div>
 	
-		<%= render :partial => 'session/set_template'%>
+
 
 		<div id="node-popUp">
 		  <span id="node-operation">node</span> <br>

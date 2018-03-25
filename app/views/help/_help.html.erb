@@ -32,7 +32,7 @@
 </div>
 <script>
 	function tabClicked(action){
-		XPAIR.AjaxHelper.get('/help/index?div=help_body&operation=' + action); 
+		XPLAIN.AjaxHelper.get('/help/index?div=help_body&operation=' + action); 
 		$('.active').removeClass('active'); 
 		$(this).parent().addClass('active')
 	}

@@ -1,10 +1,9 @@
 
-XPAIR.projections = XPAIR.projections || {};
+XPLAIN.views = XPLAIN.views || {};
 
 
-XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
-	this.xset = xset;
-	this.adapter = null;
+XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
+	this.setId = setId;
 	this.selectedRelations = [];
 	this.$treeDiv = $treeDiv;
 	this.eventsTable = new Hashtable();
@@ -13,7 +12,7 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 	var this_projection = this;
 	this.getDiv = function(){
 		return this.$treeDiv;
-	}
+	},
 	this.createTree = function($treeDiv){
 		this.destroy();
 		this.$treeDiv.jstree({
@@ -107,39 +106,7 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 	},
 	
 	this.getSelection = function(){
-		debugger;
 		return this.currentSelection;
-		
-		// var checked_nodes = this_projection.$treeDiv.jstree().get_checked(true);
-		// that = this_projection;
-		// var leafNodes = [];
-		//
-		// checked_nodes.forEach(function(node){
-		// 	var firstChild = that.$treeDiv.jstree().get_node(node.children[0])
-		// 	var isLeafNode = (node.children.length == 1 && firstChild.text == "Relations");
-		//
-		// 	// if (isLeafNode){
-		// 		leafNodes.push(node);
-		// 	// }
-		// });
-		// var paths = []
-		// leafNodes.forEach(function(leafNode){
-		// 	debugger;
-		// 	parent_relation = that.$treeDiv.jstree().get_parent(leafNode);
-		// 	var path = [new Relation(leafNode.li_attr)];
-		// 	while(parent_relation !== "#") {
-		// 		var parent_relation_node = that.$treeDiv.jstree().get_node(parent_relation);
-		// 		if(parent_relation_node.li_attr.inverse){
-		// 			path.push(new Relation(parent_relation_node.li_attr));
-		// 		}else{
-		// 			path.unshift(new Relation(parent_relation_node.li_attr));
-		// 		}
-		//
-		// 		parent_relation = that.$treeDiv.jstree().get_parent(parent_relation);
-		// 	}
-		// 	paths.push(new PathRelation(path));
-		// });
-		// return paths;
 	},
 	
 	this.hide = function(){
@@ -168,26 +135,76 @@ XPAIR.projections.RelationPathTree = function(xset, $treeDiv, params){
 			this_projection.$treeDiv.jstree().delete_node(node);
 		});
 	},
+	//TODO Repeated code from jstree_view. Generalize it!
+	this.populate = function(setJson){
+		var jstree_nodes = [];
+		var items = setJson.extension
+		for (var i in items){
+			this.addItem("#", items[i]);
+		}		
+	},
+	this.addItem = function(parentNode, item){
+		debugger;
+		var jstreeItem = this.convertItem(item);
+		var children = jstreeItem.children;
+		
+		this.$treeDiv.jstree();
+		var nodeId = this.$treeDiv.jstree().create_node(parentNode, jstreeItem, "last", null, false);
+		return nodeId;
+	},
+	
+	this.convertItem = function(item){
+		var item_node = {
+			text: item.text,
+			type: item.type,
+			data: {
+				set: item.set, 
+				item: item.id, 
+				type: item.type,
+				resultedFrom: item.resultedFrom,
+				dependencies: item.resultedFromArray 
+			},
+
+			children: [],
+			li_attr: {
+				item: item.id,
+				item_type: item.type,
+				set: item.set,
+				resultedFrom: item.resultedFrom,
+				dependencies: item.resultedFromArray
+			}
+		}
+		
+		if (item_node.type == "SchemaRelation"){
+			item_node.li_attr.inverse = item.inverse
+		}else if ((item.type == "Xpair::Literal") && item.datatype ){
+			item_node.data.datatype = item.datatype;
+			item_node.li_attr.datatype = item.datatype;
+		}
+		
+		if (item.subset){
+			item_node.subset = item.subset
+			item_node.li_attr.subset = item.subset
+		}
+
+		if(item.children !== undefined && item.children.length > 0){
+			for(var i in item.children){
+				item_node.children.push(this.convertItem(item.children[i]))
+			}
+		} else {
+			item_node.children.push({text: "Relations"});
+		}
+
+		return item_node;
+		
+	},
 	
 	this.loadData = function(expression){
 		if (!this.$treeDiv.hasClass("jstree")) {
 		  this.createTree();
 		}
-		
-		var set_id = this_projection.xset.getId();
-		
 		expression.execute("json", function(data){
-			var items = data.set.extension;
-			var relations_hash = new Hashtable();
-			var jstreeAdapter = new XPAIR.adapters.JstreeAdapter(new XPAIR.Xset(data.set));
-			this_projection.adapter = jstreeAdapter;
-			jstreeAdapter.setProjection(this_projection);
-			for(i in items){
-				if(items[i].resultedFromArray.length > 1){
-					items[i].resultedFrom = items[i].resultedFromArray[items[i].resultedFromArray.length - 2].id
-				}
-				jstreeAdapter.addItem("#", items[i]);
-			}
+			this_projection.populate(data.set);
 		});
 	},
 	

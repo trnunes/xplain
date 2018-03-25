@@ -38,7 +38,7 @@ jQuery.fn.extend({
         //removes the element from the model and replace the interface with a new one.
 
         $(this).fadeOut();
-		XPAIR.graph.removeSet($(this).attr("id"));
+		XPLAIN.graph.removeSet($(this).attr("id"));
 		
     }, //close an element
     ui_close: function(item){
@@ -246,7 +246,7 @@ function register_ui_window_behaviour(){
     // });
 	$(".help_btn").unbind().click(function(){
 		if ($('#' + $(this).attr("operation") + "_help").is(':empty')){
-			XPAIR.AjaxHelper.get("/session/help?operation=" + $(this).attr("operation"));
+			XPLAIN.AjaxHelper.get("/session/help?operation=" + $(this).attr("operation"));
 		}else{
 			$('#' + $(this).attr("operation") + "_help").empty();
 			
@@ -352,7 +352,7 @@ function register_ui_window_behaviour(){
 			$(this).parents('.hideable').find(".btn-group").hide();
 			$(this).parents('.hideable').appendTo(".container");
 			debugger;
-			var xset = XPAIR.currentSession.getSet($(this).parents(".set").attr('id'));
+			var xset = XPLAIN.currentSession.getSet($(this).parents(".set").attr('id'));
 			$("._WINDOW").tooltip({title: xset.getTitle()});
 			
 			$("#" + xset.getId()).attr('data-original-title', xset.getTitle())
@@ -422,13 +422,6 @@ function register_ui_selection_behaviour2(){
 	});
 }
 
-function handleSetSelection($view){
-	
-}
-
-function handleListItemSelection($view){
-	
-}
 function register_ui_selection_behaviour(){
 	
     $('.select').each(function(item){
@@ -443,7 +436,7 @@ function register_ui_selection_behaviour(){
 				nodeToFocus = $(this).parents('._WINDOW').attr("id");
 			}
 			
-			XPAIR.graph.selectSet(nodeToFocus);
+			XPLAIN.graph.selectSet(nodeToFocus);
 			$('._draggable').each(function(){
 				if ($(this).data('ui-draggable')){
 					$(this).draggable("destroy");
@@ -517,104 +510,4 @@ function register_ui_selection_behaviour(){
             $(this).crt_dofacet();
         });
     });
-}
-var paramClassIndex = 0
-function new_param_widget(paramName){
-	paramClassIndex++
-	var param_widget_html = 
-	"<div class = \"_WINDOW select param string\" id = \""+paramName+ "\" title = \"Relations\" paramclass = \"Param"+paramClassIndex+"\">"
-		+ "<div class = 'expand _NO_MINIMIZE'>"
-			+ "<div class ='_collapseproperties' style=\"float:left;\">"
-				+ "<span class=\"tool\">-<span class=\"tip\">Hide all selected values.</span></span>"
-			+ "</div>"
-			+ "<div class= \"_expandproperties\" style=\"float:left;\">"
-				+ "<span class=\"tool\">+ <span class=\"tip\">Show selected values for parameter.</span></span>"
-			+ "</div>"
-		+ "</div>"
-		+ "<span class = \"paramname\">" + paramName + "</span>"
-		+ "<div id = \"" + paramName + "_values_div\" class = \" _WINDOW paramvalues\"></div>"
-	+ "</div>"
-
-	$("#paramsWindow").append(param_widget_html);	
-
-	$("#" + paramName).click(function(e){
-		$(".SELECTED").addClass($(this).attr("paramclass"));
-		$(this).addClass($(this).attr("paramclass"));
-		currentExecution.setParam($(this).attr("id"), $(".SELECTED").attr("id"));
-	});	
-}
-
-function find_selected_param() {
-	if($("#paramsWindow .SELECTED").size() > 0) {
-		return $("#paramsWindow .SELECTED")
-	} 	
-	return null;	
-}
-
-function set_param_values(paramName, values){
-	var values_div_id = "#"+paramName+"_values_div";
-	$(values_div_id).empty();
-	for (var param_value in values) {
-		add_param_value(paramName, param_value);
-	}
-}
-
-function add_param_value(paramName, paramvalue) {
-	var values_div_id = "#"+paramName+"_values_div";
-	var value_div = ""
-	+ "<div class = \"select _WINDOW draggable paramvalues\">"
-		+ "<span class = \"valuetext\"> "+ paramvalue + "</span>"
-	+ "</div>"
-	$(values_div_id).append(value_div);
-}
-
-function show_empty_param_window() {	
-	var param_view_html = 
-	"<div id = \"paramsWindow\" class =\"_WINDOW paramwindow\">"
-		+ "<div class = \"windowheader _NO_MINIMIZE\" id='resname'>"
-			+ "<div class=\"windowtitle\">"
-				+ "Param Selection"
-			+ "</div>"		
-		+ "</div>"
-	+ "</div>"
-	
-	if($('.set').size() > 0) {
-		$(param_view_html).insertBefore($('.set').first());
-	} else {
-		$('body').append(param_view_html);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////WINDOW HELPER FUNCTION//////////////////////////
-//Create a empty div window and add to the body.
-function ui_create_window(){
-    var div = document.createElement('div');
-    Element.extend(div);
-    id = div.identify();
-    div.setAttribute("class", "_WINDOW select");
-    document.body.insertBefore(div, $('.set').first());
-    return id;
-}
-
-//Adds a html fragment on the html body.
-function ui_add_window(result){
-	console.log("adding window");
-    var range = document.createRange();
-    range.selectNode(document.body);
-    var documentFragment = range.createContextualFragment(result);
-	if($('.set').length > 0) {
-		$(documentFragment).insertAfter('.set');
-	} else {
-		$(document.body).append(documentFragment);
-	}
-    
-    init_all();
-    $('.set').last().hide();
-    
-    $('.set').last().toggle({
-        effect: 'scale',
-		direction: "horizontal"
-    });
-    
 }

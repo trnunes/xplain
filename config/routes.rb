@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get 'session/trace_item_domains'
   get 'session/render_page'
   get 'session/renderdomain'
+  get 'session/render_view'
   get 'session/relations'
   get 'session/common_relations'
   get 'session/all_relations'

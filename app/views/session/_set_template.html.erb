@@ -1,12 +1,8 @@
-<div class="_WINDOW window _draggable hideable select set" id = "setViewTemplate" exp = "" title="">
+<div class="_WINDOW window _draggable hideable select set" id = "DefaultSetWidget" exp = "" title="">
      <div class= "tranparentpanel" >
         <img src = "/images/loading_big.gif" style="position:absolute; top : 50%;left:43% "/>
     </div>
-	<% @style_s = ' style = "background-color:white;" '
-
-    resources =  resources_paginated() 
-
-%>
+	<% @style_s = ' style = "background-color:white;" '%>
 	    
 	<%= render :partial => 'layouts/windowheader_template'%>
 	
@@ -15,6 +11,7 @@
 	</div>
 
 	<div class = "_items_area">
+		<%= yield :extension_view %>
 	</div>
 	
 	<div style="position: absolute; width: 335px; margin: 0;bottom: 0px;">

@@ -127,9 +127,17 @@ module Wxpair
     Xpair::Namespace.new("sparpro", "http://purl.org/spar/pro/")
     Xpair::Namespace.new("frbr", "http://purl.org/vocab/frbr/core#")
     Xpair::Namespace.new("w3iont", "https://w3id.org/oc/ontology/")
+    Xpair::Namespace.new("cidoc", "http://www.cidoc-crm.org/cidoc-crm/")
+    Xpair::Namespace.new("tws", "http://data.thewalters.org/")
+    
     
     module Xpair::Visualization
-      label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "http://purl.org/dc/terms/title"
+      
+      
+      label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "rdfs:label"
+      label_for_type "cidoc:E22_Man-Made_Object", "rdfs:label"
+      label_for_type "cidoc:E12_Production", "rdfs:label"
+      label_for_type "cidoc:E33_Linguistic_Object", "rdfs:label"
       label_for_type "http://purl.org/spar/fabio/Expression", "http://purl.org/dc/terms/title"
       label_for_type "http://purl.org/spar/fabio/JournalArticle", "http://purl.org/dc/terms/title"
       label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
@@ -138,6 +146,6 @@ module Wxpair
       label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "http://purl.org/dc/terms/title"
     end
     
-
+    DEFAULT_SET_VIEW = 'tree'
   end
 end

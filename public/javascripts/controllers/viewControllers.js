@@ -1,13 +1,13 @@
-XPAIR.activeControllers = new Hashtable()
-XPAIR.getController = function(operationName){
-	XPAIR.activeControllers.get(operationName);
+XPLAIN.activeControllers = new Hashtable()
+XPLAIN.getController = function(operationName){
+	XPLAIN.activeControllers.get(operationName);
 };
 
-XPAIR.controllers = XPAIR.controllers || {};
+XPLAIN.controllers = XPLAIN.controllers || {};
 
-XPAIR.controllers.AbstractRelationsTreeController = function(){};
+XPLAIN.controllers.AbstractRelationsTreeController = function(){};
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	debugger;
 	this.setIdOfValuesList = "";
 	
@@ -53,20 +53,21 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	
 	$(this_controller.viewSelector + " .exec").off("click").click(function(){
 		this_controller.dismiss();
-		if(XPAIR.currentOperation.execute("json")){
+		if(XPLAIN.currentOperation.execute("json")){
 			clear();
-			XPAIR.activeControllers = new Hashtable();
+			XPLAIN.activeControllers = new Hashtable();
 			$(this_controller.viewSelector).parents('.modal').modal('hide');
 		}
 	});
 
 	$(this.viewSelector +  " #image").prop("checked", true);
 	$(".help").empty();
-	if(this.xset.isGroupedSet()){
-		$(this.positionDivSel).show();
-	} else {
-		$(this.positionDivSel).hide();
-	}
+	//TODO correct the level selection
+// 	if(this.xset.isMultilevel()){
+// 		$(this.positionDivSel).show();
+// 	} else {
+// 		$(this.positionDivSel).hide();
+// 	}
 	
 	
 	if($(this.treeActivatorRadioSel).length){
@@ -85,26 +86,26 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	this.initController();
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.dismiss = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.dismiss = function(){
 	if(this.tree){
 		debugger;
 		this_controller.selectedRelations = this.tree.getSelection();
 		this.tree.hide();
 	}
-	XPAIR.currentOperation = this.buildOperation();
+	XPLAIN.currentOperation = this.buildOperation();
 
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.getSelection = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.getSelection = function(){
 	if(this.tree){
 		return this.tree.getSelection();
 	}
 	return [];
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.buildOperation = function(){};
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.buildOperation = function(){};
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.registerBehavior = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.registerBehavior = function(){
 	debugger;
 	$(this.treeActivatorRadioSel).unbind().change(function() {
 		debugger;
@@ -125,13 +126,13 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.registerBehavior = f
 				this_controller.tree.hide();
 				this_controller.handlePositionChanged();
 			}
-			if($(this).hasClass("related_set_activator")){
+			if ($(this).hasClass("related_set_activator")){
 				this_controller.showRelatedSetsList();
 			} else if($(this).hasClass("by_domain_act")){
-				if(this_controller.xset.getResultedFrom()){
-					if(this_controller.xset.getResultedFrom().length > 0){
-						var dset = XPAIR.currentSession.getSet(this_controller.xset.getResultedFrom()[0]);
-						this_controller.updateValuesList(dset.data.extension, dset.getId());
+				var resultedFromSetId = XPLAIN.SetController.getResultedFrom(this_controller.setId);
+				if (this_controller.setId){
+					if (resultedFromSetId){
+						this_controller.updateValuesList(XPLAIN.SetController.getExtension(resultedFromSetId), XPLAIN.SetController.getTitle(resultedFromSetId));
 					}
 				}
 			} else {
@@ -148,8 +149,8 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.registerBehavior = f
 };
 
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected = function(branch){
-	pivot = new Pivot(new Flatten(new Load(this_controller.xset.getId()), this_controller.getSelectedPosition(), true), true);
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected = function(branch){
+	pivot = new Pivot(new Flatten(new Load(this_controller.setId), this_controller.getSelectedPosition(), true), true);
 	pivot.addRelation(branch);
 	debugger;
 	if(this_controller.valuesLimit){
@@ -162,7 +163,7 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected
 };
 
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.handlePositionChanged = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.handlePositionChanged = function(){
 	debugger;
 	if(this.getSelectedPosition() == "domain"){
 		this.showDomain();
@@ -177,63 +178,54 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.handlePositionChange
 	}
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.getSelectedPosition = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.getSelectedPosition = function(){
 	return $(this.viewSelector + " input[name='radio_pos']:checked").attr('param_value') || "image";
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened = function(relation){
-	var pivot = new Pivot(new Flatten(new Load(relation.li_attr.resultedFrom), "image", true), true);
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened = function(relation){
+	debugger;
+	var relation_set_dependencies = relation.li_attr.dependencies
+	var set_to_pivot = relation_set_dependencies[relation_set_dependencies.length - 2].id
+	var pivot = new Pivot(new Load(set_to_pivot), true);
 	pivot.addRelation(new Relation(relation.li_attr));
 	pivot.limit = 15;
 
-	var findRelations = new FindRelations(pivot, true);
-	debugger;
-	findRelations.execute("json", function(data){
+	var findRelations = new FindRelations(new Flatten(pivot, "image", true), true);
 
-		var jsTreeAdapter = this_controller.tree.adapter
+	findRelations.execute("json", function(data){
 	
 		var relations_hash = new Hashtable();
 		var items = data.set.extension;
-		for(var i in items){
-			debugger;
-			if(items[i].resultedFromArray.length > 0){
-				items[i].resultedFrom = items[i].resultedFromArray[items[i].resultedFromArray.length - 1].id
-			}	
-			jsTreeAdapter.addItem(relation, items[i]);
+		for (var i in items){
+			this_controller.tree.addItem(relation, items[i]);
 		}
 	});
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree = function(){
 	$(this.relatedSetsDiv).hide();
-	this.tree = this.tree || new XPAIR.projections.RelationPathTree(this.xset, $(this.treeDivSel), this.treeParams);
+	this.tree = this.tree || new XPLAIN.views.RelationPathTree(this.setId, $(this.treeDivSel), this.treeParams);
 	debugger;
 	this.tree.createTree($(this.treeDivSel));
 	var position = this.getSelectedPosition();
-	var findRelations = new Flatten(new FindRelations(new Load(this.xset.getId()), position, true), "image", true);
+	var findRelations = new Flatten(new FindRelations(new Load(this.setId), position, true), "image", true);
 	this.tree.loadData(findRelations);
 	debugger;
 	this.tree.onBranchSelected(this.handleBranchSelected);
 	this.tree.onBranchOpened(this.handleBranchOpened);
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.showRelatedSetsList = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.showRelatedSetsList = function(){
 	debugger;
 	$(this.relatedSetsDiv).show();
-	var sets = XPAIR.currentSession.sets.values();
-	var relatedSets = []
-	for(var i in sets){
-		var s = sets[i];
-		if(s.getResultedFrom() && s.getResultedFrom()[0] == this_controller.xset.getId()){
-			relatedSets.push(s);
-		}
-	}
+	var relatedSets = XPLAIN.SetController.getInputSets(this_controller.setId);
 	
-	var setData = relatedSets.map(function(s){ return {id: s.getId(), text: s.getTitle()}});
+	var setData = relatedSets.map(function(s){ return {id: s.id, text: s.title}});
 	if(setData.length > 0){
 		debugger;
 		$(this_controller.viewSelector + ' .values_select').val(relatedSets[0].data.extension[0]);
-		this_controller.updateValuesList(relatedSets[0].data.extension, setData[0].id)
+		//TODO correct to show all related sets
+		this_controller.updateValuesList(relatedSets[0], setData[0].id);
 		
 	}
 	
@@ -246,13 +238,14 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.showRelatedSetsList 
 	});
 	
 	$(this_controller.relatedSetsSel).on('change', function(){
-		this_controller.updateValuesList(XPAIR.currentSession.getSet(this.value).data.extension, XPAIR.currentSession.getSet(this.value).getId())
+		this_controller.updateValuesList(XPLAIN.currentSession.getSet(this.value).data.extension, XPLAIN.currentSession.getSet(this.value).getId())
 	});
 	
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = function(data, setId){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = function(data, setId){
 	var items = data;
+	debugger;
 	$(this.viewSelector + ' .values_select').val([]);
 	$(this.viewSelector + ' .values_select').empty();
 	this.setIdOfValuesList = setId;
@@ -315,22 +308,22 @@ XPAIR.controllers.AbstractRelationsTreeController.prototype.updateValuesList = f
 	debugger;
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.showDomain = function(){
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.showDomain = function(){
 	this.xset.domain(function(data){
 		this_controller.updateValuesList(data, this_controller.xset.getId());
 	});
 };
-XPAIR.controllers.AbstractRelationsTreeController.prototype.showImage = function(){
-	this.updateValuesList(this.xset.getImage(), this.xset.getId());
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.showImage = function(){
+	this.updateValuesList(XPLAIN.SetController.getExtension(this.setId), this.setId);
 };
 
-XPAIR.controllers.AbstractRelationsTreeController.prototype.initController = function(){};
-XPAIR.controllers.AbstractRelationsTreeController.prototype.registerControllerBehavior = function(){};
-XPAIR.controllers.AbstractRelationsTreeController.prototype.handleValueSelection = function(value){};
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.initController = function(){};
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.registerControllerBehavior = function(){};
+XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleValueSelection = function(value){};
 
 
-XPAIR.controllers.RankController = function(xset){
-	this.xset = xset;
+XPLAIN.controllers.RankController = function(setId){
+	this.setId = setId;
 	this.setIdOfValuesList = "";
 	this.viewSelector = "#rankModal";
 	this.orderRadiosSel = this.viewSelector +" input[name='order']";
@@ -343,9 +336,7 @@ XPAIR.controllers.RankController = function(xset){
 		$(this.viewSelector + " #alpha_rank").prop("checked", true);
 		$(this.viewSelector + " #asc").prop("checked", true);
 		$(this.viewSelector +  " #domain").prop("checked", true);
-		// $(this_controller.viewSelector + " [param_value=by_image]").parent().hide();
 	},
-	
 	
 	this.registerControllerBehavior = function(){
 		$(this.rankFunctionSel).change(function(e){
@@ -354,7 +345,8 @@ XPAIR.controllers.RankController = function(xset){
 				$(this_controller.valuesListSel).select2('destroy');
 				$(this_controller.valuesListSel).empty();
 				$(this_controller.valuesListSel).select2({
-					data: this_controller.xset.getImage(),
+					//TODO correct leaves method
+					data: this_controller.xset.leaves(),
 					placeholder: "Select a Set",
 					allowClear: true
 				});
@@ -364,7 +356,7 @@ XPAIR.controllers.RankController = function(xset){
 	},
 	
 	this.buildOperation = function(){
-		var rank = new Rank(new Load(this.xset.getId()));
+		var rank = new Rank(new Load(this.setId));
 		rank.order = $(this.orderRadiosSel + ":checked").attr("param_value") || "ASC"
 		rank.rankFunction = $(this.rankFunctionSel + ":checked").attr("param_value");
 		rank.position = this.getSelectedPosition();
@@ -384,10 +376,10 @@ XPAIR.controllers.RankController = function(xset){
 	
 };
 
-XPAIR.controllers.RankController.prototype = new XPAIR.controllers.AbstractRelationsTreeController();
+XPLAIN.controllers.RankController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
 
-XPAIR.controllers.RefineController = function(xset){
-	this.xset = xset;
+XPLAIN.controllers.RefineController = function(setId){
+	this.setId = setId;
 	this.viewSelector = "#facetModal";
 	this.buttonAddFilterSel = this.viewSelector + " #button_add_filter";
 	this.selectComparatorSel = this.viewSelector + " #select_comparator";
@@ -399,12 +391,12 @@ XPAIR.controllers.RefineController = function(xset){
 	
 	this.initController = function(){
 		// this.showRelationsTree();
-		parameters.put("FacetedRefine", true);
-		parameters.put("operation", "refine");
-		parameters.put("operator", "=");
+		XPLAIN.activeWorkspaceWidget.params_hash.put("FacetedRefine", true);
+		XPLAIN.activeWorkspaceWidget.params_hash.put("operation", "refine");
+		XPLAIN.activeWorkspaceWidget.params_hash.put("operator", "=");
 		$('#eql_comp').addClass('filter_comparator_active');
-		if(!XPAIR.currentOperation){
-			XPAIR.currentOperation = new FacetedSearch(new Load(this.xset.getId()));
+		if(!XPLAIN.currentOperation){
+			XPLAIN.currentOperation = new FacetedSearch(new Load(this.setId));
 		}
 		$(this.selectComparatorSel).val("=");
 
@@ -423,7 +415,7 @@ XPAIR.controllers.RefineController = function(xset){
 	
 	this.handleOperatorChanged = function(operator){
 		if(operator == "in"){
-			var setData = XPAIR.currentSession.sets.values().map(function(s){ return {id: 'Xset.load("' + s.getId() + '")', text: s.getTitle()}});
+			var setData = XPLAIN.SetController.getAllSetsIdsAndTitles().map(function(s){ return {id: 'Xset.load("' + this.id + '")', text: this.title}});
 			$(this.valuesListSel).select2('destroy');
 			$(this.valuesListSel).empty();
 			$(this.valuesListSel).select2({
@@ -435,7 +427,7 @@ XPAIR.controllers.RefineController = function(xset){
 	},	
 		
 	this.removeFilter = function(){
-		XPAIR.currentOperation.removeFacet(this.selectedRelations, parameters.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id});
+		XPLAIN.currentOperation.removeFacet(this.selectedRelations, XPLAIN.activeWorkspaceWidget.params_hash.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id});
 	},
 	
 	this.addFilter = function(){
@@ -461,13 +453,13 @@ XPAIR.controllers.RefineController = function(xset){
 			}
 
 			restriction.operator = comparator;
-			restriction.connector = parameters.get("connector") || "AND";
+			restriction.connector = XPLAIN.activeWorkspaceWidget.params_hash.get("connector") || "AND";
 			restriction.value = new Item({expression: value.id, text: value.text});
 		
 			restriction.position = position
 				
-			XPAIR.currentOperation.addRestriction(restriction);
-			XPAIR.currentOperation.position = position;
+			XPLAIN.currentOperation.addRestriction(restriction);
+			XPLAIN.currentOperation.position = position;
 			
 		}
 		this.updateFiltersTable();
@@ -477,7 +469,7 @@ XPAIR.controllers.RefineController = function(xset){
 	this.updateFiltersTable = function(){
 		var filter_div = "";
 		
-		filter_div += XPAIR.currentOperation.toHtml()//.join("<tr class=\"filter_connector\"><td><span>" + XPAIR.currentOperation.connector + "</span></td></tr>");
+		filter_div += XPLAIN.currentOperation.toHtml()//.join("<tr class=\"filter_connector\"><td><span>" + XPLAIN.currentOperation.connector + "</span></td></tr>");
 		$(this.filtersDivSel).html("<table>" + filter_div + "</table>");
 
 		$(this.filterCloseSpanSel).click(function(e){
@@ -486,9 +478,9 @@ XPAIR.controllers.RefineController = function(xset){
 			var operator = $(this).attr("operator");
 			var value = $(this).attr("facet_value");
 			if(facet){
-				XPAIR.currentOperation.removeRelationRestriction(facet, operator, value);
+				XPLAIN.currentOperation.removeRelationRestriction(facet, operator, value);
 			} else{
-				XPAIR.currentOperation.removeSimpleRestriction(operator, value);
+				XPLAIN.currentOperation.removeSimpleRestriction(operator, value);
 			}
 			
 			var tableCell = $(this).parent().parent()
@@ -504,20 +496,20 @@ XPAIR.controllers.RefineController = function(xset){
 			}
 
 			$(tableCell).remove();
-			if(XPAIR.currentOperation.isEmpty()){
+			if(XPLAIN.currentOperation.isEmpty()){
 				$(this.connectorsDivSel).hide();
 			}
 		});
 	},
 	
 	this.buildOperation = function(){
-		return XPAIR.currentOperation;
+		return XPLAIN.currentOperation;
 	}	
 };
-XPAIR.controllers.RefineController.prototype = new XPAIR.controllers.AbstractRelationsTreeController();
+XPLAIN.controllers.RefineController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
 
-XPAIR.controllers.PivotController = function(xset){
-	this.xset = xset;
+XPLAIN.controllers.PivotController = function(setId){
+	this.setId = setId;
 	this.viewSelector = "#pathModal";
 	this.valuesLimit = 10;
 	var this_controller = this;
@@ -525,21 +517,21 @@ XPAIR.controllers.PivotController = function(xset){
 	this.initController = function(){
 		this.treeParams.allowMultipleSelection = true;
 
-		if(!XPAIR.currentOperation){
-			XPAIR.currentOperation = new Pivot(new Load(this.xset.getId()));
+		if(!XPLAIN.currentOperation){
+			XPLAIN.currentOperation = new Pivot(new Load(this.setId));
 		}
 	},
 	
 	this.buildOperation = function(){
 		debugger;
-		XPAIR.currentOperation.relations = this_controller.selectedRelations;
-		return XPAIR.currentOperation;
+		XPLAIN.currentOperation.relations = this_controller.selectedRelations;
+		return XPLAIN.currentOperation;
 	}	
 };
-XPAIR.controllers.PivotController.prototype = new XPAIR.controllers.AbstractRelationsTreeController();
+XPLAIN.controllers.PivotController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
 
-XPAIR.controllers.GroupController = function(xset){
-	this.xset = xset;
+XPLAIN.controllers.GroupController = function(setId){
+	this.setId = setId;
 	this.viewSelector = "#groupModal";
 	var this_controller = this;
 	this.operatorSel = this.viewSelector + " input[name='radio_strategy']";
@@ -551,8 +543,8 @@ XPAIR.controllers.GroupController = function(xset){
 	this.initController = function(){
 		this.treeParams.allowMultipleSelection = true;
 
-		if(!XPAIR.currentOperation){
-			XPAIR.currentOperation = new Group(new Load(this.xset.getId()));
+		if(!XPLAIN.currentOperation){
+			XPLAIN.currentOperation = new Group(new Load(this.setId));
 		}
 		
 		$(this.setSel).empty();
@@ -561,9 +553,7 @@ XPAIR.controllers.GroupController = function(xset){
 		
 		$(this.imageSelectDivSel).hide();
 		
-		XPAIR.activeControllers.put('Group', this);
-		
-		
+		XPLAIN.activeControllers.put('Group', this);
 	},
 	
 	this.registerControllerBehavior = function(){
@@ -584,12 +574,12 @@ XPAIR.controllers.GroupController = function(xset){
 	},
 	
 	this.handleOperatorChanged = function($operator){
-		XPAIR.currentOperation.groupFunction = $operator.attr("param_value");
+		XPLAIN.currentOperation.groupFunction = $operator.attr("param_value");
 		
 	},
 	this.populateSetSelector = function(){
 
-		var setData = XPAIR.currentSession.sets.values().map(function(s){ return {id: 'Xset.load("' + s.getId() + '")', text: s.getTitle()}});
+		var setData = XPLAIN.SetController.getAllSetsIdsAndTitles().map(function(s){ return {id: 'Xset.load("' + this.id + '")', text: this.title}});
 		$(this.setSel).select2('destroy');
 		$(this.setSel).empty();
 		$(this.setSel).select2({
@@ -598,10 +588,10 @@ XPAIR.controllers.GroupController = function(xset){
 			allowClear: true
 		});
 
-	}
+	},
 	
 	this.buildOperation = function(){
-		if(XPAIR.currentOperation.groupFunction == "by_relation"){
+		if(XPLAIN.currentOperation.groupFunction == "by_relation"){
 			
 			var relations = this.selectedRelations
 			if(this.selectedRelations.length == 0){
@@ -611,40 +601,34 @@ XPAIR.controllers.GroupController = function(xset){
 			}
 				
 
-			XPAIR.currentOperation.functionParams = {relations: relations};
+			XPLAIN.currentOperation.functionParams = {relations: relations};
 			debugger;
 			if($(this.restrictGroupsCheckSel).prop("checked")){
 				var restrictionSet = $(this.setSel).select2('data');
 				if(restrictionSet.length){
-					XPAIR.currentOperation.imageSetExpression = restrictionSet[0].id;
+					XPLAIN.currentOperation.imageSetExpression = restrictionSet[0].id;
 				}
 				
 			}
 			
-		} else if(XPAIR.currentOperation.groupFunction == "by_domain"){
-			debugger;
-			if(this.xset.getResultedFrom()){
-				if(this.xset.getResultedFrom().length > 0){
-					XPAIR.currentOperation.functionParams = {domain_set: new XsetExpr(this.xset.getResultedFrom()[0])};
-				}
-			}
-			
+		} else if(XPLAIN.currentOperation.groupFunction == "by_domain"){
+			var dependentSet = XPLAIN.SetController.getResultedFrom(this.setId);
 		}
 		
-		return XPAIR.currentOperation;
+		return XPLAIN.currentOperation;
 	}	
 };
-XPAIR.controllers.GroupController.prototype = new XPAIR.controllers.AbstractRelationsTreeController();
+XPLAIN.controllers.GroupController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
 
-XPAIR.controllers.MapController = function(xset){
-	this.xset = xset;
+XPLAIN.controllers.MapController = function(setId){
+	this.setId = setId;
 	this.viewSelector = "#mapModal";
 	this.functionsRadioSel = this.viewSelector + " input[name='radio_strategy']";
 	this.functionDefinitionFormSel = this.viewSelector + " #function_form";
 	this_controller = this;
 
 	this.init = function(){
-		XPAIR.currentOperation = new Map(new Load(this.xset.getId()));
+		XPLAIN.currentOperation = new Map(new Load(this.setId));
 		$(this.functionDefinitionFormSel).hide();
 		
 
@@ -652,15 +636,16 @@ XPAIR.controllers.MapController = function(xset){
 			debugger;
 			this_controller.handleFunctionChange($(this));
 		});
-		XPAIR.activeControllers.put('Map', this);
+		XPLAIN.activeControllers.put('Map', this);
 		$(this.viewSelector + " .clear").click(function(){
 			clear();
 		});
 	
 		$(this_controller.viewSelector + " .exec").click(function(){
-			this_controller.dismiss();
 			debugger;
-			if(XPAIR.currentOperation.execute("json")){
+			this_controller.dismiss();
+			
+			if(XPLAIN.currentOperation.execute("json")){
 				clear();
 				$(this_controller.viewSelector).parents('.modal').modal('hide');
 			}
@@ -685,7 +670,8 @@ XPAIR.controllers.MapController = function(xset){
 	
 	this.dismiss = function(){
 		var selectedFunction = $(this_controller.functionsRadioSel + ":checked").attr("param_value");
-		XPAIR.currentOperation.mapFunction = selectedFunction;
+
+		XPLAIN.currentOperation.mapFunction = selectedFunction;
 		if(selectedFunction == "user_defined"){
 			this_controller.handleUserDefinedFunctionFormSubmit();
 		}

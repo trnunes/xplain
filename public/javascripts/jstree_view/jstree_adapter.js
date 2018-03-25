@@ -1,5 +1,5 @@
-XPAIR.adapters = XPAIR.adapters || {};
-
+XPLAIN.adapters = XPLAIN.adapters || {};
+//TODO move this to the jstree_view 
 function PageState(){
 	this.nodesState = new Hashtable();
 	this.selectedNodes = new Hashtable();
@@ -44,7 +44,8 @@ function PageState(){
 	}
 
 };
-XPAIR.adapters.JstreeAdapter = function(xset){
+
+XPLAIN.adapters.JstreeAdapter = function(xset){
 	this.projection = null;
 	this.xset = xset;
 	
@@ -65,6 +66,8 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 	this.getXset = function(){
 		return this.xset;
 	},
+	
+	//TODO move this to the jstree view 
 	this.update = function(xset, newData, event){
 		
 		if(event == "pageChange"){
@@ -84,6 +87,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 
 		
 	},
+	//TODO REMOVE
 	this.trace = function(item) {
 		var origin_set_id = $(item).attr("set");
 		
@@ -94,7 +98,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 		} else {
 			url = "/session/trace_item_domains.json?set="+ origin_set_id+ "&item=" + $(item).attr("item")
 		}
-		XPAIR.AjaxHelper.get(url, "json", function(data){
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 		
 			for(var i in data) {
 				var local_domains = data[i].domains;
@@ -111,6 +115,8 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 			}
 		});
 	},
+	
+	//TODO consider removing
 	this.renderLevel = function(level){
 		
 		var $tree = this_adapter.projection.getDiv();
@@ -131,97 +137,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 	    });
 
 	},
-	// this.xset.registerLevelChangeListener(this.renderLevel);
-
-	// this.eachRelation = function(setItem, jstreeItem){
-	// 	jstreeItem.children = [];
-	//
-	// 	for(var i in setItem.relations){
-	// 		var relation = setItem.relations[i];
-	//
-	// 		var jstreeRelation = {
-	// 			text: relation.text,
-	// 			type: relation.type,
-	// 			data: {
-	// 				inverse: relation.inverse,
-	// 				set: relation.set,
-	// 				type: relation.type,
-	// 				item: relation.id,
-	// 				resultedFrom: relation.resultedFrom
-	// 			},
-	// 			li_attr: {
-	// 				item: relation.id,
-	// 				item_type: relation.type,
-	// 				set: relation.set,
-	// 				inverse: relation.inverse,
-	// 				resultedFrom: relation.resultedFrom
-	// 			},
-	// 			children: []
-	//
-	// 		}
-	// 		for (var j in relation.values){
-	// 			var value = relation.values[j];
-	// 			jstreeValue = {
-	// 				text: value.text,
-	// 				type: value.type,
-	// 				data:{
-	// 					set: value.set,
-	// 					item: value.id,
-	// 					type: value.type,
-	// 					resultedFrom: value.resultedFrom
-	// 				},
-	// 				li_attr: {
-	// 					item: value.id,
-	// 					item_type: value.type,
-	// 					set: value.set,
-	// 					resultedFrom: value.resultedFrom
-	// 				},
-	// 				children:[{text: "Relations"}]
-	// 			},
-	// 			jstreeRelation.children.push(jstreeValue);
-	// 		}
-	// 		jstreeItem.children.push(jstreeRelation);
-	// 	}
-	// },
-	//
-	// this.eachItem = function(callback){
-	// 	var items = this.xset.getExtension();
-	// 	for(var i in items){
-	//
-	// 		var item = items[i];
-	// 		var item_node = {
-	// 			text: item.text,
-	// 			type: item.type,
-	// 			data: {
-	// 				set: item.set,
-	// 				item: item.id,
-	// 				type: item.type,
-	// 				resultedFrom: item.resultedFrom
-	// 			},
-	// 			children: [],
-	// 			li_attr: {
-	// 				item: item.id,
-	// 				item_type: item.type,
-	// 				set: item.set,
-	// 				resultedFrom: item.resultedFrom
-	// 			}
-	// 		}
-	// 		if (item_node.type == "Relation"){
-	// 			item_node.li_attr.inverse = item.inverse;
-	// 			item_node.data.inverse = item.inverse;
-	// 		} else if ((item.type == "Xpair::Literal") && item.datatype ){
-	// 			item_node.data.datatype = item.datatype;
-	// 			item_node.li_attr.datatype = item.datatype;
-	// 		}
-	// 		this.eachRelation(item, item_node);
-	//
-	// 		if (item_node.children.length == 0) {
-	// 			item_node.children = [{text: "Relations"}];
-	// 		}
-	// 		callback(item_node);
-	// 	}
-	// },
-	
+	//TODO move to the view class
 	this.convertItem = function(item){
 		
 		var item_node = {
@@ -266,25 +182,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 		return item_node;
 	},
 	
-	this.addItem = function(parentNode, xsetItem){
-		
-		var $tree = this.projection.getDiv();
-		var jstreeItem = this.convertItem(xsetItem, true);
-		var children = jstreeItem.children
-		;
-		$tree.jstree();
-		var nodeId = $tree.jstree().create_node(parentNode, jstreeItem, "last", null, false);
-		if (this.projectionMap.get(xsetItem.id) == null){
-			this.projectionMap.put(xsetItem.id, []);
-		}
-		this.projectionMap.get(xsetItem.id).push(nodeId);
-		// $tree.jstree().open_node(parentNode);
-		// if((children.length >= 1 && children.length <=10) && (children[0].text != "Relations")){
-		// 	$tree.jstree().open_node(nodeId);
-		// }
-		return nodeId;
-	},
-	
+	//TODO move to the view class consider creating a method add_edge in the view
 	this.updateItem = function(itemToUpdate){		
 		var $tree = this.projection.getDiv();
 		$($tree.jstree().get_json($tree, {
@@ -295,8 +193,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 				var jstreeItem = this_adapter.convertItem(itemToUpdate, true);
 				for(var i in jstreeItem.children){
 					$tree.jstree().create_node(node, jstreeItem.children[i], "last", null, false);
-				}				
-				// $tree.jstree().opfen_node(node);
+				}
 				return;
 			}
 		});		
@@ -315,6 +212,8 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 		
 		return jstree_nodes;
 	},
+	
+	//TODO move all above methods to the view class and eliminate the adapter
 	this.recreate = function(xsetExtension){
 		this.clearTree();
 		
@@ -349,10 +248,7 @@ XPAIR.adapters.JstreeAdapter = function(xset){
 				}
 				this_adapter.projectionMap.get(node.data.item).push(node.id);
 			}			
-		});		
-		
+		});
 		
 	}
-	
-	
 };

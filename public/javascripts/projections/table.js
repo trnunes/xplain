@@ -1,4 +1,4 @@
 
-XPAIR.table = function(setJson){
+XPLAIN.table = function(setJson){
 	
 }

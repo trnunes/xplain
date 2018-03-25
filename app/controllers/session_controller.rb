@@ -2,17 +2,25 @@ require 'timeout'
 class SessionController < ApplicationController
   before_action :load_current_session
   
+  
+  def render_template(resource_set, template_path)
+    #TODO change to get the template from a resourceset attribute
+    #TODO not actually rendering partial within the template
+    view = ActionView::Base.new(ActionController::Base.view_paths, {})
+    template_html = view.render(file: template_path)
+    puts "HTML: " << template_html
+    template_html
+  end
+  
   def load_current_session
     # binding.pry
     # reset_session
-    # session[:current_session] = nil
+    session[:current_session] = nil
     if(session[:current_session].nil?)
       exp_session = Xpair::Session.new
       exp_session.save
       session[:current_session] = exp_session.id
     end
-      
-    
     @session = Xpair::Session.load(session[:current_session])
   end
     
@@ -23,8 +31,6 @@ class SessionController < ApplicationController
     end
     s.save
     @sets = [s]
-
-
   end
   
   def help
@@ -45,6 +51,21 @@ class SessionController < ApplicationController
         
       end
     end   
+    
+  end
+  
+  def render_view
+    view = params[:view].downcase
+    set = Xset.load(params[:set])
+    
+    json = Jbuilder.new do |viewJson|
+      viewJson.html render_template(set, (view+ '/_'+view+ '.html.erb'))
+    end.target!
+
+    respond_to do |format|
+      format.js
+      format.json {render :json => json}
+    end
     
   end
   
@@ -81,7 +102,7 @@ class SessionController < ApplicationController
     
     respond_to do |format|
       format.js
-      format.json {render :json => generate_jbuilder(@resourceset)}
+      format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
       format.any {render :text => "SUCCESSFUL"}
       finish = Time.now 
       puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"
@@ -98,19 +119,10 @@ class SessionController < ApplicationController
     @group_page = @items_page
     respond_to do |format|
       format.js
-      format.json {render :json => generate_jbuilder(@resourceset)}
+      format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
       format.any {render :text => "SUCCESSFUL"}
     end    
   end
-  
-  def renderdomain
-    @resourceset = Xset.load(params[:set])
-    respond_to do |format|
-      format.js
-    end
-    
-  end
-  
   
   def update_title
     @resourceset = Xset.load(params[:set])
@@ -136,7 +148,7 @@ class SessionController < ApplicationController
       @resourceset.server = server
 
       @resourceset.index.paginate(20)
-      @resourceset.id = "all_relations"
+      @resourceset.id = "all_relations_set"
       
     end
     # binding.pry
@@ -145,37 +157,37 @@ class SessionController < ApplicationController
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(@resourceset)}
+        format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
       end
     end 
   end
   
   def all_types
     @page = 1
-    @resourceset = Xset.load("all_types")
+    @resourceset = Xset.load("all_types_set")
     @items_page = 1
     @group_page = 1
     
     if(@resourceset.nil?)
       server = Xset.load('default_set').server
       
-      @resourceset = Xset.new("all_types", "types")
+      @resourceset = Xset.new("all_types_set", "types")
       server.types.each do |item|
         @resourceset.add_item item
       end
       @resourceset.server = server
 
       @resourceset.index.paginate(20)
-      @resourceset.id = "all_types"
       
     end
     Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').pivot(SchemaRelation.new(\"rdf:type\"))")
     @resourceset.title = "Types"
+    
     respond_to do |format|
       if @resourceset.save
 
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(@resourceset)}
+        format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
       end
     end     
   end
@@ -185,13 +197,10 @@ class SessionController < ApplicationController
     @resourceset = input.v_refine{|gf| gf.keyword_match(keywords: [params[:str]])}
     respond_to do |format|
       if @resourceset.save
-
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(@resourceset)}
+        format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
       end
-    end     
-    
-    
+    end   
   end
   
   def search
@@ -214,39 +223,11 @@ class SessionController < ApplicationController
       if @resourceset.save
 
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(@resourceset)}
+        format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
       end
     end     
   end
   
-  def item_relations
-  end
-  
-  def relations
-    input_set = Xset.load(params[:set])
-    selection_set = input_set.select([Entity.new(params[:id])])
-    selection_set.each do |item|
-
-    end
-    @resourceset = selection_set.pivot
-    
-    @resourceset.save
-    
-    respond_to do |format|
-      format.js
-    end     
-  end
-  
-  def common_relations
-
-    set = Xset.load(params[:set])
-    
-    @common_relations = set.relations()
-    respond_to do |format|
-      format.js
-
-    end
-  end
   
   def instances
     start = Time.now
@@ -279,25 +260,12 @@ class SessionController < ApplicationController
       if @resourceset.save
 
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(@resourceset)}
+        format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
         # binding.pry
       end
     end
   end
-  
-  def select
-    selection_set = params[:set]
-    selected_items = params[:selected];
-    selected_items.each{}
-    @resourceset = selection_set.select(selected_items.map{})
     
-    respond_to do |format|
-      if @resourceset.save
-        format.js { render :file => "/session/execute.js.erb" }
-      end
-    end    
-  end
-  
   def project
     set = Xset.load(params[:set])
     @projection_set = set.pivot_forward([params[:relation]])
@@ -307,84 +275,7 @@ class SessionController < ApplicationController
       format.js
     end    
   end
-  
-  def domain
-    set = Xset.load(params[:set])
-    target_json = Jbuilder.new do |json|
-      json.array!(set.each_domain) do |domain_item|
-        to_jbuilder(json, domain_item, set)
-      end
-    end.target!
-    respond_to do |format|
-      format.json {render :json => target_json}
-    end
-  end
-  
-  def trace_subset_domains
-    set = Xset.load(params[:set])
-    subset = set.get_subset(params[:subset])
-
-
-    domains = set.trace_domains(subset)
-    # binding.pry
-
-    target_json = Jbuilder.new do |json|
-      json.array!(domains) do |local_domains|
-        json.id local_domains.first
-        json.domains Jbuilder.new do |domain_json|
-          domain_json.array!(local_domains[1..local_domains.size]) do |local_domain|
-            domain_json.id local_domain.id
-            domain_json.type local_domain.class.to_s
-          end
-        end
-      end
-    end.target!
-        
-    respond_to do |format|
-      format.json {render :json => target_json}
-    end     
     
-  end
-  
-  def trace_item_domains
-    set = Xset.load(params[:set])
-    item = set.get_item(params[:item].gsub(" ", "%20"))
-    # binding.pry
-    domains = set.trace_domains(item)
-
-    # binding.pry
-    target_json = Jbuilder.new do |json|
-      json.array!(domains) do |local_domains|
-        json.id local_domains.first
-        json.domains Jbuilder.new do |domain_json|
-          domain_json.array!(local_domains[1..local_domains.size]) do |local_domain|
-            if local_domain.is_a? Xpair::Literal
-              domain_json.id local_domain.value
-            else
-              domain_json.id local_domain.id
-            end
-            
-            domain_json.type local_domain.class.to_s
-          end
-        end
-      end
-    end.target!
-        
-    respond_to do |format|
-      format.json {render :json => target_json}
-    end     
-    
-  end
-  
-  def get_level
-    set = Xset.load(params[:set])
-    level_items = set.select_level(params[:level].to_i).map{|items_hash| items_hash.keys}.flatten
-    respond_to do |format|
-      format.json {render :json => build_json(level_items, set)}
-    end
-    
-  end
-  
   def new
   end
   
@@ -396,16 +287,29 @@ class SessionController < ApplicationController
     end.target!
   end
   
-  def generate_jbuilder(xset)
+  def generate_jbuilder(xset, template_html, component_name = 'DefaultSetWidget')
     # binding.pry
     @parents_by_item
+    resulted_from_array = []
+    resulted_from_array << xset.resulted_from.id if !xset.resulted_from.nil? 
+
     json = Jbuilder.new do |set|
       set.set do
       	set.id xset.id
         set.title xset.title
         set.pages_count xset.index.count_pages
-      	set.resultedFrom xset.resulted_from.id if !xset.resulted_from.nil?  
+        if !xset.resulted_from.nil? 
+          set.resultedFrom Jbuilder.new do |rs_json|
+            rs_json.array!(resulted_from_array)
+          end
+        end
+      	
       	set.intention xset.v_expression
+        set.view template_html
+        set.page @items_page
+        set.itemsView 'JstreeListView'
+        set.componentName component_name
+        set.view_options ['Accordion', 'Grid']
       	set.size xset.each_item.size
       	set.extension build_subtree(xset.index, Jbuilder.new, xset)
       end
@@ -467,43 +371,7 @@ class SessionController < ApplicationController
     json
   end
   
-  # def build_extension(images, xset, subset="")
-  #   extension = []
-  #
-  #   # binding.pry
-  #   Jbuilder.new do |json|
-  #
-  #     json.array!(images) do |item|
-  #
-  #       # binding.pry
-  #       if(item.is_a? Xsubset)
-  #         # binding.pry
-  #         to_jbuilder(json, item.key, xset, item.id)
-  #         # binding.pry
-  #         json.children Jbuilder.new do |image_json|
-  #           image_json.array!(item.keys) do |key|
-  #             relations = item[key]
-  #             to_jbuilder(image_json, key, xset, item.id)
-  #             if(relations.is_a? Xsubset)
-  #               json.children build_extension(relations.extension, xset, relations.id)
-  #             else
-  #               json.children Jbuilder.new do |relations_json|
-  #                 relations_json.array!(relations) do |relation|
-  #                   to_jbuilder(relations_json, relation, xset, item.id)
-  #                 end
-  #               end
-  #             end
-  #           end
-  #         end
-  #         # binding.pry
-  #       else
-  #         to_jbuilder(json, item, xset, subset)
-  #       end
-  #
-  #     end
-  #   end
-  # end
-  
+
   def to_jbuilder(json, item, xset, subset_id= "")
   	if(item.is_a?(Entity) || item.is_a?(SchemaRelation)|| item.is_a?(ComputedRelation) || item.is_a?(Type))
 

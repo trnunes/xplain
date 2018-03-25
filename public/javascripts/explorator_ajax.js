@@ -2,8 +2,8 @@
  * @author samuraraujo
  */
 var loading_text="Loading ..."
-XPAIR.activeRequests = [];
-XPAIR.AjaxHelper = {
+XPLAIN.activeRequests = [];
+XPLAIN.AjaxHelper = {
 	encondeUrl: function(url){
 	    codes =        ['%25', '%21', '%2A', '%27', '%28', '%29', '%3B', '%3A', '%40', '%26', '%3D', '%2B',  '%2C', '%2F', '%3F', '%23', '%5B', '%5D'];
 	    replacements = [ "%",   '!',   '\\*',  "'",   "\\(", "\\)", ";",    ":",  "@",    "&",  "=",   "\\+",  ",",  "/",   "\\?", "#",   "\\[",  "\\]"];
@@ -16,25 +16,26 @@ XPAIR.AjaxHelper = {
 	execute: function(expression, successFunction, format, page) {
 		
 		var executeOperationUrl = "/session/execute";
-		if(format){
-			executeOperationUrl += "."+format;
-		}
-		executeOperationUrl += "?exp=" + XPAIR.AjaxHelper.encondeUrl(expression);
+
+		executeOperationUrl += ".json";
+
+		executeOperationUrl += "?exp=" + XPLAIN.AjaxHelper.encondeUrl(expression);
 		if(page){
 			executeOperationUrl += "&page=" + page;
 		}
-		XPAIR.AjaxHelper.post(executeOperationUrl, format, successFunction);
+		XPLAIN.AjaxHelper.post(executeOperationUrl, format, successFunction);
 	},
 	
 	get: function(uri, format, success_function = function(){}) {
 	    $('#loadwindow').show();
-		XPAIR.activeRequests.push($.ajax({
+	
+		XPLAIN.activeRequests.push($.ajax({
 			type: 'GET',
 			url: uri,
 			format: format,
 			
 			success: function(data, status, jqrequest){
-				
+				debugger;
 
 				$('#loadingtext').innerHTML = loading_text;
 	            $('#loadwindow').hide();			
@@ -51,7 +52,7 @@ XPAIR.AjaxHelper = {
 	
 	post: function(uri, format, success_function) {
 	    $('#loadwindow').show();
-		XPAIR.activeRequests.push($.ajax({
+		XPLAIN.activeRequests.push($.ajax({
 			type: 'POST',
 			url: uri,
 			format: format,

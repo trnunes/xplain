@@ -1,5 +1,5 @@
-var XPAIR = XPAIR || {};
-XPAIR.graph = new function(){
+var XPLAIN = XPLAIN || {};
+XPLAIN.graph = new function(){
 	var that = this;
 	
     this.options = { 
@@ -16,8 +16,6 @@ XPAIR.graph = new function(){
           },
 		  showButton: false
         },
-		
-		
 	  };
 		
 	this.nodeColor = {border: '#AFAFAF', background: '#AFAFAF', highlight:{border: '#3fe2f5', background: '#3fe2f5'}}
@@ -57,35 +55,30 @@ XPAIR.graph = new function(){
 		this.nodes.update([{id: nodeId, label: title}])
 	},
 	
-	this.removeSet = function(xsetId){
+	this.removeSet = function(setId){
 		that = this;		
-		this.nodes.remove(xsetId);
+		this.nodes.remove(setId);
 
 		var toEdges = this.edges.get({
 		  filter: function (item) {
-		    return (item.to == xsetId);
+		    return (item.to == setId);
 		  }
 		});
 		var fromEdges = this.edges.get({
 		  filter: function (item) {
-		    return (item.from == xsetId);
+		    return (item.from == setId);
 		  }
 		});
-		debugger;
+
 		fromEdges.forEach(function(edge){
 			that.edges.add({
 				from: 1,
 				to: edge.to,
 				label: edge.label,
 				arrows: 'to'
-				
 			});
-			
-			
 		});
-
 		this.edges.remove(toEdges);
-
 	},
 
 	this.init = function(){
@@ -122,20 +115,20 @@ XPAIR.graph = new function(){
 		this.focus(xsetId);
 		this.graph.selectNodes([xsetId]);
 	}
-	this.addXset = function(xset){
+	this.addSet = function(setJson){
         try {
-			
-            this.nodes.add({
-                id: xset.getId(),
-                label: xset.getTitle(),
+	        this.nodes.add({
+                id: setJson.id,
+                label: setJson.title,
 				color: this.nodeColor
             });
-			if(xset.getResultedFrom()){
-				for (var i in xset.getResultedFrom()){
+			debugger;
+			if (setJson.resultedFrom){
+				for (var i in setJson.resultedFrom){
 					this.edges.add({
-						from: xset.getResultedFrom()[i],
-						label: xset.getIntention(),
-						to: xset.getId(),
+						from: setJson.resultedFrom[i],
+						label: setJson.intention,
+						to: setJson.id,
 						arrows: 'to'
 					});
 				}
@@ -143,22 +136,18 @@ XPAIR.graph = new function(){
 
 				this.edges.add({
 					from: 1,
-					to: xset.getId(),
-					label: xset.getIntention(),
+					to: setJson.id,
+					label: setJson.intention,
 					arrows: 'to'
-					
 				});
 			}
         }
         catch (err) {
             console.log(err);
         }
-		XPAIR.currentSession.getProjections(xset.getId())[0].show();
-		
 	}
-	
 }
 
 $(document).ready(function(){
-	XPAIR.graph.init();
+	XPLAIN.graph.init();
 })

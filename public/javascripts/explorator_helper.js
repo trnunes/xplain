@@ -19,11 +19,9 @@ function getTextValue(element){
 function init_all(){
     $('#loadingtext').innerHTML = loading_text;
     $('#loadwindow').hide();
-    register_ui_behaviour();
-    register_controllers();
-    querybuilderselection();
-    curlbracket();
+	XPLAIN.initDefaultWorkspace();
 }
+
 function jstree_icon_type(item) {
 	if (item.type === "SchemaRelation") {
 		return "relation";
