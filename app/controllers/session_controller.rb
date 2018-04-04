@@ -3,17 +3,14 @@ class SessionController < ApplicationController
   before_action :load_current_session
   
   def load_current_session
-    # binding.pry
-    # reset_session
-    # session[:current_session] = nil
-    if(session[:current_session].nil?)
+    
+    if(!session[:current_session].is_a? Xpair::Session)
       exp_session = Xpair::Session.new
       exp_session.save
-      session[:current_session] = exp_session.id
+      session[:current_session] = exp_session
     end
-      
-    
-    @session = Xpair::Session.load(session[:current_session])
+       
+    @session = session[:current_session]
   end
     
   def index
@@ -72,7 +69,7 @@ class SessionController < ApplicationController
       Filtering.clear()
     end
     # binding.pry
-    Xpair::Session.load(session[:current_session]).save_expression(params[:exp])
+    
     # binding.pry
     @resourceset.index.paginate(20)
     
@@ -141,7 +138,7 @@ class SessionController < ApplicationController
     end
     # binding.pry
     @resourceset.title = "All Relations"
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').find_relations()")
+    
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -169,7 +166,7 @@ class SessionController < ApplicationController
       @resourceset.id = "all_types"
       
     end
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').pivot(SchemaRelation.new(\"rdf:type\"))")
+    
     @resourceset.title = "Types"
     respond_to do |format|
       if @resourceset.save
@@ -209,7 +206,7 @@ class SessionController < ApplicationController
     Explorable.exploration_session.add_set @resourceset
     @resourceset.natural_sort!
     # binding.pry
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').refine{|f| f.keyword_match(\"#{keywords.inspect}\")}")
+    
     respond_to do |format|
       if @resourceset.save
 
@@ -269,7 +266,7 @@ class SessionController < ApplicationController
     @resourceset.index.paginate(20)
     # binding.pry
     @page = 1
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('#{@resourceset.id}').select_items([Type.new(\"#{params[:type]}\")]).pivot(relations: [SchemaRelation.new(\"rdf:type\"), true)])")
+    
     finish = Time.now
 
     puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"     
