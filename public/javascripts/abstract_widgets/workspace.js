@@ -7,6 +7,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
 	this.params_hash = new Hashtable();
 	
 }
+
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype = Object.create(XPLAIN.widgets.Widget.prototype)
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.build = function(){
@@ -52,6 +53,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.onAddSet = function(eventJson){
 	this.addWidgetToView(setWidget)
 	
 }
+
 	
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = function(){
 	var thisWidget = this;
@@ -124,22 +126,37 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
 
 			thisWidget.params_hash.put('B', $('.SELECTED'));
 
-            if (!thisWidget.currentOperation){
+            if (!thisWidget.state.currentOperation){
 	            if (thisWidget.params_hash.get('operation') == 'intersect') 
-	                thisWidget.currentOperation = new SemanticExpression('A').intersection('B').expression;
+	                thisWidget.state.currentOperation = new SemanticExpression('A').intersection('B').expression;
 	            else if (XPLAIN.activeWorkspaceWidget.params_hash.get('operation') == 'diff') 
-	                thisWidget.currentOperation = new SemanticExpression('A').difference('B').expression;
+	                thisWidget.state.currentOperation = new SemanticExpression('A').difference('B').expression;
 				else if (XPLAIN.activeWorkspaceWidget.params_hash.get('operation') == 'union') {
-	                thisWidget.currentOperation = new SemanticExpression('A').union('B').expression;
+	                thisWidget.state.currentOperation = new SemanticExpression('A').union('B').expression;
 				}			
             }
 		
-			if (thisWidget.currentOperation.execute("json")){
+			if (thisWidget.state.currentOperation.execute("json")){
 				thisWidget.clear();
 			}
         });
     });
 }
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.selectSetAndFocus = function(setId){
+    debugger;
+    
+    var $setWindow = $("[data-id='"+ setId + "']");
+    $setWindow.ui_show();
+    $setWindow.attr("top", "0px");
+    $setWindow.attr("left", "0px");
+    $setWindow.insertBefore($('#exploration_area .set').first())
+    
+    // $setWindow.fadeIn();
+    $('.SELECTED').removeClass("SELECTED");
+    $setWindow.addClass('SELECTED');
+
+};
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setParameter = function(widget){
 
@@ -180,6 +197,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.startOperation = function(widget
 	this.params_hash.put("operation", operationId);
 	$(widget).addClass("active");
 	var inputParams = this.params_hash.get("A");
+	
 	if(inputParams.length == 0){
 		alert("Choose at least one item/set to execute the operation!");
 		return;
@@ -207,41 +225,45 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.clear = function (){
 	$('[type=radio]').prop('checked', false);
 
 	$('.filter_comparator_active').removeClass('filter_comparator_active');
-	this.currentOperation = null;
+	this.state.currentOperation = null;
 	this.clearFacetModal();
 	XPLAIN.activeControllers = new Hashtable();
-}
+};
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.clearFacetModal = function(){
 	$('.filters').empty();
 	$("#facetModal .modal-body").hide();
 	// $("#facetModal .values_select").empty();
 	$('#relation_checkbox').prop('checked', false);
-}
+};
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.removeCSS = function(klass){
 	
     $('.' + klass).removeClass(klass);
 	
-},
+};
 
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.addChildView = function(viewClass){
 	
-}
+};
 
 XPLAIN.states.WorkspaceState = function(){ 
 	XPLAIN.states.State.call(this)
 	this.sets = [];
-}
-XPLAIN.states.WorkspaceState.prototype = Object.create(XPLAIN.states.State.prototype)
+	this.currentOperation = null;
+};
 
-XPLAIN.states.WorkspaceState.prototype.sets = [],
+XPLAIN.states.WorkspaceState.prototype = Object.create(XPLAIN.states.State.prototype);
+
+XPLAIN.states.WorkspaceState.prototype.sets = [];
+
+XPLAIN.states.WorkspaceState.prototype.currentOperation = null;
 
 XPLAIN.states.WorkspaceState.prototype.addSetFromJson = function(setJson){
 	debugger;
 	this.addSetState(new XPLAIN.states.SetState(setJson));
-}
+};
 
 XPLAIN.states.WorkspaceState.prototype.addSetState = function(setState){
 	var thisState = this;
@@ -251,7 +273,4 @@ XPLAIN.states.WorkspaceState.prototype.addSetState = function(setState){
 	};
 	
 	this.change('addSet', updateFunction);
-}
-
-
-
+};

@@ -8,7 +8,7 @@ XPLAIN.controllers = XPLAIN.controllers || {};
 XPLAIN.controllers.AbstractRelationsTreeController = function(){};
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
-	debugger;
+	debugger;	
 	this.setIdOfValuesList = "";
 	
 	this.treeDivSel = this.viewSelector + " .modal-body";
@@ -48,12 +48,11 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 		$(this_controller.relatedSetsDiv).hide();
 		$(".help").empty();
 		clear();
-
 	});
 	
 	$(this_controller.viewSelector + " .exec").off("click").click(function(){
 		this_controller.dismiss();
-		if(XPLAIN.currentOperation.execute("json")){
+		if(XPLAIN.activeWorkspaceState.currentOperation.execute("json")){
 			clear();
 			XPLAIN.activeControllers = new Hashtable();
 			$(this_controller.viewSelector).parents('.modal').modal('hide');
@@ -63,16 +62,15 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	$(this.viewSelector +  " #image").prop("checked", true);
 	$(".help").empty();
 	//TODO correct the level selection
-// 	if(this.xset.isMultilevel()){
-// 		$(this.positionDivSel).show();
-// 	} else {
-// 		$(this.positionDivSel).hide();
-// 	}
-	
+	if(XPLAIN.SetController.countLevels(this.setId) > 1){
+		$(this.positionDivSel).show();
+	} else {
+		$(this.positionDivSel).hide();
+	}
 	
 	if($(this.treeActivatorRadioSel).length){
-		// $(this.treeActivatorRadioSel).prop("checked", false);
-		// this.handlePositionChanged();
+    	$(this.treeActivatorRadioSel).prop("checked", false);
+    	this.handlePositionChanged();
 	} else {
 		this.loadRelationsTree();
 	}
@@ -92,7 +90,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.dismiss = function(
 		this_controller.selectedRelations = this.tree.getSelection();
 		this.tree.hide();
 	}
-	XPLAIN.currentOperation = this.buildOperation();
+	XPLAIN.activeWorkspaceState.currentOperation = this.buildOperation();
 
 };
 
@@ -113,12 +111,9 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.registerBehavior = 
 		$(this_controller.valuesListSel).select2('data', null);
 		$(this_controller.valuesListSel).empty();
         if(this.checked && $(this).hasClass("relation_tree_activator")) {
-			if(this_controller.tree){
-				this_controller.tree.restore();
-			} else{
 				
-				this_controller.loadRelationsTree();
-			}
+			this_controller.loadRelationsTree();
+
 			$(this_controller.relatedSetsDiv).hide()
 			
         } else {
@@ -165,7 +160,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelecte
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.handlePositionChanged = function(){
 	debugger;
-	if(this.getSelectedPosition() == "domain"){
+	if(this.getSelectedPosition() == "1"){
 		this.showDomain();
 		$(this.viewSelector + " #by_image_div").show();
 	} else {
@@ -179,18 +174,21 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handlePositionChang
 };
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.getSelectedPosition = function(){
-	return $(this.viewSelector + " input[name='radio_pos']:checked").attr('param_value') || "image";
+	return $(this.viewSelector + " input[name='radio_pos']:checked").attr('param_value') || "2";
 };
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened = function(relation){
 	debugger;
 	var relation_set_dependencies = relation.li_attr.dependencies
-	var set_to_pivot = relation_set_dependencies[relation_set_dependencies.length - 2].id
+	var set_to_pivot = relation_set_dependencies[relation_set_dependencies.length - 2].id	
 	var pivot = new Pivot(new Load(set_to_pivot), true);
+	if (set_to_pivot == this.setId){
+	    pivot.position = this.getSelectedPosition();
+	}
 	pivot.addRelation(new Relation(relation.li_attr));
 	pivot.limit = 15;
 
-	var findRelations = new FindRelations(new Flatten(pivot, "image", true), true);
+	var findRelations = new FindRelations(new Flatten(pivot, "2", true), "2", true);
 
 	findRelations.execute("json", function(data){
 	
@@ -204,11 +202,11 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened 
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree = function(){
 	$(this.relatedSetsDiv).hide();
-	this.tree = this.tree || new XPLAIN.views.RelationPathTree(this.setId, $(this.treeDivSel), this.treeParams);
+	this.tree = new XPLAIN.views.RelationPathTree(this.setId, $(this.treeDivSel), this.treeParams);
 	debugger;
 	this.tree.createTree($(this.treeDivSel));
 	var position = this.getSelectedPosition();
-	var findRelations = new Flatten(new FindRelations(new Load(this.setId), position, true), "image", true);
+	var findRelations = new Flatten(new FindRelations(new Load(this.setId), position, true), "2", true);
 	this.tree.loadData(findRelations);
 	debugger;
 	this.tree.onBranchSelected(this.handleBranchSelected);
@@ -248,6 +246,8 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = 
 	debugger;
 	$(this.viewSelector + ' .values_select').val([]);
 	$(this.viewSelector + ' .values_select').empty();
+	$('.select2-container').remove();
+	$('.select2-dropdown').remove();
 	this.setIdOfValuesList = setId;
 	$(this.viewSelector + ' .values_select').select2({
 		ajax: {
@@ -256,7 +256,14 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = 
 				  var load = new Load(setId);
 				  load.page = (params.data.page || 1)
 				  load.execute("json", function(data){
-					  success(data.set.extension);
+				      
+				      if (this_controller.getSelectedPosition() == "2"){
+				          success(XPLAIN.SetController.getLeavesFromExtensiondata.set.extension);
+				      } else {
+				          success(data.set.extension);
+				      }
+				      
+					  
 				  });
 
 				  return;
@@ -309,12 +316,13 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = 
 };
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.showDomain = function(){
-	this.xset.domain(function(data){
-		this_controller.updateValuesList(data, this_controller.xset.getId());
-	});
+    var extension = XPLAIN.SetController.getExtension(this.setId);
+	this.updateValuesList(extension, this.setId);
+
 };
+
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.showImage = function(){
-	this.updateValuesList(XPLAIN.SetController.getExtension(this.setId), this.setId);
+	this.updateValuesList(XPLAIN.SetController.getLeaves(this.setId), this.setId);
 };
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.initController = function(){};
@@ -346,7 +354,7 @@ XPLAIN.controllers.RankController = function(setId){
 				$(this_controller.valuesListSel).empty();
 				$(this_controller.valuesListSel).select2({
 					//TODO correct leaves method
-					data: this_controller.xset.leaves(),
+					data: XPLAIN.SetController.getLeaves(this.setId),
 					placeholder: "Select a Set",
 					allowClear: true
 				});
@@ -367,7 +375,7 @@ XPLAIN.controllers.RankController = function(setId){
 	},
 	
 	this.positionChanged = function(position){
-		if(position == "image"){
+		if(position == "2"){
 			$(this_controller.viewSelector + " [param_value=by_image]").parent().hide();
 		} else {
 			$(this_controller.viewSelector + " [param_value=by_image]").parent().show();
@@ -395,8 +403,8 @@ XPLAIN.controllers.RefineController = function(setId){
 		XPLAIN.activeWorkspaceWidget.params_hash.put("operation", "refine");
 		XPLAIN.activeWorkspaceWidget.params_hash.put("operator", "=");
 		$('#eql_comp').addClass('filter_comparator_active');
-		if(!XPLAIN.currentOperation){
-			XPLAIN.currentOperation = new FacetedSearch(new Load(this.setId));
+		if(!XPLAIN.activeWorkspaceState.currentOperation){
+			XPLAIN.activeWorkspaceState.currentOperation = new FacetedSearch(new Load(this.setId));
 		}
 		$(this.selectComparatorSel).val("=");
 
@@ -427,7 +435,7 @@ XPLAIN.controllers.RefineController = function(setId){
 	},	
 		
 	this.removeFilter = function(){
-		XPLAIN.currentOperation.removeFacet(this.selectedRelations, XPLAIN.activeWorkspaceWidget.params_hash.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id});
+		XPLAIN.activeWorkspaceState.currentOperation.removeFacet(this.selectedRelations, XPLAIN.activeWorkspaceWidget.params_hash.get('operator'), {item_type: $(value).attr("item_type"), datatype: $(value).attr("datatype"), item: value.id});
 	},
 	
 	this.addFilter = function(){
@@ -458,8 +466,8 @@ XPLAIN.controllers.RefineController = function(setId){
 		
 			restriction.position = position
 				
-			XPLAIN.currentOperation.addRestriction(restriction);
-			XPLAIN.currentOperation.position = position;
+			XPLAIN.activeWorkspaceState.currentOperation.addRestriction(restriction);
+			XPLAIN.activeWorkspaceState.currentOperation.position = position;
 			
 		}
 		this.updateFiltersTable();
@@ -469,7 +477,7 @@ XPLAIN.controllers.RefineController = function(setId){
 	this.updateFiltersTable = function(){
 		var filter_div = "";
 		
-		filter_div += XPLAIN.currentOperation.toHtml()//.join("<tr class=\"filter_connector\"><td><span>" + XPLAIN.currentOperation.connector + "</span></td></tr>");
+		filter_div += XPLAIN.activeWorkspaceState.currentOperation.toHtml()//.join("<tr class=\"filter_connector\"><td><span>" + XPLAIN.activeWorkspaceState.currentOperation.connector + "</span></td></tr>");
 		$(this.filtersDivSel).html("<table>" + filter_div + "</table>");
 
 		$(this.filterCloseSpanSel).click(function(e){
@@ -478,9 +486,9 @@ XPLAIN.controllers.RefineController = function(setId){
 			var operator = $(this).attr("operator");
 			var value = $(this).attr("facet_value");
 			if(facet){
-				XPLAIN.currentOperation.removeRelationRestriction(facet, operator, value);
+				XPLAIN.activeWorkspaceState.currentOperation.removeRelationRestriction(facet, operator, value);
 			} else{
-				XPLAIN.currentOperation.removeSimpleRestriction(operator, value);
+				XPLAIN.activeWorkspaceState.currentOperation.removeSimpleRestriction(operator, value);
 			}
 			
 			var tableCell = $(this).parent().parent()
@@ -496,14 +504,14 @@ XPLAIN.controllers.RefineController = function(setId){
 			}
 
 			$(tableCell).remove();
-			if(XPLAIN.currentOperation.isEmpty()){
+			if(XPLAIN.activeWorkspaceState.currentOperation.isEmpty()){
 				$(this.connectorsDivSel).hide();
 			}
 		});
 	},
 	
 	this.buildOperation = function(){
-		return XPLAIN.currentOperation;
+		return XPLAIN.activeWorkspaceState.currentOperation;
 	}	
 };
 XPLAIN.controllers.RefineController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
@@ -517,15 +525,15 @@ XPLAIN.controllers.PivotController = function(setId){
 	this.initController = function(){
 		this.treeParams.allowMultipleSelection = true;
 
-		if(!XPLAIN.currentOperation){
-			XPLAIN.currentOperation = new Pivot(new Load(this.setId));
+		if(!XPLAIN.activeWorkspaceState.currentOperation){
+			XPLAIN.activeWorkspaceState.currentOperation = new Pivot(new Load(this.setId));
 		}
 	},
 	
 	this.buildOperation = function(){
 		debugger;
-		XPLAIN.currentOperation.relations = this_controller.selectedRelations;
-		return XPLAIN.currentOperation;
+		XPLAIN.activeWorkspaceState.currentOperation.relations = this_controller.selectedRelations;
+		return XPLAIN.activeWorkspaceState.currentOperation;
 	}	
 };
 XPLAIN.controllers.PivotController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
@@ -543,8 +551,8 @@ XPLAIN.controllers.GroupController = function(setId){
 	this.initController = function(){
 		this.treeParams.allowMultipleSelection = true;
 
-		if(!XPLAIN.currentOperation){
-			XPLAIN.currentOperation = new Group(new Load(this.setId));
+		if(!XPLAIN.activeWorkspaceState.currentOperation){
+			XPLAIN.activeWorkspaceState.currentOperation = new Group(new Load(this.setId));
 		}
 		
 		$(this.setSel).empty();
@@ -574,7 +582,7 @@ XPLAIN.controllers.GroupController = function(setId){
 	},
 	
 	this.handleOperatorChanged = function($operator){
-		XPLAIN.currentOperation.groupFunction = $operator.attr("param_value");
+		XPLAIN.activeWorkspaceState.currentOperation.groupFunction = $operator.attr("param_value");
 		
 	},
 	this.populateSetSelector = function(){
@@ -591,7 +599,7 @@ XPLAIN.controllers.GroupController = function(setId){
 	},
 	
 	this.buildOperation = function(){
-		if(XPLAIN.currentOperation.groupFunction == "by_relation"){
+		if(XPLAIN.activeWorkspaceState.currentOperation.groupFunction == "by_relation"){
 			
 			var relations = this.selectedRelations
 			if(this.selectedRelations.length == 0){
@@ -601,21 +609,21 @@ XPLAIN.controllers.GroupController = function(setId){
 			}
 				
 
-			XPLAIN.currentOperation.functionParams = {relations: relations};
+			XPLAIN.activeWorkspaceState.currentOperation.functionParams = {relations: relations};
 			debugger;
 			if($(this.restrictGroupsCheckSel).prop("checked")){
 				var restrictionSet = $(this.setSel).select2('data');
 				if(restrictionSet.length){
-					XPLAIN.currentOperation.imageSetExpression = restrictionSet[0].id;
+					XPLAIN.activeWorkspaceState.currentOperation.imageSetExpression = restrictionSet[0].id;
 				}
 				
 			}
 			
-		} else if(XPLAIN.currentOperation.groupFunction == "by_domain"){
+		} else if(XPLAIN.activeWorkspaceState.currentOperation.groupFunction == "by_domain"){
 			var dependentSet = XPLAIN.SetController.getResultedFrom(this.setId);
 		}
 		
-		return XPLAIN.currentOperation;
+		return XPLAIN.activeWorkspaceState.currentOperation;
 	}	
 };
 XPLAIN.controllers.GroupController.prototype = new XPLAIN.controllers.AbstractRelationsTreeController();
@@ -628,7 +636,7 @@ XPLAIN.controllers.MapController = function(setId){
 	this_controller = this;
 
 	this.init = function(){
-		XPLAIN.currentOperation = new Map(new Load(this.setId));
+		XPLAIN.activeWorkspaceState.currentOperation = new Map(new Load(this.setId));
 		$(this.functionDefinitionFormSel).hide();
 		
 
@@ -645,7 +653,7 @@ XPLAIN.controllers.MapController = function(setId){
 			debugger;
 			this_controller.dismiss();
 			
-			if(XPLAIN.currentOperation.execute("json")){
+			if(XPLAIN.activeWorkspaceState.currentOperation.execute("json")){
 				clear();
 				$(this_controller.viewSelector).parents('.modal').modal('hide');
 			}
@@ -671,7 +679,7 @@ XPLAIN.controllers.MapController = function(setId){
 	this.dismiss = function(){
 		var selectedFunction = $(this_controller.functionsRadioSel + ":checked").attr("param_value");
 
-		XPLAIN.currentOperation.mapFunction = selectedFunction;
+		XPLAIN.activeWorkspaceState.currentOperation.mapFunction = selectedFunction;
 		if(selectedFunction == "user_defined"){
 			this_controller.handleUserDefinedFunctionFormSubmit();
 		}

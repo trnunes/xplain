@@ -13,16 +13,16 @@ class SessionController < ApplicationController
   end
   
   def load_current_session
-    # binding.pry
-    # reset_session
-    session[:current_session] = nil
-    if(session[:current_session].nil?)
+    
+    if(!session[:current_session].is_a? Xpair::Session)
       exp_session = Xpair::Session.new
       exp_session.save
-      session[:current_session] = exp_session.id
+      session[:current_session] = exp_session
     end
-    @session = Xpair::Session.load(session[:current_session])
+       
+    @session = session[:current_session]
   end
+
     
   def index
     s = Xset.new do |s|
@@ -75,7 +75,7 @@ class SessionController < ApplicationController
     @group_page = 1 if(@group_page == 0)
     @items_page = params[:page].to_i
     @items_page = 1 if(@items_page == 0) 
-    Xpair::Visualization.label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
+
     start = Time.now
     begin
       # begin
@@ -93,7 +93,7 @@ class SessionController < ApplicationController
       Filtering.clear()
     end
     # binding.pry
-    Xpair::Session.load(session[:current_session]).save_expression(params[:exp])
+    # Xpair::Session.load(session[:current_session]).save_expression(params[:exp])
     # binding.pry
     @resourceset.index.paginate(20)
     
@@ -109,7 +109,63 @@ class SessionController < ApplicationController
     end   
 
   end
+ 
+   def set_endpoint
+    url = params[:url].to_s
+    
+    server_params = {
+      results_limit: 10000,
+      method: params[:http_method],
+      items_limit: params[:max_items].to_i,
+      use_select: false
+    }
+    
+    if params[:use_blazegraph_index]
+      Rails.application.config.use_blazegraph_index = true
+    else
+      Rails.application.config.use_blazegraph_index = false
+    end
+    
+    if !url.nil?
+      #TODO fix the need of a default set as starting point
+      s = Xset.load('default_set')
+      s.server.set_params(url, server_params)
+      s.save
+    end
+    respond_to do |format|
+      format.any {render :text => "SUCCESSFUL"}
+    end
+  end
   
+  def namespace
+    
+    if params[:namespace_list]
+      Xpair::Namespace.update(params[:namespace_list])
+    end
+    
+    respond_to do |format|
+      format.json {render :json => generate_namespace_json()}
+    end
+  end
+  
+  def generate_namespace_json
+    Jbuilder.new do |json|
+      json.array!(Xpair::Namespace.each) do |namespace|
+        json.uri namespace.uri
+        json.prefix namespace.prefix
+      end
+    end.target!
+  end
+  
+  def update_title
+    @resourceset = Xset.load(params[:set])
+    @resourceset.title = Xset.load(params[:title])
+    @resourceset.save
+    respond_to do |format|
+      format.any {render :text => "SUCCESSFUL"}
+    end    
+    
+  end 
   
   def render_page
     @resourceset = Xset.load(params[:set])
@@ -153,7 +209,7 @@ class SessionController < ApplicationController
     end
     # binding.pry
     @resourceset.title = "All Relations"
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').find_relations()")
+    # Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').find_relations()")
     respond_to do |format|
       if @resourceset.save
         format.js { render :file => "/session/execute.js.erb" }
@@ -180,7 +236,7 @@ class SessionController < ApplicationController
       @resourceset.index.paginate(20)
       
     end
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').pivot(SchemaRelation.new(\"rdf:type\"))")
+    #Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').pivot(SchemaRelation.new(\"rdf:type\"))")
     @resourceset.title = "Types"
     
     respond_to do |format|
@@ -209,8 +265,13 @@ class SessionController < ApplicationController
     server = Xset.load('default_set').server
     keywords = params[:keywords]
     @resourceset = Xset.new(SecureRandom.uuid, "search(\"#{keywords.inspect}\")")
-    # server.search(keywords).each do |item|
-    server.blaze_graph_search(keywords).each do |item|
+    search_results = 
+      if Rails.application.config.use_blazegraph_index
+        server.blaze_graph_search(keywords)
+      else
+        server.search(keywords)
+      end
+    search_results.each do |item|
       @resourceset.add_item item     
     end
     @resourceset.server = server
@@ -218,12 +279,12 @@ class SessionController < ApplicationController
     Explorable.exploration_session.add_set @resourceset
     @resourceset.natural_sort!
     # binding.pry
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('root').refine{|f| f.keyword_match(\"#{keywords.inspect}\")}")
+    
     respond_to do |format|
       if @resourceset.save
 
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxpair::Application::DEFAULT_SET_VIEW+ '/_'+Wxpair::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
+        format.json {render :json => generate_jbuilder(@resourceset)}
       end
     end     
   end
@@ -250,7 +311,7 @@ class SessionController < ApplicationController
     @resourceset.index.paginate(20)
     # binding.pry
     @page = 1
-    Xpair::Session.load(session[:current_session]).save_expression("Xset.load('#{@resourceset.id}').select_items([Type.new(\"#{params[:type]}\")]).pivot(relations: [SchemaRelation.new(\"rdf:type\"), true)])")
+    # Xpair::Session.load(session[:current_session]).save_expression("Xset.load('#{@resourceset.id}').select_items([Type.new(\"#{params[:type]}\")]).pivot(relations: [SchemaRelation.new(\"rdf:type\"), true)])")
     finish = Time.now
 
     puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"     
@@ -289,9 +350,15 @@ class SessionController < ApplicationController
   
   def generate_jbuilder(xset, template_html, component_name = 'DefaultSetWidget')
     # binding.pry
-    @parents_by_item
-    resulted_from_array = []
-    resulted_from_array << xset.resulted_from.id if !xset.resulted_from.nil? 
+    
+    resulted_from_array = []    
+    resulted_from_set = xset.resulted_from
+    # binding.pry  
+    while(!resulted_from_set.nil?)
+      resulted_from_array << resulted_from_set.id
+      resulted_from_set = resulted_from_set.resulted_from
+      # binding.pry
+    end 
 
     json = Jbuilder.new do |set|
       set.set do
@@ -373,27 +440,22 @@ class SessionController < ApplicationController
   
 
   def to_jbuilder(json, item, xset, subset_id= "")
-  	if(item.is_a?(Entity) || item.is_a?(SchemaRelation)|| item.is_a?(ComputedRelation) || item.is_a?(Type))
+    if(item.is_a?(Entity) || item.is_a?(SchemaRelation)|| item.is_a?(ComputedRelation) || item.is_a?(Type))
 
-	  	json.id item.id
+      json.id item.id      
+      json.text item.text
       # binding.pry
-      if item.text.nil?
-        json.text item.id
-      else
-        json.text item.text
-      end
-			
-			json.type item.class.to_s
-			json.inverse item.inverse if item.is_a?(SchemaRelation)	
-		else
-			json.id item.to_s
+      json.type item.class.to_s
+      json.inverse item.inverse if item.is_a?(SchemaRelation) 
+    else
+      json.id item.to_s
       # binding.pry
-			json.text item.text
-			json.type "Xpair::Literal"
+      json.text item.text
+      json.type "Xpair::Literal"
       if item.has_datatype?
         json.datatype item.datatype
       end
-		end
+    end
     json.expression item.expression
 
     if !subset_id.empty?
@@ -406,17 +468,17 @@ class SessionController < ApplicationController
       end
     end
     
-  	json.set xset.id
+    json.set xset.id
+    
     if !xset.resulted_from.nil?
       resulted_from_array = []
       resulted_from_set = xset.resulted_from
-      
       while(!resulted_from_set.nil?)
         resulted_from_array.unshift(resulted_from_set.id)
         resulted_from_set = resulted_from_set.resulted_from
       end
       
-    	json.resultedFrom xset.resulted_from.id
+      json.resultedFrom xset.resulted_from.id
       json.resultedFromArray Jbuilder.new do |resulted_from_json|
         resulted_from_json.array!(resulted_from_array) do |resulted_from|
           resulted_from_json.id resulted_from

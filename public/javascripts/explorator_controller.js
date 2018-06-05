@@ -237,6 +237,7 @@ function clear(){
 	$('[type=radio]').prop('checked', false);
 
 	$('.filter_comparator_active').removeClass('filter_comparator_active');
+	debugger;
 	XPLAIN.currentOperation = null;
 	clearFacetModal();
 	XPLAIN.activeControllers = new Hashtable();
@@ -344,11 +345,12 @@ function SemanticExpression(param) {
 		
 	if (operationInput.length > 0) {
 
-		this.expression = new Expression(operationInput.attr('exp'));
+		this.expression = new Load(operationInput.attr('data-id'));
 		
 	} else {
 		alert("You must select at least one item/set in the exploration view!");
 	}
+	debugger;
 	console.log("INPUT EXPRESSION: " + this.expression);	
 };
 
@@ -368,9 +370,10 @@ SemanticExpression.prototype.union = function(param){
     }
 	
     setsToUnite = setsToUnite.map(function(selectedSet){
-        return new Load($(selectedSet).attr('id'));
+        return new Load($(selectedSet).attr('data-id'));
     });
-	setsToUnite.push(this.expression)
+	setsToUnite.push(this.expression);
+	debugger;
 	var union = new Union(setsToUnite);
 	this.expression = union;
     return this;
@@ -386,7 +389,7 @@ SemanticExpression.prototype.intersection = function(param) {
 		setsToIntersect = [setsToIntersect];
     }
 	
-    setsToIntersect = setsToIntersect.map(function(selectedSet){ return new Load($(selectedSet).attr('id')) });	
+    setsToIntersect = setsToIntersect.map(function(selectedSet){ return new Load($(selectedSet).attr('data-id')) });	
 	setsToIntersect.push(this.expression);
 	
 	var intersection = new Intersection(setsToIntersect);
@@ -404,7 +407,7 @@ SemanticExpression.prototype.difference = function(param){
 		setsToDiff = [setsToDiff];
     }
 
-    setsToDiff = setsToDiff.map(function(selectedSet){ return new Load($(selectedSet).attr('id')) });	
+    setsToDiff = setsToDiff.map(function(selectedSet){ return new Load($(selectedSet).attr('data-id')) });	
 	setsToDiff.unshift(this.expression);
     //The parameter could be only one element or several.			
     this.expression = new Difference(setsToDiff);
@@ -423,7 +426,7 @@ SemanticExpression.prototype.join = function(param){
     }
 	
     setsToUnite = setsToUnite.map(function(selectedSet){
-        return new Load($(selectedSet).attr('id'));
+        return new Load($(selectedSet).attr('data-id'));
     });
 	setsToUnite.push(this.expression)
 	var union = new Join(setsToUnite);

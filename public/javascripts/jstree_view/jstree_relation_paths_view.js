@@ -204,6 +204,7 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		  this.createTree();
 		}
 		expression.execute("json", function(data){
+			debugger
 			this_projection.populate(data.set);
 		});
 	},

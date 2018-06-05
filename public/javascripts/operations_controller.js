@@ -93,8 +93,13 @@ XPLAIN.Xset = function(data, operation){
 		if(!this.isEmpty()){
 			return this.data.extension[0].children;
 		}
+		
+		
 		return false;
 	},
+	
+	
+	
 	
 	this.addGenerates = function(generatedSet){
 		this.generates.push(generatedSet);

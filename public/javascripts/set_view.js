@@ -211,7 +211,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.register_ui_selection_behaviour = func
 			nodeToFocus = $(this).parents('._WINDOW').attr("data-id");
 		}
 
-		XPLAIN.graph.selectSet(nodeToFocus);
+        XPLAIN.graph.selectNode(nodeToFocus);
 		$('._draggable').each(function(){
 			if ($(this).data('ui-draggable')){
 				$(this).draggable("destroy");

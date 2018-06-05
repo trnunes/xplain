@@ -149,6 +149,7 @@ function Pivot(inputDependencies, isVisual) {
 	this.relations = [];
 	this.isForward = true;
 	this.limit = null;
+	this.position = "2"
 	
 
 	this.setParams = function(params){
@@ -218,7 +219,7 @@ function Pivot(inputDependencies, isVisual) {
 		}
 		pivotExpr += this.getRelationExpr();
 
-		pivotExpr += ")";
+		pivotExpr += ", level: "+this.position+ ")";
 		return setExpr + pivotExpr;		
 	}
 };
@@ -228,7 +229,7 @@ Pivot.prototype = Object.create(Operation.prototype)
 function FindRelations(inputDependencies, position, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
 	
-	this.position = position || "image";
+	this.position = position || "2";
 
 	this.getExpression = function(){
 		var prefix = "";
@@ -241,7 +242,7 @@ function FindRelations(inputDependencies, position, isVisual){
 		if(this.direction == "forward"){
 			expression = ".forward_relations"
 		}
-		expression += "(limit: 25, position: '" +this.position+"')"
+		expression += "(limit: 25, level: " +this.position+")"
 
 		expression = this.input[0].getExpression() + expression;
 		return expression;
@@ -289,7 +290,7 @@ function Refine(inputDependencies, isVisual){
 	this.filter = null;
 	this.functionParams = {connector: 'AND'};
 	this.connector = "AND";
-	this.position = "image"
+	this.position = "2"
 	this.page
 	// this.filterParams = {};
 	this.relations = [];
@@ -410,7 +411,7 @@ function Refine(inputDependencies, isVisual){
 		
 		var filterParams = this.generateParamsExpr();		
 		
-		return this.input[0].getExpression() + "."+prefix+"refine(position: \""+this.position+"\"){|f|f."+this.filter+"("+filterParams+")}";
+		return this.input[0].getExpression() + "."+prefix+"refine(level: "+this.position+"){|f|f."+this.filter+"("+filterParams+")}";
 	}
 };
 Refine.prototype = Object.create(Operation.prototype)
@@ -512,7 +513,7 @@ function FacetedSearch(inputDependencies, isVisual){
 	this.connector = "AND";
 	this.simpleRestrictionsHash = new Hashtable();
 	this.restrictionsByRelationHash = new Hashtable();
-	this.position = "image";
+	this.position = "2";
 	
 	this.isEmpty = function(){
 		return (this.simpleRestrictionsHash.isEmpty() && this.restrictionsByRelationHash.isEmpty());
@@ -640,7 +641,7 @@ function FacetedSearch(inputDependencies, isVisual){
 		
 		refineExpressions = [];
 		if(simpleRestrictionExpr != ""){
-			simpleRestrictionExpr = prefix + "refine(position: '"+this.position+"'){|f| f.compare(connector: \""+connector+"\", restrictions: ["+simpleRestrictionExpr+"])}"
+			simpleRestrictionExpr = prefix + "refine(level: "+this.position+"){|f| f.compare(connector: \""+connector+"\", restrictions: ["+simpleRestrictionExpr+"])}"
 			refineExpressions.push(simpleRestrictionExpr);
 		}
 		
@@ -649,7 +650,7 @@ function FacetedSearch(inputDependencies, isVisual){
 			debugger;
 			expression = this.restrictionsByRelationHash.get(key).getExpression();
 			connector = this.restrictionsByRelationHash.get(key).connector || "AND"
-			refineExpression = prefix + "refine(position: '"+this.position+"'){|f| f.relation_compare(relations: ["+key+"], connector: \""+connector+"\", restrictions: ["+expression+"])}"
+			refineExpression = prefix + "refine(level: "+this.position+"){|f| f.relation_compare(relations: ["+key+"], connector: \""+connector+"\", restrictions: ["+expression+"])}"
 			refineExpressions.push(refineExpression);
 		}
 		that = this;
@@ -920,7 +921,7 @@ function Rank(inputDependencies, isVisual){
 	this.rankFunction = null;
 	this.functionParams = null;
 	this.order = null;
-	this.position = "image"
+	this.position = "2"
 	this.setParams = function(params){
 		functionParams = {}
 		
@@ -987,7 +988,7 @@ function Rank(inputDependencies, isVisual){
 			if(this.order){
 				constructor = "{order: '" + this.order + "'";
 			}
-			constructor += ", position: '" + this.position + "'}";
+			constructor += ", level: " + this.position + "}";
 		
 			return this.input[0].getExpression() + ".rank("+constructor+"){|gf|gf."+this.rankFunction+"("+rankParamsExp+")}";
 			
@@ -1012,14 +1013,14 @@ Load.prototype = Object.create(Operation.prototype)
 function Flatten(inputDependencies, position, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
 	
-	this.position = position || "image";
+	this.position = position || "2";
 	this.getExpression = function(){
 		var prefix = "";
 		if(this.isVisual){
 			prefix = "v_"
 		}
 		debugger;
-		return this.input[0].getExpression() + "."+prefix+"flatten(position: '"+this.position+"')"
+		return this.input[0].getExpression() + "."+prefix+"flatten(level: "+this.position+")"
 	},
 	this.validate = function(){
 		return true;

@@ -90,31 +90,19 @@ XPLAIN.graph = new function(){
 		var container = $('#graph_view .graph_container')[0]
 		this.graph = new vis.Network(container, data, this.options);
 	    this.graph.on("click", function (params) {
-			debugger;
-			console.log(params);
-
-			var $setWindow = $("#" + params.nodes[0] + "._WINDOW");
-			$setWindow.ui_show();
-			$setWindow.attr("top", "0px");
-			$setWindow.attr("left", "0px");
-			$setWindow.insertBefore($('#exploration_area .set').first())
-			
-			// $setWindow.fadeIn();
-			$('.SELECTED').removeClass("SELECTED");
-			$setWindow.addClass('SELECTED');
-			
-						// $setWindow.show();
-			// $("#exploration_area").css("z-index: 20");
+	        debugger;
+	        XPLAIN.activeWorkspaceWidget.selectSetAndFocus(params.nodes[0]);
 		});	
 	},
 	this.focus  = function(xsetId){
 		this.graph.focus(xsetId);
 		
 	},
-	this.selectSet = function(xsetId){
+	this.selectNode = function(xsetId){
 		this.focus(xsetId);
-		this.graph.selectNodes([xsetId]);
-	}
+		this.graph.selectNodes([xsetId]);		
+	},
+	
 	this.addSet = function(setJson){
         try {
 	        this.nodes.add({
@@ -125,12 +113,15 @@ XPLAIN.graph = new function(){
 			debugger;
 			if (setJson.resultedFrom){
 				for (var i in setJson.resultedFrom){
-					this.edges.add({
-						from: setJson.resultedFrom[i],
-						label: setJson.intention,
-						to: setJson.id,
-						arrows: 'to'
-					});
+				    if (this.nodes.get(setJson.resultedFrom[i])){
+                        this.edges.add({
+                            from: setJson.resultedFrom[i],
+                            label: setJson.intention,
+                            to: setJson.id,
+                            arrows: 'to'
+                        });
+                        break;
+				    }
 				}
 			} else {
 
@@ -141,6 +132,7 @@ XPLAIN.graph = new function(){
 					arrows: 'to'
 				});
 			}
+			this.selectNode(setJson.id)
         }
         catch (err) {
             console.log(err);
