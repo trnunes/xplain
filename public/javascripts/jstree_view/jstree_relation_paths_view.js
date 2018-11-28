@@ -28,16 +28,16 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 				"three_state" : false
 			},
 			"types" : {
-				"Entity" : {
+				"Xplain::Entity" : {
 					"icon" : "glyphicon glyphicon-folder-close"
 				},
-				"SchemaRelation" : {
+				"Xplain::SchemaRelation" : {
 					"icon" : "glyphicon glyphicon-flash"
 				},
-				"ComputedRelation" : {
+				"Xplain::ComputedRelation" : {
 					"icon" : "glyphicon glyphicon-flash"
 				},
-				"Xpair::Literal": {
+				"Xplain::Literal": {
 					"icon": "glyphicon glyphicon-asterisk"
 				}
 			},
@@ -99,7 +99,7 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 	
 	this.notify = function(event, data){
 		var registeredCallbacks = this.eventsTable.get(event);
-		debugger;
+		
 		if(registeredCallbacks){
 			registeredCallbacks.forEach(function(callback){callback(data)});
 		}
@@ -124,6 +124,7 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		if (this.$treeDiv.hasClass("jstree")) {
 		  this.$treeDiv.jstree("destroy");
 		}
+		this.$treeDiv.empty();
 	},
 	
 	this.clear = function(){
@@ -136,15 +137,17 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		});
 	},
 	//TODO Repeated code from jstree_view. Generalize it!
-	this.populate = function(setJson){
-		var jstree_nodes = [];
-		var items = setJson.extension
-		for (var i in items){
-			this.addItem("#", items[i]);
+	this.populate = function(relations, setId, resultedFrom){
+		this.destroy();
+		this.createTree();
+		for (var i in relations){
+			var relation = relations[i];
+			relation.resultedFrom = resultedFrom;
+			this.addItem("#", relation);
 		}		
 	},
 	this.addItem = function(parentNode, item){
-		debugger;
+		
 		var jstreeItem = this.convertItem(item);
 		var children = jstreeItem.children;
 		
@@ -157,12 +160,12 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		var item_node = {
 			text: item.text,
 			type: item.type,
+			
 			data: {
 				set: item.set, 
 				item: item.id, 
 				type: item.type,
-				resultedFrom: item.resultedFrom,
-				dependencies: item.resultedFromArray 
+				resultedFrom: item.resultedFrom
 			},
 
 			children: [],
@@ -170,14 +173,14 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 				item: item.id,
 				item_type: item.type,
 				set: item.set,
-				resultedFrom: item.resultedFrom,
-				dependencies: item.resultedFromArray
+				setNode: item.node,
+				resultedFrom: item.resultedFrom
 			}
 		}
 		
-		if (item_node.type == "SchemaRelation"){
+		if (item_node.type == "Xplain::SchemaRelation"){
 			item_node.li_attr.inverse = item.inverse
-		}else if ((item.type == "Xpair::Literal") && item.datatype ){
+		}else if ((item.type == "Xplain::Literal") && item.datatype ){
 			item_node.data.datatype = item.datatype;
 			item_node.li_attr.datatype = item.datatype;
 		}
@@ -203,10 +206,11 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		if (!this.$treeDiv.hasClass("jstree")) {
 		  this.createTree();
 		}
-		expression.execute("json", function(data){
-			debugger
-			this_projection.populate(data.set);
+		XPLAIN.AjaxHelper.execute(expression, function(data){
+			this_projection.populate(data.extension, data.id, data.resultedFrom);
 		});
+		
+		
 	},
 	
 	this.show = function(){
@@ -214,12 +218,12 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 	},
 	
 	this.handleBranchSelection = function(e, data){
-		debugger;
+		
 		e.stopPropagation();
 		e.preventDefault();
 		
 		var facetRelationSelected = data.node;
-				
+		
 		var checked_nodes = this.$treeDiv.jstree().get_checked(true);
 		checked_nodes.splice(checked_nodes.indexOf(facetRelationSelected.id));
 		this.$treeDiv.jstree(true).uncheck_node(checked_nodes);
@@ -237,13 +241,8 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		while(parentRelation !== "#") {
 			
 			facetRelationNode = this.$treeDiv.jstree().get_node(parentRelation);
-			debugger;
-			if(facetRelationNode.li_attr.inverse && this.allInverse(path)){
-				path.push(new Relation(facetRelationNode.li_attr));
-			}else{
-				path.unshift(new Relation(facetRelationNode.li_attr));
-			}
-			
+			debugger;			
+			path.unshift(new Relation(facetRelationNode.li_attr));
 			parentRelation = this.$treeDiv.jstree().get_parent(facetRelationNode);
 		}
 		this.currentSelection = [new PathRelation(path)];

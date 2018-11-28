@@ -32,7 +32,7 @@ XPLAIN.widgets.Widget.prototype = {
 	},
 	build: function(){
 		this.children.forEach(function(child){
-			debugger
+			
 			child.build()}
 			);
 	},

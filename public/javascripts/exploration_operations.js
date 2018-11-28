@@ -2,21 +2,36 @@ var XPLAIN = XPLAIN || {}
 function Item(itemObj){
 	this.itemObj = itemObj;
 	this.text = itemObj.text;
-	this.id = itemObj.item
+	this.id = itemObj.id;
+
 	this.getExpression = function(){
 
 		if(itemObj.expression){
 			return itemObj.expression;
 		}
-		var expr = itemObj.item_type + ".new(\""+ itemObj.item +"\"";
+		var type = ""
+		debugger
+		switch(itemObj.type){
+			case "Xplain::Entity":
+				type = "entity";
+				break;
+			case "Xplain::Type":
+				type = "type";
+				break;
+			case "Xplain::Literal":
+				type = "literal";
+				break;
+		}
+
+		var expr = type + " \""+ itemObj.id +"\"";
 		if(itemObj.inverse != null){
 			expr += ", " + itemObj.inverse;
 		}
 		
 		if(itemObj.datatype != null){
-			expr += ", \"" + itemObj.datatype  + "\"";
+			expr += "=> \"" + itemObj.datatype  + "\"";
 		}
-		expr += ")";
+		
 		return expr.replace(/#/, "%23");
 	}
 };
@@ -26,7 +41,7 @@ function PathRelation(relations){
 	this.id = relations.map(function(r){ return r.id}).join(" , ");
 	this.getExpression = function(){
 		var exp = this.relations.map(function(relation){return relation.getExpression()}).join(", ");
-		return "PathRelation.new(["+exp+"])";
+		return exp;
 	}
 };
 
@@ -35,11 +50,12 @@ function Relation(data){
 	this.data = data;
 	this.id = data.item;
 	this.getExpression = function(){
-		var exp = data.item_type + ".new(\"" +data.item + "\"";
-		if(data.inverse != null){
-			exp += ", " + data.inverse;
+		var exp = "\"" + data.item + "\"";
+		
+		if(data.inverse == "true"){
+			exp = "inverse(" + exp+ ")";
 		}		
-		exp += ")";
+		
 		return exp;
 	}
 };
@@ -68,6 +84,8 @@ Operation.prototype = {
 	input: [],
 	errorMessages: [],
 	isVisual: null,
+	postProcessingExpression: "",
+
 	name: function(){
 		
 	},
@@ -123,11 +141,11 @@ Operation.prototype = {
 	
 	execute: function(format, successFunction, failure){
 		var that = this
-		debugger;
-		if(this.validate()){
 		
-			XPLAIN.AjaxHelper.execute(this.getExpression(), successFunction || function(data){
-				XPLAIN.activeWorkspaceState.addSetFromJson(data.set);
+		if(this.validate()){
+			debugger;
+			XPLAIN.AjaxHelper.execute(this.getExpression() + ".execute" + this.postProcessingExpression, successFunction || function(data){
+				XPLAIN.activeWorkspaceState.addSetFromJson(data);
 			});		
 		} else {
 			for (var i in this.errorMessages){
@@ -138,93 +156,106 @@ Operation.prototype = {
 			return false;
 		}
 		return true;
-	},
+	}
 	
 };
 
-function Pivot(inputDependencies, isVisual) {	
+Pivot = function (inputDependencies, isVisual) {	
 	Operation.call(this, inputDependencies, isVisual);
-	
 	this.isPath = false;
 	this.relations = [];
 	this.isForward = true;
 	this.limit = null;
-	this.position = "2"
-	
+	this.position = null;
+	this.group_by_domain = false;
+	this.debug = false;
+}
+Pivot.prototype = Object.create(Operation.prototype);
+Pivot.prototype.postProcessingExpression = "";
+Pivot.prototype.setParams =  function(params){
 
-	this.setParams = function(params){
+	if(params.containsKey("path")){
+		this.isPath = true;
+	}
 
-		if(params.containsKey("path")){
-			this.isPath = true;
-		}
-		
-		if(params.containsKey("relations")){
-			var targetRelations = params.get("relations");
-		}
-		
+	if(params.containsKey("relations")){
+		var targetRelations = params.get("relations");
+	}
 
-		for(var i=0; i< targetRelations.length; i++) {
-			this.addRelation(targetRelations[i]);
-			if(targetRelations[i].inverse){
-				this.isForward = false;
-			}
-		}
-	},
-	this.addRelation = function(relation){
-		this.relations.push(relation);
-		if(relation.inverse){
+
+	for(var i=0; i< targetRelations.length; i++) {
+		this.addRelation(targetRelations[i]);
+		if(targetRelations[i].inverse){
 			this.isForward = false;
 		}
-	},
+	}
+}
+
+Pivot.prototype.addRelation = function(relation){
+	this.relations.push(relation);
+	if(relation.inverse){
+		this.isForward = false;
+	}
+}
 		
 	//private
 	//TODO implement validation
-	this.validate = function() {
-		
-		if (!this.input){
-			this.addErrorMessage("You must select one of the sets in the exploration area for this operation!");
-			return false;
-		}
-		
-		if((this.relations.length == 0) && (this.path.length == 0)){
-			this.addErrorMessage("You must select at least one relation in the exploration area to pivot!");
-			return false;
-		}
-		return true;
-			
-	},
-		
-	this.getRelationExpr = function() {
-		var relation_expr = "";
-		relation_expr = "[" + this.relations.map(function(r){return r.getExpression()}).join(", ")+ "]";
-		if(this.limit){
-			relation_expr += ", limit: " + this.limit
-		}
-		return "relations: " + relation_expr;
-	},
-	
-	this.getExpression = function(){
-		
-		var prefix = "";
-		if(this.isVisual){
-			prefix = "v_";
-		}
+Pivot.prototype.validate = function() {
 
-		var setExpr = this.input[0].getExpression();
-		var pivotExpr = "";
-		if (this.isForward) {
-			pivotExpr = "."+prefix+"pivot_forward(";
-		}else {
-			pivotExpr = "."+prefix+"pivot_backward(";
-		}
-		pivotExpr += this.getRelationExpr();
-
-		pivotExpr += ", level: "+this.position+ ")";
-		return setExpr + pivotExpr;		
+	if (!this.input){
+		this.addErrorMessage("You must select one of the sets in the exploration area for this operation!");
+		return false;
 	}
-};
 
-Pivot.prototype = Object.create(Operation.prototype)
+	if((this.relations.length == 0)){
+		this.addErrorMessage("You must select at least one relation in the exploration area to pivot!");
+		return false;
+	}
+	return true;
+
+}
+		
+Pivot.prototype.getRelationExpr = function() {
+	var relation_expr = "";
+	debugger;
+	relation_expr = this.relations.map(function(r){return r.getExpression()}).join(", ");
+
+	return "relation " + relation_expr;
+}
+	
+Pivot.prototype.getExpression = function(){
+
+	var prefix = "";
+	if(this.isVisual){
+		prefix = "v_";
+	}
+
+	var setExpr = this.input[0].getExpression();
+	var pivotExpr = ".pivot(";
+	if (this.position) {
+		pivotExpr += "level: "+this.position + ",";
+	}
+	if (this.limit){
+		pivotExpr += " limit: " + this.limit + ",";
+	}
+	if (this.group_by_domain) {
+		pivotExpr += " group_by_domain: true,"
+	}
+	if (this.debug) {
+		pivotExpr += " debug: true"
+	}
+	pivotExpr += ")";
+	pivotExpr += "{" +this.getRelationExpr()+"}";
+
+	return setExpr + pivotExpr;		
+}
+
+Pivot.prototype.uniq = function(){
+	this.postProcessingExpression += ".uniq!.sort_asc!";
+	return this;
+}
+
+
 
 function FindRelations(inputDependencies, position, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
@@ -257,6 +288,11 @@ function FindRelations(inputDependencies, position, isVisual){
 		}
 		
 		return true;
+	},
+
+	this.postProcessingExpression = function(){
+		return ".uniq!";
+
 	}
 	
 };
@@ -269,7 +305,7 @@ function Select(inputDependencies, selection){
 	this.selection = selection;
 	
 	this.getExpression = function(){
-		var expression = this.input[0].getExpression() + ".select_items(["+this.selection.map(function(i){return i.getExpression()}).join(",")+"])";
+		var expression = this.input[0].getExpression() + ".nodes_select(ids: ["+this.selection.map(function(id){return "\""+id+"\""}).join(",")+"])";
 		return expression;
 	},
 	
@@ -479,6 +515,25 @@ function RelationRestriction(relation, operator, value, connector){
 		}
 		
 	},
+
+	//TODO replicated code with Restriction! Generalize it.
+	this.getComparatorExp = function(operator){		
+		switch(operator){
+		case "=":
+			return "equals";			
+		case "<":
+			return "less_than";
+		case "<=":
+			return "less_than_equal";
+		case ">":
+			return "greater_than";
+		case ">=":
+			return "greater_than_equal";			
+		default:
+			return operator;
+		}
+	},
+
 	this.removeRestriction = function(operator, valueExpression){
 		for(var i in this.restrictions){
 			debugger;
@@ -489,10 +544,10 @@ function RelationRestriction(relation, operator, value, connector){
 	},
 	
 	this.getExpression = function(){
-		var restrictionExpr = ""
+		var restrictionExpr = "";
+		var that = this;
 		restrictionExpr = this.restrictions.map(function(restrictionClause){
-			
-			return "['"+restrictionClause.operator+ "', " + restrictionClause.value.getExpression()+"]"
+			return that.getComparatorExp(restrictionClause.operator) +"{  relation "+ that.relation.getExpression() + ";" + restrictionClause.value.getExpression()+"}"
 		}).join(", ");
 		return restrictionExpr
 	}
@@ -506,11 +561,29 @@ function CompositeRestrictionAnd(){
 	}
 };
 
+function KeywordSearch(keywords, isVisual){
+	Operation.call(this, null, isVisual);
+	this.keywords = keywords;
+	this.getExpression = function(){
+		var prefix = "";
+		var expr = "Xplain::KeywordSearch.new(keyword_phrase: \""+ keywords.join(" ")+"\")";
+		return expr	;
+	},
+	
+	this.validate = function(){
+		//TODO validate keyword expression
+		return true;
+	}
+
+
+};
+KeywordSearch.prototype = Object.create(Operation.prototype);
+
 function FacetedSearch(inputDependencies, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
 	
 	this.facets = [];
-	this.connector = "AND";
+	this.connector = "And";
 	this.simpleRestrictionsHash = new Hashtable();
 	this.restrictionsByRelationHash = new Hashtable();
 	this.position = "2";
@@ -548,7 +621,7 @@ function FacetedSearch(inputDependencies, isVisual){
 				if(connector){
 					this.facets[i].push(connector);
 				} else {
-					this.facets[i].push("AND");
+					this.facets[i].push("And");
 				}
 
 
@@ -572,7 +645,7 @@ function FacetedSearch(inputDependencies, isVisual){
 			relationExpr = facet.relation.id
 			facetHtml = facet.restrictions.map(function(restriction){
 				var restriction_div = "";
-				restriction_div += "<td><span>" + relationExpr + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator= \""+restriction.operator+"\" facet='"+facet.relation.getExpression()+"' facet_value='"+restriction.value.getExpression()+"'>x</span></span>" + "</td>";
+				restriction_div += "<td><span>" + relationExpr + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator= \""+restriction.operator+"\" facet='"+facet.relation.getExpression()+"' facet_value='"+restriction.value.id+"'>x</span></span>" + "</td>";
 				debugger;
 				return restriction_div;
 			}).join(" <td class=\"filter_connector\"><span >" + facet.connector + " </span></td>");
@@ -581,7 +654,7 @@ function FacetedSearch(inputDependencies, isVisual){
 		
 		var simpleResTableCols = this.simpleRestrictionsHash.values().map(function(restriction){
 			var restriction_div = "";
-			restriction_div += "<td><span>" + that.position + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator=\""+restriction.operator+"\" facet_value='"+restriction.value.getExpression()+"'>x</span></span>" + "</td>";
+			restriction_div += "<td><span>" + that.position + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator=\""+restriction.operator+"\" facet_value='"+restriction.value.id+"'>x</span></span>" + "</td>";
 			debugger;
 			return restriction_div
 		});
@@ -628,47 +701,21 @@ function FacetedSearch(inputDependencies, isVisual){
 	
 	this.getExpression = function(){
 		var prefix = "";
+		var expr = ".refine";
+		debugger;
+		if (this.position) {			
+			expr += "(level: " + this.position + ")";
+		}
+
+		expr += "{"+this.connector+"{[";
+
 		if(this.isVisual){
 			prefix = "v_";
 		}
-		
-		var expr = ""
-		var connector = "AND"
-		var simpleRestrictionExpr = this.simpleRestrictionsHash.values().map(function(r){
-			connector = r.connector || "AND"
-			return r.getExpression();
-		}).join(", ");
-		
-		refineExpressions = [];
-		if(simpleRestrictionExpr != ""){
-			simpleRestrictionExpr = prefix + "refine(level: "+this.position+"){|f| f.compare(connector: \""+connector+"\", restrictions: ["+simpleRestrictionExpr+"])}"
-			refineExpressions.push(simpleRestrictionExpr);
-		}
-		
-		for( var i in this.restrictionsByRelationHash.keys()){
-			var key = this.restrictionsByRelationHash.keys()[i];
-			debugger;
-			expression = this.restrictionsByRelationHash.get(key).getExpression();
-			connector = this.restrictionsByRelationHash.get(key).connector || "AND"
-			refineExpression = prefix + "refine(level: "+this.position+"){|f| f.relation_compare(relations: ["+key+"], connector: \""+connector+"\", restrictions: ["+expression+"])}"
-			refineExpressions.push(refineExpression);
-		}
-		that = this;
-		refineOperations = refineExpressions.map(function(r){return new Expression(that.input[0].getExpression() + "."+r)});
-		
-		var facetedSearch = refineOperations[0];
 
-		if(refineExpressions.length > 1){
-			if(this.connector == "AND"){
-				
-				facetedSearch = new Intersection(refineOperations);
-			} else {
-				facetedSearch = new Union(refineOperations);
-			}
-		}
-
-		return facetedSearch.getExpression();
-		
+		expr += this.restrictionsByRelationHash.values().map(function(restriction){return restriction.getExpression()}).join(", ");
+		expr += "]}}";
+		return this.input[0].getExpression() + expr	;
 	},
 	
 	this.validate = function(){
@@ -690,14 +737,14 @@ function Union(inputDependencies){
 	this.inplace = false;
 	this.getExpression = function(){
 		if(this.validate()){
-			var union = this.input[0].getExpression();
-			for (var i=1; i < this.input.length; i++) {
-				union += ".union(" +this.input[i].getExpression()+", inplace:"+this.inplace+")";
+			var union = "";
+			for (var i=0; i < this.input.length; i++) {
+				union += this.input[i].getExpression()+", ";
 			}
 		} else {
 			alert("Not Valid Expression!");
 		}
-		return union;
+		return "Xplain::Unite.new([" + union + "])";
 	},
 		
 	this.validate = function(){
@@ -715,16 +762,15 @@ function Intersection(inputDependencies){
 	Operation.call(this, inputDependencies);
 	
 	this.getExpression = function(){
-		if (this.validate()){
-			
-			var union = this.input[0].getExpression();
-			for(var i=1; i < this.input.length; i++) {
-				union += ".intersect(" +this.input[i].getExpression()+")"
-			}			
+		if(this.validate()){
+			var intersect = "";
+			for (var i=0; i < this.input.length; i++) {
+				intersect += this.input[i].getExpression()+", ";
+			}
 		} else {
 			alert("Not Valid Expression!");
 		}
-		return union;
+		return "Xplain::Intersect.new([" + intersect + "])";
 	},
 		
 	this.validate = function(){
@@ -744,14 +790,14 @@ function Difference(inputDependencies){
 	
 	this.getExpression = function(){
 		if(this.validate()){
-			var diff = this.input[0].getExpression();
-			for (var i=1; i < this.input.length; i++) {
-				diff += ".diff(" +this.input[i].getExpression()+")"
-			}			
+			var diff = "";
+			for (var i=0; i < this.input.length; i++) {
+				diff += this.input[i].getExpression()+", ";
+			}
 		} else {
 			alert("Not Valid Expression!");
 		}
-		return diff;
+		return "Xplain::Diff.new([" + diff + "])";
 	},
 	this.validate = function(){
 		
@@ -795,11 +841,10 @@ Join.prototype = Object.create(Operation.prototype)
 //TODO include a param that is the list of params for the chosen map function
 function Map(inputDependencies, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
-	if (!level){
-		var level = 1;
-	}
+	this.position = 0;
 	
 	this.mapFunction = null;
+	this.relations = null;
 	
 	this.setFunction = function(mapFunction){
 		this.mapFunction = mapFunction;
@@ -815,20 +860,27 @@ function Map(inputDependencies, isVisual){
 			var expression = this.input[0].getExpression();
 			var functionExpression = this.mapFunction;
 			if(this.functionParams != null && this.functionParams.length > 0){
-				functionExpression += "(["+ this.functionParams.join(",")+"])"
+				functionExpression += "(["+ this.functionParams.join(",")+"])";
 			}
-			expression += ".map(){|f| f."+functionExpression+"}";
+			
+			expression += ".xmap"
+			if (this.position){
+				expression += "(level: "+this.position+")";
+			}
+			expression += "{"+functionExpression;
+			if (this.relations.length) {
+				var relationExpr = this.relations.map(function(rel){return rel.getExpression();}).join(", ");
+				expression += "{ relation " + relationExpr + "}";
+			}
+			expression += "}";
+			debugger;
 			return expression;
 		}else {
 			alert("Not Valid Expression!");
 		}
 	},
 	this.validate = function(){
-		
-		if(!this.mapFunction){
-			this.addErrorMessage("Please select a mapping function to apply!");
-			return false;
-		}
+		//TODO implement validation
 		return true;
 		
 	}	
@@ -837,46 +889,13 @@ Map.prototype = Object.create(Operation.prototype)
 
 function Group(inputDependencies, level, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
-	
+	this.params = {};
+	this.limit = null;
 	if (!level){
 		var level = 1;
 	}
 	
 	this.imageSetExpression = null;
-	this.setParams = function(params){
-		groupParams = {}
-		
-		if (params.containsKey("groupingFunction")){
-			this.setFunction(params.get("groupingFunction"));
-		}
-		
-		if ((this.groupFunction == "by_relation") || (this.groupFunction == "by_domain")){
-			if(params.containsKey('relations')){
-				var relationsArray = params.get('relations')
-				var paramValues = [];
-	
-				relationsArray.each(function(){
-					if ($(this).hasClass("set")) {
-						paramValues.push(new Expression($(this).attr("exp")));
-					} else {
-						paramValues.push({item: $(this).attr('item'), item_type: $(this).attr("item_type")});				
-					}
-				});
-				if (paramValues.length > 0){
-					groupParams.relations = [paramValues];
-				}
-			}			
-		}
-		
-		this.setFunctionParams(groupParams);	
-		
-	},
-	this.setFunction = function(groupFunction){
-		this.groupFunction = groupFunction;
-	},
-	this.setFunctionParams = function(functionParams){
-		this.functionParams = functionParams;
-	},
 	//TODO implement validate
 	this.validate = function(){
 		
@@ -888,9 +907,9 @@ function Group(inputDependencies, level, isVisual){
 			this.addErrorMessage("You must choose a grouping function for this operation!");
 			return false;
 		}
-		if(this.groupFunction == "by_relation"){
+		if(this.groupFunction == "by_image"){
 			
-			if (!(this.functionParams.relations && this.functionParams.relations.length > 0)){
+			if (!(this.params.relations && this.params.relations.length > 0)){
 				this.addErrorMessage("You must select a relation or a relation set in the exploration area!");
 				return false;
 			}
@@ -900,17 +919,15 @@ function Group(inputDependencies, level, isVisual){
 		
 	},
 	this.getExpression = function(){
-		var groupParamsExp = "";
-
 		
-		groupParamsExp = this.generateParamsExpr();
-		
-		var groupExpr = this.input[0].getExpression() + ".group";
-		if(this.imageSetExpression){
-			groupExpr += "(image_set: " + this.imageSetExpression + ")"
+		var relationExpr = this.params.functionParams.map(function(rel){return rel.getExpression();}).join(", ");
+		debugger
+		var groupExpr = "group(";
+		if(this.limit) {
+			groupExpr += "limit: " + this.limit;
 		}
-		groupExpr += "{|gf|gf."+this.groupFunction+"("+groupParamsExp+")}";
-		return groupExpr;
+		groupExpr += ")";
+		return this.input[0].getExpression() + ".group{"+this.params.function + "{ relation " +  relationExpr + "}}";
 	}
 }
 Group.prototype = Object.create(Operation.prototype)
@@ -921,7 +938,7 @@ function Rank(inputDependencies, isVisual){
 	this.rankFunction = null;
 	this.functionParams = null;
 	this.order = null;
-	this.position = "2"
+	this.position = null;
 	this.setParams = function(params){
 		functionParams = {}
 		
@@ -960,41 +977,58 @@ function Rank(inputDependencies, isVisual){
 		this.functionParams = rankFunctionParams;
 	},
 	this.validate = function(){
+// 		TODO: fix validations
+// 		if(!this.input){
+// 			this.addErrorMessage("Please select a set to rank!");
+// 			return false;
+// 		}
+// 		if(!this.rankFunction){
+// 			this.addErrorMessage("Please select a ranking function to rank the set!");
+// 			return false;
+// 		}
 		
-		if (!this.input){
-			this.addErrorMessage("Please select a set to rank!");
-			return false;
-		}
-		if(!this.rankFunction){
-			this.addErrorMessage("Please select a ranking function to rank the set!");
-			return false;
-		}
-		
-		if(this.rankFunction == "by_relation"){
-			if(!this.functionParams.relation){
-				this.addErrorMessage("You must select at least one relation/relation set for ranking!");
-				return false;
-			}
-		}
+// 		if(this.rankFunction == "by_relation"){
+// 			if(!this.functionParams.relation){
+// 				this.addErrorMessage("You must select at least one relation/relation set for ranking!");
+// 				return false;
+// 			}
+// 		}
 		return true;
 	},
 	this.getExpression = function(){
-		var rankParamsExp = "";
-		var rankParams = {};
-		
-		if(this.validate()){
-			rankParamsExp = this.generateParamsExpr();
-			var constructor = "";
-			if(this.order){
-				constructor = "{order: '" + this.order + "'";
-			}
-			constructor += ", level: " + this.position + "}";
-		
-			return this.input[0].getExpression() + ".rank("+constructor+"){|gf|gf."+this.rankFunction+"("+rankParamsExp+")}";
-			
-		} else {
-			alert("Invalid expression!");
+					
+		var expression = ".rank";
+		expression += "(";
+		debugger
+		if (this.order == "DESC") {
+			expression += 'order: :desc,'
 		}
+
+		if (this.position){
+			expression += " level: "+this.position;
+		}
+		expression += ")";
+		if (this.functionParams){
+			expression += "{" + this.functionParams.function;
+			delete this.functionParams.function;
+			
+			expression += "{"
+			
+			jQuery.each(this.functionParams, function(paramName, paramValues){
+				expression += " " + paramName;
+				if (paramValues.getExpression) {
+					expression += " " + paramValues.getExpression();
+
+				} else {
+					expression += " " + paramValues;
+				}
+				
+			});
+			expression += "}}";
+		}
+
+		
+		return this.input[0].getExpression() + expression;
 	}
 }
 Rank.prototype = Object.create(Operation.prototype)
@@ -1002,7 +1036,7 @@ Rank.prototype = Object.create(Operation.prototype)
 function Load(setId){
 	this.setId = setId;
 	this.getExpression = function(){
-		return "Xset.load('"+this.setId.replace("#", "%23")+"')";
+		return "Xplain::ResultSet.load('"+this.setId.replace("#", "%23")+"')";
 	},
 	this.validate = function(){
 		return true;	
@@ -1042,7 +1076,11 @@ function Project(inputDependencies, relation){
 	
 	this.relation = relation;
 	this.getExpression = function(){
-		return this.input[0].getExpression() + ".project(SchemaRelation.new('" + this.relation.replace("#", "%23") + "'))"
+		var pivot = new Pivot(this.input[0]);
+		pivot.relations = [new Relation({item: this.relation})];
+		pivot.group_by_domain = true;
+		debugger
+		return pivot.getExpression();
 	},
 	this.validate = function(){
 		return true;

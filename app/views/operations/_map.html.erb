@@ -2,41 +2,48 @@
     <div class="modal-dialog">
         <div class="modal-content" style="overflow: auto; width: 900px">
             <div class="modal-header">
+            	
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                 <h4 class="modal-title">Mapping Functions</h4>
-				 <div class="form-group" >
-					 <div class="radio">
-					   <label><input type="radio" class = "param" param = "map_function" param_value = "count" name="radio_strategy" checked>Count items</label>
-					 </div>
-					 <div class="radio">
-					   <label><input type="radio" class = "param" param = "map_function" param_value = "sum" name="radio_strategy" checked>Sum</label>
-					 </div>
-					 <div class="radio">
-					   <label><input type="radio" class = "param" param = "map_function" param_value = "avg" name="radio_strategy">Average</label>
-					 </div>
-					 
-					 <div class="radio">
-					   <label><input type="radio" class = "param" param = "map_function" param_value = "user_defined" name="radio_strategy">Define Custom Function</label>
-					 </div>
-					 
-					 
-					 <!-- <div class="radio">
-					   <label><input type="radio" class = "param" param = "grouping_function" param_value = "clustering" name="radio_strategy">Clustering</label>
-					 </div> -->
-				 </div>
+            </div>
 
-				<div>
-		            <div class="modal-body">
+		
+            <div class="modal-body">
+				 <div class="form-group position">
+					 <label>Level</label>
+ 	 				 <div class="radio">
+					   <label><input type="radio" id="domain" class = "param position_radio_input" param = "position" param_value = "1"><span>Level 1</span></label>
+					 </div>
+				 </div>
+				<h4 class="modal-title">Mapping Functions</h4>
+				<div class="form-group" >
+					<div class="radio">
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "count" name="radio_strategy" checked>Count items</label>
+					</div>
+					<div class="radio">
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "sum" name="radio_strategy" checked>Sum</label>
+					</div>
+					<div class="radio">
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "avg" name="radio_strategy">Average</label>
+					</div>
+					
+					<div class="radio">
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "user_defined" name="radio_strategy">Define Custom Function</label>
 					</div>
 				</div>
-					
+				 <div class="checkbox">
+				   <label><input type="checkbox" class="relation_tree_activator param" id="relation_radio"  value = "relation_compare" name="relation_check">Choose Relations</label>
+				 </div>
+
+				<div class = "relation_area form-group">
+				</div>
+				
 				<form class="form-horizontal" id = "function_form">
-   				 <div class="form-group" id="relation_input" >
-   				   <label for="relation" class="control-label col-sm-2">Name</label>
-   				   <div class="col-sm-10">
-   					   <input type="text" class="form-control" id="input_name">
-   				   </div>
-   				 </div>
+				 <div class="form-group" id="relation_input" >
+				   <label for="relation" class="control-label col-sm-2">Name</label>
+				   <div class="col-sm-10">
+					   <input type="text" class="form-control" id="input_name">
+				   </div>
+				 </div>
 					
 				 <div class="form-group" id="function_init" >
 				   <label for="relation" class="control-label col-sm-2">Initializer</label>
@@ -44,13 +51,13 @@
 					   <textarea class="form-control" rows="5" id="init"></textarea>
 				   </div>
 				 </div>
-  				  <div class="form-group">
+				  <div class="form-group">
 					  
-  				    <label class="control-label col-sm-2" >Map Function</label>
-  				    <div class="col-sm-10">
-  						<textarea class="form-control" rows="5" id="comment"></textarea>
-  				    </div>
-  				  </div>
+				    <label class="control-label col-sm-2" >Map Function</label>
+				    <div class="col-sm-10">
+						<textarea class="form-control" rows="5" id="comment"></textarea>
+				    </div>
+				  </div>
 					
 				  <div class="form-group">
 				    <label class="control-label col-sm-2" for="email">Type</label>
@@ -61,20 +68,25 @@
 					       <option value="<">Combinator</option>
 					   </select>
 				    </div>
-				  </div>
+				  </div>			
+				</form>
+				<div id = "map_help" class="help">
 				</div>
-			</form>
-			<div id = "map_help" class="help">
 			</div>
-			
- 		   <div class="modal-footer">
- 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
+		   <div class="modal-footer">
+		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
 			   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
 			   <button type="button" id="map_help_btn" class="btn btn-default help_btn" operation="map">Help</button>
- 	       </div>
+	       </div>
+
+			<!-- /.modal-content -->
+		</div>
+				
+					
 			
-        </div>
-        <!-- /.modal-content -->
+			
+        
+        
     </div>
     <!-- /.modal-dialog -->
 </div>

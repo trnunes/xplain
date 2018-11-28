@@ -10,7 +10,7 @@ XPLAIN.widgets.JstreeView.prototype = Object.create(XPLAIN.widgets.Widget.protot
 
 XPLAIN.widgets.JstreeView.prototype.build = function(){
 	XPLAIN.widgets.Widget.prototype.build.call(this);
-	debugger
+	
 	var setJson = this.getContextState().setJson;
 	var $setView = $(this.view).parent();
 	var $div = $("<div id = '"+this.id+"' class='_items_area'></div>");
@@ -31,19 +31,19 @@ XPLAIN.widgets.JstreeView.prototype.build = function(){
 
 	    },
 	    "types" : {
-	      "Entity" : {
+	      "Xplain::Entity" : {
 	        "icon" : "glyphicon glyphicon-folder-close"
 	      },
-	      "Type" : {
+	      "Xplain::Type" : {
 	        "icon" : "glyphicon glyphicon-folder-close"
 	      },
-	      "SchemaRelation" : {
+	      "Xplain::SchemaRelation" : {
 	        "icon" : "glyphicon glyphicon-flash"
 	      },
-	      "ComputedRelation" : {
+	      "Xplain::ComputedRelation" : {
 	        "icon" : "glyphicon glyphicon-flash"
 	      },
-		  "Xpair::Literal": {
+		  "Xplain::Literal": {
 			  "icon": "glyphicon glyphicon-asterisk"
 		  }
 	    },
@@ -52,7 +52,7 @@ XPLAIN.widgets.JstreeView.prototype.build = function(){
             'case_sensitive' : false,
             'show_only_matches' : true,
 			'ajax':{
-				url: 'session/refine.json?set=' + setId,
+				url: 'session/search.json?set=' + setId,
 				
 				data: function(str) {
 				  return { "set": setId, "search_str" : str };
@@ -60,7 +60,8 @@ XPLAIN.widgets.JstreeView.prototype.build = function(){
 				
 				success: function(data){
 					$('#loadwindow').hide();
-					return data.set.extension.map(function(item){
+					debugger
+					return data.extension.map(function(item){
 
 						var nodeid = $div.find("[item='"+item.id+"']").attr("id");
 						if(!nodeid){
@@ -75,27 +76,7 @@ XPLAIN.widgets.JstreeView.prototype.build = function(){
 		"contextmenu": this.createTreeContextMenu($div)
 	});
 	
-	//TODO create a method on controller register_keyword_search event
-    var to = false;
-    $setView.find('.search-input').keyup(function () {
-
-      if(to) { 
-		  clearTimeout(to); 
-	  }
-      to = setTimeout(function () {
-		  
-        var v = $("#" + setId + ' .search-input').val();
-		if((v.length > 2) || (!v.length)){
-			if(v.length){
-				$('#loadwindow').show();
-			}
-
-			$div.jstree(true).search(v);
-		}
-        
-      }, 250);
-    });
-	debugger;
+	
 	$div.jstree().hide_checkboxes();	
 	this.registerBehavior($div);
 	this.show($div);
@@ -148,7 +129,10 @@ XPLAIN.widgets.JstreeView.prototype.updateText = function(items){
 			var $items_jstree = $(this).parents('._items_area.jstree');
 			var item_node = $items_jstree.jstree().get_node($(this).attr('id'));
 			if ($items_jstree.length){
-				$items_jstree.jstree('rename_node', item_node , item.text);
+				if (item.children.length) {
+					$items_jstree.jstree('rename_node', item_node , item.children[0].text);
+				}
+				
 			}
 		
 		});
@@ -160,6 +144,13 @@ XPLAIN.widgets.JstreeView.prototype.onPageChange = function(eventJson){
 	$jstreeListView = $('#' + this.id);
 	this.clearTree($jstreeListView);
 	this.populate($jstreeListView, this.getContextState().setJson);
+}
+
+XPLAIN.widgets.JstreeView.prototype.onKeywordSearch = function(eventJson){
+	var $div = $("#"+this.id);
+	debugger;
+	$div.jstree(true).search(eventJson.data);
+
 }
 
 XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
@@ -174,18 +165,34 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 			$(".SELECTED").each(function(){
 				
 				var selected_node = $treeView.jstree().get_node($(this).attr("id"));
-				if(!unionsHash.containsKey(selected_node.li_attr.set)){
-					unionsHash.put(selected_node.li_attr.set, []);
+// 				TODO fix the selection of items between sets
+				if (!selected_node) {
+					return;
 				}
-				unionsHash.get(selected_node.li_attr.set).push(new Item(selected_node.li_attr));
+				var setId = $(this).parents(".set").data("id");
+				debugger
+				
+				if(!unionsHash.containsKey(setId)){
+					unionsHash.put(setId, []);
+				}
+				unionsHash.get(setId).push(selected_node.li_attr.item);
 			});
 			var selectOperations = []
+
 			for (var i in unionsHash.keys()) {
 				var setId = unionsHash.keys()[i];
 				var selection = unionsHash.get(setId);
 				selectOperations.push(new Select(new Load(setId), selection))
 			}
-			new Union(selectOperations).execute("json");
+
+			var operation = null;
+
+			if (selectOperations.length == 1){
+				operation = selectOperations[0]
+			} else {
+				operation = new Union(selectOperations);
+			}
+			operation.execute("json");
         }
     };
 	
@@ -208,7 +215,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 					});
 				}
 			};
-			if (node.type === "Entity"){
+			if (node.type === "Xplain::Entity"){
 		        return {
 					// "Trace": common_menu_options,
 
@@ -232,7 +239,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 		                }
 		            }
 		        };			
-			} else if(node.type === "SchemaRelation"){
+			} else if(node.type === "Xplain::SchemaRelation"){
 				return {
 					"Select": selectSubmenu,
 		            "Applied To": {
@@ -245,7 +252,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 							debugger;
 							//TODO fire DomainRequestedEvent{relation: relation}
 							var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Relation($node.li_attr)]));
-							pivot.addRelation(new Relation({item: "xplain:domain", item_type: "SchemaRelation"}));
+							pivot.addRelation(new Relation({item: "xplain:domain", item_type: "Xplain::SchemaRelation"}));
 							pivot.execute("json");
 		                }
 		            },
@@ -259,7 +266,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 							debugger;
 							//TODO fire ImageRequestedEvent{relation: relation}
 							var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Relation($node.li_attr)]));
-							pivot.addRelation(new Relation({item: "xplain:range", item_type: "SchemaRelation"}));
+							pivot.addRelation(new Relation({item: "xplain:range", item_type: "Xplain::SchemaRelation"}));
 							pivot.execute("json");
 		                }
 		            },
@@ -300,7 +307,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 					
 					
 				};
-			} else if(node.type === "Type"){
+			} else if(node.type === "Xplain::Type"){
 				return  {
 					"Select": selectSubmenu,
 		            "instances": {
@@ -308,16 +315,19 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 		                "separator_after": false,
 		                "label": "Items of this type",
 		                "action": function (obj) { 
-							console.log($node.data.item);
-							var type = $node.text;
+							var jt_node = $node;
+
+							var type = jt_node.text;
 							
 							var f = function(data){
-								XPLAIN.SetController.appendToWorkspace(data.set)
-							}
+								XPLAIN.SetController.appendToWorkspace(data)
+							};
+							debugger
+							var setId = $("#" + jt_node.id).parents(".set").data("id");
+							var pivot = new Pivot(new Select(new Load(setId), [$node.li_attr.item]));
+							pivot.addRelation(new Relation({item: "rdf:type", inverse: "true"}));
 							
-							var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Item($node.li_attr)]));
-							pivot.addRelation(new Relation({item: "rdf:type", item_type: "SchemaRelation", inverse: true}))
-							pivot.execute("json");
+							pivot.uniq().execute("json");
 		                }
 		            },
 		            "relations": {
@@ -325,13 +335,14 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 		                "separator_after": false,
 		                "label": "Relations for this type",
 		                "action": function (obj) { 
+		                	var jt_node = $node;
+		                	var setId = $("#" + jt_node.id).parents(".set").data("id");
 							var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Item($node.li_attr)]));
-							pivot.addRelation(new Relation({item: "xplain:ofType", item_type: "SchemaRelation"}));
-							pivot.execute("json");
+							//TODO implement a composition to retrieve the relations for a type
 		                }
 		            }
 				};
-			} else if(node.type === "Xpair::Literal"){
+			} else if(node.type === "Xplain::Literal"){
 				return  {
 					"Select": selectSubmenu,
 					"Trace": common_menu_options,
@@ -399,7 +410,7 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 
 		if(node_to_open.children.length == 0) {
 			var tree_update_function = function(data, status, jqrequest) {
-				var items = data.set.extension;
+				var items = data.extension;
 				for (var i in items){
 					var item = items[i];
 					thisView.addItem($tree, node_to_open, item);
@@ -413,18 +424,35 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 
 			//exploration expression
 			//TODO move this core to expandRelation(relation) or findRelations(item)
-			if(node_to_open.li_attr.item_type == "SchemaRelation"){
+			if(node_to_open.li_attr.item_type == "Xplain::SchemaRelation"){
 				debugger;
-				var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr
-				set_id = $tree.jstree().get_node(node_to_open.parent).li_attr.set
-				var findRelations = new Pivot(new Select(new Load(set_id), [new Item(item_id)]));
-				findRelations.relations = [new Relation(node_to_open.li_attr)]
+				var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr.item;
+				var relation_id = $tree.jstree().get_node(node_to_open).li_attr.item;
+				var is_inverse = $tree.jstree().get_node(node_to_open).li_attr.inverse == "true";
+				var expression= "";
+				
+				if(relation_id.indexOf(":")){
+					expression = "Xplain::Entity.new(\""+item_id+"\")." + relation_id.replace(":", "__");
+					if (is_inverse) {
+						debugger
+
+					    expression = "Xplain::Entity.new(\""+item_id+"\")." + relation_id.replace(":", "__") + " :inverse";
+					}
+					
+				} else {
+
+					expression = "Xplain::SchemaRelation.new(id: \""+relation_id+"\", inverse: "+is_inverse+").restricted_image([Entity.new(\""+item_id+"\"])";
+
+				}
+				XPLAIN.AjaxHelper.execute(expression, tree_update_function);
 			} else {
-				var findRelations = new FindRelations(new Select(new Load(set_id), [new Item(item_to_open_id)]));
+			    
+			    var expression = "Xplain::Entity.new(\""+node_to_open.li_attr.item+"\").relations"
+			    XPLAIN.AjaxHelper.execute(expression, tree_update_function);
 			}
 			
 			
-			findRelations.execute("json", tree_update_function);
+			
 		}
 	});		
 }
@@ -454,13 +482,15 @@ XPLAIN.widgets.JstreeView.prototype.convertItem = function(item){
 			item: item.id,
 			item_type: item.type,
 			set: item.set,
+			node: item.node,
 			resultedFrom: item.resultedFrom
 		}
 	}
 	
-	if (item_node.type == "SchemaRelation"){
+	item_node.li_attr.node = item.node;
+	if (item_node.type == "Xplain::SchemaRelation"){
 		item_node.li_attr.inverse = item.inverse
-	}else if ((item.type == "Xpair::Literal") && item.datatype ){
+	}else if ((item.type == "Xplain::Literal") && item.datatype ){
 		item_node.data.datatype = item.datatype;
 		item_node.li_attr.datatype = item.datatype;
 	}

@@ -39,7 +39,8 @@
 	<script src="/javascripts/jquery-contextmenu-common-master/dist/fixed/jquery.contextMenu.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.19.1/vis.min.js"></script>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.full.js"></script>
+	<script src="https://unpkg.com/infinite-scroll@3/dist/infinite-scroll.pkgd.min.js"></script>	
     <script type="text/javascript" src="/javascripts/explorator_querybuilder.js"></script>
 	<script type="text/javascript" src="/javascripts/exploration_graph.js"></script>
 	
@@ -94,6 +95,95 @@
 	        </div>
 	    </div>
 	</div>
+	<div class="modal fade" id="namespace_modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+            	<h4 class="modal-title">Namespaces</h4>
+            </div>
+
+				
+            <div class="modal-body">
+				<form class="form-horizontal" id = "function_form">
+					<div class="row">
+	   					<div class="col-md-2">
+   							<input type="text" class="form-control ns-prefix">
+						</div>
+	   				    
+	   				    <div class="col-md-6">
+				   			<input type="text" class="form-control ns-uri">
+				   		</div>
+				   		
+	   				    <div class="col-md-1">
+				   			<button type="button" class="btn btn-default ns-add-btn">
+							  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+							</button>
+				   		</div>
+					</div>
+   				</form>
+			</div>			
+		
+ 		   <div class="modal-footer">
+ 		       <button type="button" id="save_ns_btn" class="exec btn btn-default" >Save</button>
+ 	       </div>
+			
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="endpoint_modal"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+            	<h4 class="modal-title">Endpoint</h4>
+            </div>
+
+				
+            <div class="modal-body">
+				<form class="form-horizontal" id = "function_form">
+	   				<div class="form-group">
+					  <label for="input_url" class="control-label col-sm-2">Endpoint URL</label>
+					  <div class="col-sm-10">
+						  <input type="text" class="form-control" id="input_url">
+					  </div>
+					</div>
+					
+					<div class="form-group">
+					   <label for="input_url" class="control-label col-sm-2">Max Number of Items/Query</label>
+					   <div class="col-sm-10">
+						   <input type="number" id="max_items" value="2000" min="100" data-bind="value:max_items" />
+					   </div>
+					</div>  
+  
+					<div class="form-group" >
+						<label class="control-label col-sm-2">HTTP Method</label>
+						<div class="col-sm-10">
+							<div class="radio">
+							  <label><input type="radio" name="http-method" value="get" >GET</label>
+							</div>
+							<div class="radio">
+							  <label><input type="radio" name="http-method" value="post" checked >POST</label>
+							</div>
+						</div>
+					</div>
+					<div class="form-check">
+						<input type="checkbox" class="form-check-input col-sm-2" id="blazegraph_search_idx">
+						<label class="form-check-label" for="blazegraph_search_idx">Use Blazegraph Search Index</label>
+					</div>
+   				</form>
+			</div>			
+		
+ 		   <div class="modal-footer">
+ 		       <button type="button" id="set_endpoint_btn" class="exec btn btn-default" data-dismiss="modal">OK</button>
+ 	       </div>
+			
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
 </body>
 
 <script>

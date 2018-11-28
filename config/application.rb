@@ -10,7 +10,7 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module Wxpair
+module Wxplain
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
@@ -27,37 +27,34 @@ module Wxpair
     # Do not swallow errors in after_commit/after_rollback callbacks.
     DEFAULT_SET_VIEW = 'tree'
     
-    #Change this to point to other endpoints    
-    Rails.application.config.use_blazegraph_index = true
-    graph_url = "http://opencitations.net/sparql"
-    Explorable.use_cache(true)
-    server = RDFDataServer.new(graph_url, method: 'get', results_limit: 10000, items_limit: 100, use_select: false)
+    #Change this to point to other endpoints
+    graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
+
+    # setting the blazegraph server as the default data server for the exploration tasks
+    Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000
     
-    #TODO fix the need of a default set as starting point
-    s = Xset.new('default_set', '') 
-    s.server = server
-    s.save
+    # setting the session information repository
+    Xplain.set_exploration_repository class: MemoryRepository    
     
     # Config the repository of session information
     # Persistable.set_session_repository server
 
     #Namespaces
-    Xpair::Namespace.new("uspat", "http://us.patents.aksw.org/")
-    Xpair::Namespace.new("fabio", "http://purl.org/spar/fabio/")
-    Xpair::Namespace.new("cito", "http://purl.org/spar/cito/")
-    Xpair::Namespace.new("c4o", "http://purl.org/spar/c4o/")
-    Xpair::Namespace.new("biro", "http://purl.org/spar/biro/")
-    Xpair::Namespace.new("spardatacite", "http://purl.org/spar/datacite/")
-    Xpair::Namespace.new("sparpro", "http://purl.org/spar/pro/")
-    Xpair::Namespace.new("prismstandard", "http://prismstandard.org/namespaces/basic/2.0/")
-    Xpair::Namespace.new("sparpro", "http://purl.org/spar/pro/")
-    Xpair::Namespace.new("frbr", "http://purl.org/vocab/frbr/core#")
-    Xpair::Namespace.new("w3iont", "https://w3id.org/oc/ontology/")
-    Xpair::Namespace.new("dbpedia", "http://dbpedia.org/ontology/")
+    Xplain::Namespace.new("uspat", "http://us.patents.aksw.org/")
+    Xplain::Namespace.new("fabio", "http://purl.org/spar/fabio/")
+    Xplain::Namespace.new("cito", "http://purl.org/spar/cito/")
+    Xplain::Namespace.new("c4o", "http://purl.org/spar/c4o/")
+    Xplain::Namespace.new("biro", "http://purl.org/spar/biro/")
+    Xplain::Namespace.new("spardatacite", "http://purl.org/spar/datacite/")
+    Xplain::Namespace.new("sparpro", "http://purl.org/spar/pro/")
+    Xplain::Namespace.new("prismstandard", "http://prismstandard.org/namespaces/basic/2.0/")
+    Xplain::Namespace.new("sparpro", "http://purl.org/spar/pro/")
+    Xplain::Namespace.new("frbr", "http://purl.org/vocab/frbr/core#")
+    Xplain::Namespace.new("w3iont", "https://w3id.org/oc/ontology/")
     
     #Visualization properties config
-    module Xpair::Visualization
-      label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "rdfs:label"
+    module Xplain::Visualization
+      label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "dcterms:title", "c4o:hasContent", "rdfs:label"
       label_for_type "http://purl.org/spar/fabio/Expression", "dcterms:title"
       label_for_type "http://purl.org/spar/fabio/JournalArticle", "dcterms:title"
       label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"

@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
 
   get 'session/execute'
-  get 'session/refine'
+  get 'session/search'
   get 'session/update_title'
+  get 'session/execute_update'
   get 'session/domain'
   post 'session/execute'
   get 'session/trace_subset_domains'
@@ -18,6 +19,9 @@ Rails.application.routes.draw do
   get 'session/select'
   get 'session/get_level'
   get 'session/search'
+  get 'session/set_endpoint'
+  get 'session/namespace'
+  post 'session/namespace'  
   get 'session/project'
   post 'session/index'
   get 'session/new'

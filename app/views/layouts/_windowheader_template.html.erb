@@ -9,22 +9,39 @@
         <font id="size" style='float: left; font-size:11px;font-weight:normal'>
             
         </font>
-		<div class="btn-group" style="margin-left: 5px; float: left;">
-			<button type="button" id="visualize" class="btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">P</button>
-			<button type="button" id="add_view" class="btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">V</button>
-			
-	         <ul id = "properties" class="dropdown-menu">
-
-	         </ul>
-	         <ul id = "view_options" class="dropdown-menu">
-
-	         </ul>
-
+        <div class="dropdown no_set_select" style="margin-left: 5px; float: left;">
+		  <button class="btn-xs btn-primary dropdown-toggle" type="button" id="add_view" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		    V
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="add_view" id = "view_options">
+		  	...
+		  </div>
 		</div>
+        <div class="dropdown no_set_select" style="margin-left: 5px; float: left;">
+		  <button class="btn-xs btn-primary dropdown-toggle" type="button" id="project" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		    P
+		  </button>
+		  <div class="dropdown-menu" aria-labelledby="project" id = "properties">
+		  	...
+		  </div>
+		</div>
+
 		
+		<!-- <div class="btn-group" style="margin-left: 5px; float: left;">
+			<button type="button" id="visualize" class="btn-xs btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">P</button>
+			<button type="button" id="add_view" class="btn-xs btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">V</button>
+			
+	         <div id = "properties" class="dropdown-menu" aria-labelledby="visualize">
+
+	         </div>
+	         <div id = "view_options" class="dropdown-menu" aria-labelledby="add_view">
+
+	         </div>
+
+		</div> -->		
     </div>
 
-    <div class=' winoperations '>        
+    <div class=' winoperations no_set_select'>        
 	 
 		
 		 <div class ='_hide'>
@@ -44,7 +61,7 @@
 	
 </div>
 <div class ='windowheader _NO_MINIMIZE' id='resname'>
-	<div class="windowtitle"> 	
+	<div class="windowtitle no_set_select"> 	
 	    <div id="set_title"></div>
 	</div> &nbsp;	
 </div>

@@ -2,6 +2,7 @@ XPLAIN.widgets = XPLAIN.widgets || {}
 XPLAIN.states = XPLAIN.states || {}
 
 XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
+	
 	debugger
 	XPLAIN.widgets.Widget.call(this, null, workspaceState);
 	this.params_hash = new Hashtable();
@@ -43,11 +44,11 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.addWidgetToView = function(widge
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.onAddSet = function(eventJson){
-	var addedSetState = eventJson.data
+	var addedSetState = eventJson.data;
 	var abstractSetWidget = new XPLAIN.widgets.SetWidget(this, addedSetState);
-
+	
 	var setWidget = XPLAIN.widgets.createView(abstractSetWidget, addedSetState.setJson);
-	debugger
+	
 	abstractSetWidget.build();
 	XPLAIN.graph.addSet(addedSetState.setJson);
 	this.addWidgetToView(setWidget)
@@ -59,19 +60,57 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	var thisWidget = this;
 	$("#all_types").unbind().click(function(){
 		debugger;
-		XPLAIN.AjaxHelper.get("/session/all_types.json", "json", function(data){
-			debugger
-			data.set.intention = "All Types";			
-			thisWidget.state.addSetFromJson(data.set);
+		var expression = "Xplain::SchemaRelation.new(id: \"has_type\").image.sort_asc!"
+		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
+			
+			
+			thisWidget.state.addSetFromJson(data);
 		});
 	});
 
 	$("#all_relations").unbind().click(function(){
-		XPLAIN.AjaxHelper.get("/session/all_relations.json", "json", function(data){
-			data.set.intention = "All Relations";
-			XPLAIN.SetController.appendToWorkspace(data.set);
+	    var expression = "Xplain::SchemaRelation.new(id: \"relations\").image"
+        XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
+			thisWidget.state.addSetFromJson(data);
 		});
 	});
+    
+    $('#set_endpoint_btn').click(function () {
+        var endpoint_url = $('#input_url').val();
+        var http_method = $("#endpoint_modal [name=http-method]:checked").val();
+        var max_items_per_query = $("#endpoint_modal #max_items").val();
+        
+        // mounting endpoint config url
+        var url = "/session/set_endpoint?method="+http_method+"&items_limit=" + max_items_per_query + "&graph=" +  encodeURIComponent(endpoint_url);
+
+        if ($("#endpoint_modal #blazegraph_search_idx:checked").size()){
+            url += "&class=BlazegraphDataServer";            
+        } else {
+        	url += "&class=RDFDataServer";
+        }
+        debugger;
+        if (endpoint_url) {
+            XPLAIN.AjaxHelper.get(url);
+        }
+       
+     });    
+
+
+}
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
+	var inputValues = $("#seachbykeyword").val();
+	
+
+	if (inputValues === '') {
+		$("#seachbykeyword").fadeOut(50).promise().done(function () {
+	        $(this).toggleClass("blink-class").fadeIn(50);
+	    });
+
+		alert("Please, type one or more keywords!");
+		return this;
+	} else {
+		new KeywordSearch([inputValues]).execute("json");
+	}
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = function(){
@@ -90,7 +129,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
 	});
 
 	$(".operation").click(function(){
-		debugger;
+		
 		$(".help").empty();
 		thisWidget.startOperation(this);
 	});
@@ -126,15 +165,15 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
 
 			thisWidget.params_hash.put('B', $('.SELECTED'));
 
-            if (!thisWidget.state.currentOperation){
-	            if (thisWidget.params_hash.get('operation') == 'intersect') 
-	                thisWidget.state.currentOperation = new SemanticExpression('A').intersection('B').expression;
-	            else if (XPLAIN.activeWorkspaceWidget.params_hash.get('operation') == 'diff') 
-	                thisWidget.state.currentOperation = new SemanticExpression('A').difference('B').expression;
-				else if (XPLAIN.activeWorkspaceWidget.params_hash.get('operation') == 'union') {
-	                thisWidget.state.currentOperation = new SemanticExpression('A').union('B').expression;
-				}			
-            }
+            
+			if (thisWidget.params_hash.get('operation') == 'intersect') 
+				thisWidget.state.currentOperation = new SemanticExpression('A').intersection('B').expression;
+			else if (XPLAIN.activeWorkspaceWidget.params_hash.get('operation') == 'diff') 
+				thisWidget.state.currentOperation = new SemanticExpression('A').difference('B').expression;
+			else if (XPLAIN.activeWorkspaceWidget.params_hash.get('operation') == 'union') {
+				thisWidget.state.currentOperation = new SemanticExpression('A').union('B').expression;
+			}			
+            
 		
 			if (thisWidget.state.currentOperation.execute("json")){
 				thisWidget.clear();
@@ -205,8 +244,8 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.startOperation = function(widget
 	if(!$(widget).hasClass("set_operation")){
 		var setId = $(inputParams[0]).attr("data-id");
 		var operationName = $(widget).attr("operation");
-		debugger;
-		var operationController = XPLAIN.activeControllers.get(operationName) || eval("new XPLAIN.controllers."+operationName+"Controller(setId);");
+		
+		var operationController = eval("new XPLAIN.controllers."+operationName+"Controller(setId);");
 
 		operationController.init();
 	}
@@ -243,6 +282,86 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.removeCSS = function(klass){
 	
 };
 
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.show_endpoint_modal = function(){
+	$("#endpoint_modal [name=http-method] [value=post]").first().prop('checked', true);
+	$('#endpoint_modal').modal('show');
+};
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal = function(){
+
+	var add_ns = function(ns_prefix, ns_uri){       
+		var $first_row = $('#namespace_modal .row').first();
+
+		cloned_prefix_uri_row = $first_row.clone();
+		$(cloned_prefix_uri_row).find(".ns-prefix").val(ns_prefix);
+		$(cloned_prefix_uri_row).find(".ns-uri").val(ns_uri);
+		$(cloned_prefix_uri_row).find(".ns-add-btn").removeClass("ns-add-btn").addClass("ns-remove-btn");
+		$(cloned_prefix_uri_row).find(".glyphicon-plus").removeClass("glyphicon-plus").addClass("glyphicon-remove");
+		$first_row.after(cloned_prefix_uri_row);
+		$(cloned_prefix_uri_row).find(".ns-remove-btn").off('click').click(function(){
+			$(this).parents('.row').remove();
+		});
+	};
+
+	var validate_ns = function($ns_row){
+		return ($ns_row.find(".ns-prefix").val() && $ns_row.find(".ns-uri").val());
+	};
+
+	var save_namespace_list = function(){
+		var ns_json = {};
+		var has_invalid_ns = false;
+		$('#namespace_modal .row').first().siblings().each(function(){
+			if(validate_ns($(this))){
+				var prefix = $(this).find(".ns-prefix").val();
+				var uri = $(this).find(".ns-uri").val();                
+				ns_json[prefix] = uri;
+			} else {
+				has_invalid_ns = true;
+			}
+
+		});
+
+		if(!has_invalid_ns) {
+			$.ajax({
+			  type : "POST",
+			  url :  '/session/namespace',
+			  dataType: 'json',
+			  contentType: 'application/json',
+			  data : JSON.stringify({"namespace_list": ns_json})
+			});
+
+			$('#namespace_modal').modal('hide');            
+		} else {
+			alert("There are some invalid namespaces, please correct before saving!");
+		}
+
+	};
+
+	$('#namespace_modal .row').first().find(".ns-add-btn").off("click").click(function(){
+		var $new_ns_row = $(this).parents('.row');
+		if (validate_ns($new_ns_row)){
+			add_ns($new_ns_row.find(".ns-prefix").val(), $new_ns_row.find(".ns-uri").val());
+			$new_ns_row.find(".ns-prefix").val("");
+			$new_ns_row.find(".ns-uri").val("");
+		} else {
+			alert("You should provide a valid prefix and URI for the namespace!");
+		}
+	});
+
+	XPLAIN.AjaxHelper.get("/session/namespace.json", "json", function(data){
+
+		$('#namespace_modal .row').first().siblings().remove();
+
+		for (var i in data){
+			add_ns(data[i].prefix, data[i].uri);    
+		}
+		$('#namespace_modal').modal('show');
+	});
+
+	$('#namespace_modal #save_ns_btn').off("click").click(function(){
+		save_namespace_list();
+	});
+}
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.addChildView = function(viewClass){
 	
@@ -261,7 +380,7 @@ XPLAIN.states.WorkspaceState.prototype.sets = [];
 XPLAIN.states.WorkspaceState.prototype.currentOperation = null;
 
 XPLAIN.states.WorkspaceState.prototype.addSetFromJson = function(setJson){
-	debugger;
+	
 	this.addSetState(new XPLAIN.states.SetState(setJson));
 };
 

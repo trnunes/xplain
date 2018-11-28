@@ -53,11 +53,28 @@ XPLAIN.states.SetState.prototype.addItemState = function(itemState){
 	});
 }
 
+XPLAIN.states.SetState.prototype.setTitle = function(newTitle) {
+	if (newTitle == this.setJson.title) {
+		return;
+	}
+
+	var titleUpdateExpr = 'Xplain::ResultSet.load("' + this.setJson.id + '").title = "' + newTitle + '"';
+	that = this;
+	debugger;
+	XPLAIN.AjaxHelper.get("/session/execute_update?update=" + titleUpdateExpr, "json", function(data){
+		that.change('setTitle', function(){
+			debugger;
+			that.setJson.title = newTitle;
+			return newTitle;
+		});
+	});
+}
+
 XPLAIN.states.SetState.prototype.setPage = function(page){
 	that = this;
 	XPLAIN.AjaxHelper.get("/session/render_page.json?set=" + that.setJson.id + "&page=" + page, "json", function(data){
 		that.change('pageChange', function(){
-			that.setJson = data.set;
+			that.setJson.extension = data.extension;
 		});
 	});
 }

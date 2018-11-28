@@ -11,7 +11,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype = Object.create(XPLAIN.widgets.Widget.
 XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 	//TODO Move the template instantiation back to the server
 	
-	debugger
+	
 	XPLAIN.widgets.Widget.prototype.build.call(this);
 	var setJson = this.getContextState().setJson;
 	var $view = $(this.view)
@@ -25,9 +25,9 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 		"data-resultedFrom": setJson.resultedFrom,
 	});
 	$view.data(setJson)
-	that = this;
-	thatWidget = this;
-	debugger;
+	var that = this;
+	var thatWidget = this;
+	
 	$view.find("#size").html(setJson.size + " Items");
 	$view.find("#set_title").html(setJson.title);
 	$view.find("#titlemin").html(setJson.title);
@@ -46,9 +46,9 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 		$view.find("#set_title_input").bind("enterKey",function(e){
 			
 			$view.find("#set_title").html($(this).val());
-			$view.find("#titlemin").html($(this).val())
-			that.setTitle($(this).val(), setJson.id);
-			
+			$view.find("#titlemin").html($(this).val());
+			debugger
+			thatWidget.getContextState().setTitle($(this).val());
 		});
 		$view.find("#set_title_input").focus()
 		$view.find("#set_title_input").keyup(function(e){
@@ -59,15 +59,18 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 		});
 	});
 	
-	$view.find("#visualize").click(function(e){
+	$view.find("#project").click(function(e){
+		debugger
 		$setview = $(this).parents('._WINDOW');
-		op =  new Flatten(new FindRelations(new Load(setJson.id)));
-		op.execute("json", function(data){
+		var relationsPivot = new Pivot(new Load(thatWidget.getContextState().setJson.id));
+		relationsPivot.addRelation(new Relation({item: "relations"}));
+
+		relationsPivot.execute("json", function(data){
 			debugger;
 			$setview.find("#properties").empty();
-			for(var i in data.set.extension){
-				var r = data.set.extension[i];
-				if(!r.inverse){
+			for(var i in data.extension){
+				var r = data.extension[i];
+				if(!eval(r.inverse)){
 					$setview.find("#properties").append("<li><a class=\"v_property\" tabindex=\"-1\" >"+r.id+"</a></li>");
 				}
 			}
@@ -77,11 +80,13 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 			});
 			
 		});
+
 		
 	});
 	
 	$view.find('._show').hide();
 	$view.find('#add_view').click(function(e){
+		debugger
 		$view.find("#view_options").empty();
 		for (var i in setJson.view_options){
 			var viewOption = setJson.view_options[i];
@@ -96,10 +101,34 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 		
 	});
 
+	debugger;
+	var to=false;
+	$view.find('.search-input').keyup(function () {
+		debugger
+      if(to) { 
+		  clearTimeout(to); 
+	  }
+      to = setTimeout(function () {
+		  
+        var v = $view.find('.search-input').val();
+        
+		if((v.length > 4) || (!v.length)){
+			if(v.length){
+				$('#loadwindow').show();
+			}
+			var eventJson = {event: "keywordSearch", data: v, originState: thatWidget.getContextState()}
+
+			thatWidget.update(eventJson);
+		}
+        
+      }, 250);
+    });
+
+
 	//TODO add init pagination list
 	this.init_pagination_list($view, setJson);
 	
-	debugger;
+
 
 
 	this.register_ui_behaviour($view);
@@ -110,20 +139,27 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 }
 	
 XPLAIN.widgets.DefaultSetWidget.prototype.setTitle = function(title, $view){
-	//TODO get graph back to work
-	XPLAIN.graph.updateNodeTitle(viewId, title);
-	XPLAIN.AjaxHelper.get("/session/update_title?set="+ $view.attr('id')+ "&title=" + title, "json", function(data){});
-	$view.attr("data-original-title", title);
+	this.getContextState().setTitle(title);
+	
 	return title;
 }
-	
+
+XPLAIN.widgets.DefaultSetWidget.prototype.onSetTitle = function(eventJson){
+	debugger;
+	var newTitle = this.getContextState().setJson.title
+	$(this.view).find("#set_title").html(newTitle);
+	XPLAIN.graph.updateNodeTitle(this.getContextState().setJson.id, newTitle);
+}
 	//TODO project only in the view that started the request and not in all views
 XPLAIN.widgets.DefaultSetWidget.prototype.project = function(relation, setId){
+	debugger;
+	var that = this;
 	new Project(new Load(setId), relation).execute("json", function(data){
 		debugger;
-		for (var index in XPLAIN.itemsViews){
-			var itemsViewController = XPLAIN.itemsViews[index];
-			itemsViewController.updateText(data.set.extension);
+
+		for (var index in that.children){
+			var itemsViewController = that.children[index];
+			itemsViewController.updateText(data.extension);
 		}
 	});
 }
@@ -180,6 +216,8 @@ XPLAIN.widgets.DefaultSetWidget.prototype.register_ui_window_behaviour = functio
         $(this).click(function(e){
 
             $(this).parents('.hideable').first().ui_remove();
+            var setToRemove = $(this).parents('._WINDOW').attr("data-id");
+        	XPLAIN.graph.removeSet(setToRemove);
             debugger
             if (e){
             	e.stopPropagation();
@@ -220,10 +258,24 @@ XPLAIN.widgets.DefaultSetWidget.prototype.register_ui_selection_behaviour = func
 			$(this).draggable();
 			$(this).resizable();				
 		});
+		debugger;
+		//TODO figure out a better way to improve the set selection interaction
+		var fire_set_select = $(event.target).hasClass('set') || !($(event.target).hasClass('no_set_select') || $(event.target).parents('.no_set_select').length || $(event.target).parents('._items_area').length);
+		if(fire_set_select){
+
+			if ($view.hasClass('SELECTED')) {
+				$view.removeClass('SELECTED');
+			} else {
+				$('.SELECTED').removeClass('SELECTED');
+				$view.addClass('SELECTED');
+			}
+			
+		}
+
 	
 
 		if (event.target !== this)
-			return
+			return;
 		
         $view.children('.properties').each(function(x){
             if (!$(this).hasClass('_NO_MINIMIZE') && $(this).is(":visible")) {
@@ -246,7 +298,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.register_ui_selection_behaviour = func
 			            event.stopPropagation();
 			return;
         }
-		debugger;
+		
         if (!(event.ctrlKey || event.shiftKey)) {
             //remove the selection from all elements on the interface
             $('.SELECTED').removeClass('SELECTED');
@@ -286,7 +338,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.init_pagination_list = function($view,
 	var thisController = this;
 
 	first_page = $view.find(".pagination").children()[1];
-	console.log(setJson.pages_count)
+	
 	if(setJson.pages_count <= 1){
 		$view.find(".pagination_div").remove();
 	} else {

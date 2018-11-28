@@ -4,17 +4,21 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                  <h4 class="modal-title">Relations Selection</h4>
-				 <div class="form-group" id="position">
+				 <div class="form-group position">
 					 <label>Level</label>
-					 <div class="radio">
-					   <label><input type="radio" id="domain" class = "param" param = "position" param_value = "1" name="radio_pos">Level 1</label>
+ 	 				 <div class="radio">
+					   <label><input type="radio" id="domain" class = "param position_radio_input" param = "position" param_value = "1"><span>Level 1</span></label>
 					 </div>
-					 <div class="radio">
-					   <label><input type="radio" id="image" class = "param" param = "position" param_value = "2" name="radio_pos" checked>Level 2</label>
-					 </div>					 
 				 </div>
 				<div>
+					 <div class="checkbox">
+					   <label><input type="checkbox" class="param" id="group_by_domain"  value = "group_by_domain" name="radio_strategy">Group by Domain</label>
+					 </div>
+
 		            <div class="modal-body">
+						<div class = "relation_area form-group">
+						</div>
+
 					</div>
 				</div>
 			</div>

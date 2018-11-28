@@ -35,7 +35,7 @@ XPLAIN.AjaxHelper = {
 			format: format,
 			
 			success: function(data, status, jqrequest){
-				debugger;
+				
 
 				$('#loadingtext').innerHTML = loading_text;
 	            $('#loadwindow').hide();			

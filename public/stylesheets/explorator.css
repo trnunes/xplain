@@ -310,37 +310,32 @@ div.windowtoolbar div.filter:hover {
 /*format the window ui component*/ .window {
     font-family: Arial, Helvetica, sans-serif;
     float: left;
-    /* margin: 4px; */
+    margin: 5px;
     width: 350px;
     height: 480px;
-    border: 4px solid #ffffff;
-    /* text-align: center; */
     font-size: 14px;
-    padding: 9px;
+    padding: 5px;
     top: 5px;
     position: relative;
     background-color: rgba(219, 217, 216, 0.71);
-    overflow: auto;
 }
 
 .graph_window {
     font-family: Arial, Helvetica, sans-serif;
     float: right;
-    margin-left: 5px;
-    width: 680px;
+    margin-left: 1px;
+    width: 556px;
     border: 2px solid #cccccc;
-    /* text-align: center; */
     font-size: 14px;
     /* padding: 9px; */
     top: 5px;
     position: relative;
     background-color: #fefefe;
-    /* height: 480px; */
-    /* margin-bottom: 5px; */
+    margin-bottom: 1px;
+    overflow: hidden;
 }
 .graph_container {
-	width: 100%;
-	height: 350px;
+	height: 355px;
 }
 
 div._items_area {

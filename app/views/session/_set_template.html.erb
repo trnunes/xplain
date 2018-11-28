@@ -5,8 +5,8 @@
 	<% @style_s = ' style = "background-color:white;" '%>
 	    
 	<%= render :partial => 'layouts/windowheader_template'%>
-	
-	<div class="search-div">
+	<!--  TODO refactor the selection behavior and remove the "no_set_select" class-->	
+	<div class="search-div no_set_select">
 		<input class="search-input form-control" style="width: 100%;">
 	</div>
 
@@ -14,7 +14,7 @@
 		<%= yield :extension_view %>
 	</div>
 	
-	<div style="position: absolute; width: 335px; margin: 0;bottom: 0px;">
+	<div class="no_set_select" style="position: absolute; width: 335px; margin: 0;bottom: 0px;">
 		<div class="pagination_div">
 		    <ul class="pagination">
 		      <li class="page-item">

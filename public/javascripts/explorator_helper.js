@@ -25,8 +25,8 @@ function init_all(){
 function jstree_icon_type(item) {
 	if (item.type === "SchemaRelation") {
 		return "relation";
-	} else if (item.type === "Entity" || item.type === "Type") {
-		return "entity";
+	} else if (item.type === "Xplain::Entity" || item.type === "Type") {
+		return "Xplain::Entity";
 	} else {
 		return "literal";
 	}

@@ -58,6 +58,7 @@ XPLAIN.graph = new function(){
 	this.removeSet = function(setId){
 		that = this;		
 		this.nodes.remove(setId);
+		debugger
 
 		var toEdges = this.edges.get({
 		  filter: function (item) {
@@ -92,7 +93,15 @@ XPLAIN.graph = new function(){
 	    this.graph.on("click", function (params) {
 	        debugger;
 	        XPLAIN.activeWorkspaceWidget.selectSetAndFocus(params.nodes[0]);
-		});	
+		});
+		
+		  $('#graph_view ._remove').each(function(){
+			$(this).click(function(e){
+
+				$(this).parents('.hideable').first().ui_remove();
+				e.stopPropagation();
+			});
+		});
 	},
 	this.focus  = function(xsetId){
 		this.graph.focus(xsetId);
@@ -111,24 +120,38 @@ XPLAIN.graph = new function(){
 				color: this.nodeColor
             });
 			debugger;
-			if (setJson.resultedFrom){
+			if (setJson.resultedFrom.length > 0){
+				var resultedFromFound = false;
 				for (var i in setJson.resultedFrom){
-				    if (this.nodes.get(setJson.resultedFrom[i])){
+				    if (this.nodes.get(setJson.resultedFrom[i].id)){
                         this.edges.add({
-                            from: setJson.resultedFrom[i],
-                            label: setJson.intention,
+                            from: setJson.resultedFrom[i].id,
+                            label: setJson.intention_label,
                             to: setJson.id,
                             arrows: 'to'
                         });
-                        break;
+                        resultedFromFound = true;
 				    }
+				}
+				if (!resultedFromFound) {
+					for (var i in setJson.history){
+						if (this.nodes.get(setJson.history[i].id)){
+							this.edges.add({
+								from: setJson.history[i].id,
+								label: setJson.intention_label,
+								to: setJson.id,
+								arrows: 'to'
+							});
+							break;
+						}
+					}
 				}
 			} else {
 
 				this.edges.add({
 					from: 1,
 					to: setJson.id,
-					label: setJson.intention,
+					label: setJson.intention_label,
 					arrows: 'to'
 				});
 			}

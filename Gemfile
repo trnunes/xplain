@@ -25,7 +25,7 @@ gem 'linkeddata', '2.0.0'
 
 gem 'sparql-client', '2.0.1'
 
-gem 'xpair'
+gem 'xplain'
 
 
 
