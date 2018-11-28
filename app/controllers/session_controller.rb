@@ -71,6 +71,7 @@ class SessionController < ApplicationController
  
    def set_endpoint
 
+    params[:read_timeout] = 3000
     Xplain.set_default_server params
 
     respond_to do |format|
