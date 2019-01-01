@@ -169,6 +169,7 @@ Pivot = function (inputDependencies, isVisual) {
 	this.position = null;
 	this.group_by_domain = false;
 	this.debug = false;
+	this.visual = false;
 }
 Pivot.prototype = Object.create(Operation.prototype);
 Pivot.prototype.postProcessingExpression = "";
@@ -242,7 +243,10 @@ Pivot.prototype.getExpression = function(){
 		pivotExpr += " group_by_domain: true,"
 	}
 	if (this.debug) {
-		pivotExpr += " debug: true"
+		pivotExpr += " debug: true,"
+	}
+	if (this.visual) {
+		pivotExpr += " visual: true"
 	}
 	pivotExpr += ")";
 	pivotExpr += "{" +this.getRelationExpr()+"}";

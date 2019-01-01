@@ -97,6 +97,17 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 
 
 }
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session = function(){
+	var thisWidget = this;
+	XPLAIN.AjaxHelper.get("/session/load_all_resultsets.json", "json", function(data){
+		debugger;
+		data.forEach(function(resultsetJson){
+			thisWidget.state.addSetFromJson(resultsetJson);
+		});
+	});
+}
+
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
 	var inputValues = $("#seachbykeyword").val();
 	

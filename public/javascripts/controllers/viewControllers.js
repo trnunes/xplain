@@ -192,7 +192,8 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelecte
 	var relation = pathRelation.relations[pathRelation.relations.length - 1];
 	var expression =  "Xplain::ResultSet.find_by_node_id(\""+relation.data.setNode+"\")";
 	expression += ".first.resulted_from.first";
-	var pivot = new Pivot(new Expression(expression));	
+	var pivot = new Pivot(new Expression(expression));
+	pivot.visual = true;
 	debugger;
 	var path_has_single_relation = pathRelation.relations.length <= 1;
 	if (path_has_single_relation){
@@ -234,7 +235,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened 
 	var expression =  "Xplain::ResultSet.find_by_node_id(\""+relation.li_attr.setNode+"\")";
 	expression += ".first.resulted_from.first";
 	var pivot = new Pivot(new Expression(expression));
-
+	pivot.visual = true;
 	pivot.addRelation(new Relation(relation.li_attr));
 	this_controller.beforePivotBranchSelected(pivot);
 
@@ -244,6 +245,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened 
 	}
 
 	var relationsPivot = new Pivot(pivot);
+	relationsPivot.visual = true;
 	relationsPivot.limit = pivot.limit;
 	relationsPivot.addRelation(new Relation({item: "relations"}));
 
@@ -264,7 +266,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree =
 	if (level) {
 		levelExpr = "(level: "+level+")";
 	}
-	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot"+levelExpr+"{ relation \"relations\"}.execute"
+	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(visual: true)"+levelExpr+"{ relation \"relations\"}.execute"
 	
 	this.tree.loadData(expression);
 
@@ -320,7 +322,13 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = 
 				});
 				return;
 			  }
-// 			  TODO: IMPLEMENT KEYWORD SEARCH HERE
+
+			  
+
+			  XPLAIN.AjaxHelper.get("/session/search.json?set=" + setId + "&str=" + params.data.term, "json", function(data){
+			  	debugger;
+			  	success(data, (params.data.page || 1));
+			  });
 			  
 			},
 			

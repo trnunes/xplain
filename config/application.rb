@@ -28,14 +28,14 @@ module Wxplain
     DEFAULT_SET_VIEW = 'tree'
     
     #Change this to point to other endpoints
-    # graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
-    graph_url = "http://opencitations.net/sparql"
+    graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
+    # graph_url = "http://opencitations.net/sparql"
 
     # setting the blazegraph server as the default data server for the exploration tasks
     Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000
     
     # setting the session information repository
-    Xplain.set_exploration_repository class: MemoryRepository    
+    Xplain.set_exploration_repository Xplain.default_server    
     
     # Config the repository of session information
     # Persistable.set_session_repository server

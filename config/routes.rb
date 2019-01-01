@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   get 'session/search'
   get 'session/update_title'
   get 'session/execute_update'
+  get 'session/load_all_resultsets'
   get 'session/domain'
   post 'session/execute'
   get 'session/trace_subset_domains'

@@ -1,7 +1,7 @@
 require 'timeout'
 class SessionController < ApplicationController
   
-  def render_template(resource_set, template_path)
+  def render_template(template_path)
     #TODO change to get the template from a resourceset attribute
     #TODO not actually rendering partial within the template
     view = ActionView::Base.new(ActionController::Base.view_paths, {})
@@ -11,6 +11,21 @@ class SessionController < ApplicationController
   end
     
   def index
+  end
+  
+  def render_operation
+    
+    respond_to do |format|
+      if params[:operation]
+        format.json{ render json: render_template('operations/_' + params[:operation].to_s + '.html.erb')}
+      else
+        format.json{ render status: "You must provide the operation ID!"}
+      end
+    end
+    
+    
+    operation_name = params[:operation]
+    
   end
   
   def help
@@ -36,10 +51,10 @@ class SessionController < ApplicationController
   
   def render_view
     view = params[:view].downcase
-    set = Xplain::ResultSet.load(params[:set])
+    @items_set = Xplain::ResultSet.load(params[:set])
     
     json = Jbuilder.new do |viewJson|
-      viewJson.html render_template(set, (view+ '/_'+view+ '.html.erb'))
+      viewJson.html render_template(view+ '/_'+view+ '.html.erb')
     end.target!
 
     respond_to do |format|
@@ -62,7 +77,7 @@ class SessionController < ApplicationController
     
     respond_to do |format|
       format.js
-      format.json {render :json => generate_jbuilder(@resourceset, render_template(@resourceset, (Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
+      format.json {render :json => generate_jbuilder(@resourceset, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
       format.any {render :text => "SUCCESSFUL"}
       finish = Time.now 
       puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"
@@ -115,7 +130,7 @@ class SessionController < ApplicationController
     default_template_file = (Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')
     respond_to do |format|
       format.js
-      format.json {render :json => generate_jbuilder(resourceset, render_template(resourceset, default_template_file), nil, items_page)}
+      format.json {render :json => generate_jbuilder(resourceset, render_template(default_template_file), nil, items_page).target!}
       format.any {render :text => "SUCCESSFUL"}
     end    
   end
@@ -130,19 +145,33 @@ class SessionController < ApplicationController
 
 
       format.js { render :file => "/session/execute.js.erb" }
-      format.json {render :json => generate_jbuilder(@result_set, render_template(@result_set, (Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
+      format.json {render :json => generate_jbuilder(@result_set, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
 
     end     
   end
   
+  def load_all_resultsets
+    begin
+      all_result_sets_ordered = Xplain::ResultSet.load_all_tsorted_exploration_only
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    end
+    result_sets_json = "[#{all_result_sets_ordered.map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}.join(", ")}]"
+    respond_to do |format|
+      format.json {render :json =>  result_sets_json}
+    end
+  end
+  
   def search
     input = Xplain::ResultSet.load(params[:set])
-    search_operation = Xplain::KeywordSearch.new(inputs: input, keyword_phrase:  params[:str].to_s, inplace: true)
-    rs = search_operation.execute()
+    search_operation = Xplain::KeywordSearch.new(inputs: input, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
+    
+    rs = search_operation.execute().uniq!
     respond_to do |format|
 
         format.js { render :file => "/session/execute.js.erb" }
-        format.json {render :json => generate_jbuilder(rs, render_template(rs, (Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')))}
+        format.json {render :json => generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
       
     end
   end
@@ -179,8 +208,10 @@ class SessionController < ApplicationController
           
         end
       end
-    end.target!
+    end
+    json
   end
+  
   
   def to_jbuilder(node, jbuilder_obj)
     if node.item.is_a? Xplain::Literal

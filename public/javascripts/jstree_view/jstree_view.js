@@ -252,6 +252,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 							debugger;
 							//TODO fire DomainRequestedEvent{relation: relation}
 							var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Relation($node.li_attr)]));
+							pivot.visual = true;
 							pivot.addRelation(new Relation({item: "xplain:domain", item_type: "Xplain::SchemaRelation"}));
 							pivot.execute("json");
 		                }
@@ -266,6 +267,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 							debugger;
 							//TODO fire ImageRequestedEvent{relation: relation}
 							var pivot = new Pivot(new Select(new Load($node.li_attr.set), [new Relation($node.li_attr)]));
+							pivot.visual = true;
 							pivot.addRelation(new Relation({item: "xplain:range", item_type: "Xplain::SchemaRelation"}));
 							pivot.execute("json");
 		                }
