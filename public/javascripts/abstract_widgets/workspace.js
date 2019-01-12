@@ -60,7 +60,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	var thisWidget = this;
 	$("#all_types").unbind().click(function(){
 		debugger;
-		var expression = "Xplain::SchemaRelation.new(id: \"has_type\").image.sort_asc!"
+		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\").image.sort_asc!').execute"
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
 			
 			
@@ -69,7 +69,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	});
 
 	$("#all_relations").unbind().click(function(){
-	    var expression = "Xplain::SchemaRelation.new(id: \"relations\").image"
+	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\").image').execute"
         XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
 			thisWidget.state.addSetFromJson(data);
 		});
@@ -98,14 +98,43 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 
 }
 
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.list_sessions = function(){
+	var thisWidget = this;
+	
+	
+	XPLAIN.AjaxHelper.get("/session/list_sessions.json", "json", function(data){
+	
+		$("#section_list_modal").remove();
+		$("body").append(data.html);
+		$("#section_list_modal").modal("show")
+	});
+}
+
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session = function(){
 	var thisWidget = this;
-	XPLAIN.AjaxHelper.get("/session/load_all_resultsets.json", "json", function(data){
+	debugger;
+	var session_name = $("input:radio[name=radio_session]:checked").parent().text();
+	XPLAIN.AjaxHelper.get("/session/load_session.json?name=" + session_name, "json", function(data){
 		debugger;
-		data.forEach(function(resultsetJson){
-			thisWidget.state.addSetFromJson(resultsetJson);
+		$('.set').find("._remove").click()
+		data.forEach(function(setData){
+			thisWidget.state.addSetFromJson(setData);
 		});
+		$("#current_session span").text("Current Session: " + session_name);
+		
 	});
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(){
+	var thisWidget = this;
+	debugger;
+	var session_name = prompt("Please enter the session name", "");
+	if (session_name) {
+		XPLAIN.AjaxHelper.get("/session/save_session.json?name=" + session_name, "json", function(data){
+			debugger;
+			$("#current_session span").text("Current Session: " + session_name);
+		});
+	}
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){

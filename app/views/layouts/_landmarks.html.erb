@@ -3,11 +3,12 @@
       <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
       Main Menu <span class="caret"></span></button>
       <ul class="dropdown-menu" role="menu">
-  		<li class="dropdown-header">Starting Points</li>
   		<li><a id = "all_types"  >All Data Types</a></li>
   		<li><a id = "all_relations" >All Relations</a></li>
+		<div class="dropdown-divider"></div>
   		<li><a onclick = "XPLAIN.activeWorkspaceWidget.save_session()">Save Session</a></li>
-  		<li><a onclick = "XPLAIN.activeWorkspaceWidget.load_session()">Load Previous Session</a></li>
+  		<li><a onclick = "XPLAIN.activeWorkspaceWidget.list_sessions()">Load Session</a></li>
+		<div class="dropdown-divider"></div>
   		<li><a onclick = "XPLAIN.activeWorkspaceWidget.show_endpoint_modal()">Change Endpoint</a></li>
   		<li><a onclick = "XPLAIN.activeWorkspaceWidget.setup_and_show_namespaces_modal()">Namespaces</a></li>
 		<li><a  onclick ="$('#graph_view').show()">Show Graph View</a></li>

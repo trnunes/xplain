@@ -312,7 +312,7 @@ div.windowtoolbar div.filter:hover {
     float: left;
     margin: 5px;
     width: 350px;
-    height: 480px;
+    height: 443px;
     font-size: 14px;
     padding: 5px;
     top: 5px;
@@ -333,9 +333,11 @@ div.windowtoolbar div.filter:hover {
     background-color: #fefefe;
     margin-bottom: 1px;
     overflow: hidden;
+    height: 99%;
 }
 .graph_container {
-	height: 355px;
+	height: 313px;
+	/* overflow: auto; */
 }
 
 div._items_area {
@@ -590,7 +592,7 @@ span.tool:hover span.tip {
  */ .landmarks {
     font-family: Arial, Helvetica, sans-serif;
     float: left;
-    top: 38px;
+    top: 55px;
     left: 0px;
     width: 100%;
     background-color: #fff;

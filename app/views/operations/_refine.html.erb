@@ -21,12 +21,21 @@
 
 
 				 </div>
+				 
+				 <div class="form-group" >
+
+					 <div class="checkbox">
+					   <label><input type="checkbox" class="relation_tree_activator param" id="cfilter_check">Define Custom Filter</label>
+					 </div>
+
+
+				 </div>
 
 				<div class = "relation_area form-group">
 				</div>
       			 <div class="filters" style="padding: 8px;">
       			 </div>
-				<form class="form-horizontal">
+				<form id= "define_filter_form" class="form-horizontal">
 				 <!-- <div class="form-group" id="relation_input" >
 				   <label for="relation" class="control-label col-sm-2">Relation</label>
 				   <div class="col-sm-10">
@@ -71,46 +80,29 @@
 					
 				</div>
 				  
-				  <div class="form-group"> 
-				    <div class="col-sm-offset-2 col-sm-10">
-				      <button type="button" id="button_add_filter" class="btn btn-default">Add Filter</button>
-				    </div>
-				  </div>
 				</form>
 				
-								<form class="form-horizontal" id = "function_form">
+			<form class="form-horizontal" id = "cfilter_form">
 				 <div class="form-group" id="relation_input" >
 				   <label for="relation" class="control-label col-sm-2">Name</label>
 				   <div class="col-sm-10">
-					   <input type="text" class="form-control" id="input_name">
+					   <input type="text" class="form-control" id="filter_name">
 				   </div>
 				 </div>
 					
-				 <div class="form-group" id="function_init" >
-				   <label for="relation" class="control-label col-sm-2">Initializer</label>
-				   <div class="col-sm-10">
-					   <textarea class="form-control" rows="5" id="init"></textarea>
-				   </div>
-				 </div>
 				  <div class="form-group">
 					  
-				    <label class="control-label col-sm-2" >Map Function</label>
+				    <label class="control-label col-sm-2" >*Filter Code</label>
 				    <div class="col-sm-10">
-						<textarea class="form-control" rows="5" id="comment"></textarea>
+						<textarea class="form-control" rows="5" id="filter_code_area"></textarea>
 				    </div>
 				  </div>
-					
-				  <div class="form-group">
-				    <label class="control-label col-sm-2" for="email">Type</label>
-				    <div class="col-sm-10">
-					   <select class="form-control" id="select_comparator">
-						   <option value="=">Aggregator</option>
-					       <option value="<=">Transformator</option>
-					       <option value="<">Combinator</option>
-					   </select>
-				    </div>
-				  </div>			
 				</form>
+				<div class="form-group"> 
+				    <div class="col-sm-offset-2 col-sm-10">
+				      <button type="button" id="button_add_filter" class="btn btn-default">Add Filter</button>
+				    </div>
+			  	</div>
 
 				<div id = "refine_help" class="help">
 				</div>

@@ -1,7 +1,14 @@
 require 'timeout'
 class SessionController < ApplicationController
+  before_filter :load_temp_session
   
-  def render_template(template_path)
+  def load_temp_session
+    if !session[:current_session]
+      session[:current_session] = Xplain::Session.new(SecureRandom.uuid, "Unnamed")
+    end
+  end
+  
+  def render_template(template_path, context={})
     #TODO change to get the template from a resourceset attribute
     #TODO not actually rendering partial within the template
     view = ActionView::Base.new(ActionController::Base.view_paths, {})
@@ -64,12 +71,13 @@ class SessionController < ApplicationController
     
   end
   
+  
   def execute
 
     start = Time.now
     begin      
       @resourceset = eval(params[:exp].gsub("%23", "#"))
-      @resourceset.save
+      session[:current_session] << @resourceset
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -134,12 +142,41 @@ class SessionController < ApplicationController
       format.any {render :text => "SUCCESSFUL"}
     end    
   end
+  
+  def list_sessions
+    @section_list = Xplain::Session.list_titles
+    @section_list.delete("Unnamed")
+    @section_list.delete(session[:current_session].title)
+    view = ActionView::Base.new(ActionController::Base.view_paths, {section_list: @section_list})
+    template_html = view.render({partial: "session/section_list"})
     
+    respond_to do |format|
+      format.json{render :json => Jbuilder.new{|set_json| set_json.html template_html}.target!}
+    end
+  end
+    
+  def save_session
+    name = params[:name]
+    if !name.empty? && name != session[:current_session].title
+      new_session = Xplain::Session.new(SecureRandom.uuid, name)
+      session[:current_session].each_result_set_tsorted do |rs|
+        new_session << rs
+      end
+      if session[:current_session].title == "Unnamed"
+        session[:current_session].delete
+      end
+      session[:current_session] = new_session
+    end
+    
+    respond_to do |format|
+      format.json{render :json => Jbuilder.new(){|json| json.message "Success"}.target!}
+    end 
+  end
   
   def all_types
-    has_type_relation = Xplain::SchemaRelation.new(id: "has_type")
+    ruby_expression = "Xplain::SchemaRelation.new(id: \"has_type\").image"
 
-    @result_set = has_type_relation.image
+    @result_set = Xplain::ExecuteRuby.new(code: ruby_expression).execute
     
     respond_to do |format|
 
@@ -147,12 +184,12 @@ class SessionController < ApplicationController
       format.js { render :file => "/session/execute.js.erb" }
       format.json {render :json => generate_jbuilder(@result_set, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
 
-    end     
+    end 
   end
   
   def load_all_resultsets
     begin
-      all_result_sets_ordered = Xplain::ResultSet.load_all_tsorted_exploration_only
+      all_result_sets_ordered = session[:current_session].each_result_set_tsorted(exploration_only: true)
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -161,6 +198,30 @@ class SessionController < ApplicationController
     respond_to do |format|
       format.json {render :json =>  result_sets_json}
     end
+  end
+  
+  def load_session
+    
+    if params[:name]
+      session_name = params[:name]
+      session_found = Xplain::Session.find_by_title(session_name).first
+    end
+
+    respond_to do |format|
+      if session_found
+        session[:current_session] = session_found
+        begin
+          result_sets_json = "[#{session_found.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}.join(", ")}]"
+        rescue Exception => e
+          puts e.message
+          puts e.backtrace
+        end
+        format.json {render :json =>  result_sets_json}
+      else
+        format.json {render :json =>  "errorMessage: \"Session #{params[:name]} does not exist!\""}
+      end
+    end
+
   end
   
   def search

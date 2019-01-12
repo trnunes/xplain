@@ -264,9 +264,9 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree =
 	this.tree = new XPLAIN.views.RelationPathTree(this.setId, $(this.treeDivSel), this.treeParams);
 	var levelExpr = "";
 	if (level) {
-		levelExpr = "(level: "+level+")";
+		levelExpr = "level: "+level;
 	}
-	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(visual: true)"+levelExpr+"{ relation \"relations\"}.execute"
+	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(visual: true, "+levelExpr+"){ relation \"relations\"}.execute"
 	
 	this.tree.loadData(expression);
 
@@ -452,6 +452,7 @@ XPLAIN.controllers.RefineController = function(setId){
 	this.connectorsDivSel = this.viewSelector + " #facet_conn"
 	this.filtersDivSel = this.viewSelector + " .filters";
 	this.filterCloseSpanSel = this.viewSelector + " span .close"
+
 	var this_controller = this;
 	
 	this.initController = function(){
@@ -466,7 +467,23 @@ XPLAIN.controllers.RefineController = function(setId){
 		$(this.selectComparatorSel).val("=");
 
 		$(this.connectorsDivSel).hide();
-		debugger;
+
+		$("#cfilter_form").hide();
+
+		$("#define_filter_form").show();
+
+		$("#cfilter_check").unbind().change(function(e){
+			if($("#cfilter_check").is(':checked')) {
+				$("#cfilter_form").show();
+				$("#define_filter_form").hide();
+			} else {
+				$("#define_filter_form").show();
+				$("#cfilter_form").hide();
+			}
+			
+		});
+
+		
 		$(this.viewSelector + " .modal-body").show();
 	},
 	
@@ -499,36 +516,32 @@ XPLAIN.controllers.RefineController = function(setId){
 	
 	this.addFilter = function(){
 		$(this.connectorsDivSel).show();
+		debugger
+		if($("#filter_code_area").val()){
+			var filter_code = $("#filter_code_area").val();
+			var filter_name = ""
+			if ($("#filter_name").val()) {
+				filter_name = $("#filter_name").val();
+			}
+			$("#filter_code_area").val("");
+			$("#filter_name").val("");
+
+			XPLAIN.activeWorkspaceState.currentOperation.addFilter(filter_name, filter_code);
+		}
 		var position = $(this.positionRadiosSel + ":checked").attr('param_value');
 		//TODO review the boolean operator
 		var booleanOperator = $(this.connectorSel + ":checked").attr('param_value') || "And";
 		var values = $(this.valuesListSel).select2('data');
 		var selectedRelations = this.getSelection();
-		if(values.length == 0){
-			return;
-		}
 
 		for(var i in values){
 			value = values[i];
 			var comparator = $($(this.selectComparatorSel).find(":selected")).val();
+			
+			var valueObj = new Item(value.item_data);
 
-			var relation = null;
-			var restriction = null;
-			if(selectedRelations.length > 0){
-				restriction = new RelationRestriction();
-				restriction.relation = selectedRelations[0];
-			} else {
-				restriction = new Restriction();
-			}
-
-			restriction.operator = comparator;
-			restriction.connector = booleanOperator;
-			debugger
-			restriction.value = new Item(value.item_data);
-		
-			restriction.position = position
-			debugger
-			XPLAIN.activeWorkspaceState.currentOperation.addRestriction(restriction);
+			XPLAIN.activeWorkspaceState.currentOperation.addRestriction(comparator, selectedRelations[0], valueObj);
+			
 			XPLAIN.activeWorkspaceState.currentOperation.connector = booleanOperator;
 			XPLAIN.activeWorkspaceState.currentOperation.position = position;
 			
@@ -538,38 +551,20 @@ XPLAIN.controllers.RefineController = function(setId){
 	},
 	
 	this.updateFiltersTable = function(){
+		var that = this;
 		var filter_div = "";
-		
+		$("#filter_table").remove();
+
 		filter_div += XPLAIN.activeWorkspaceState.currentOperation.toHtml()//.join("<tr class=\"filter_connector\"><td><span>" + XPLAIN.activeWorkspaceState.currentOperation.connector + "</span></td></tr>");
-		$(this.filtersDivSel).html("<table>" + filter_div + "</table>");
+		$(this.filtersDivSel).html("<table id=\"filter_table\">" + filter_div + "</table>");
+		debugger
 
-		$(this.filterCloseSpanSel).click(function(e){
+		$(".filter_remove").click(function(e){
 			debugger;
-			var facet = $(this).attr("facet");
-			var operator = $(this).attr("operator");
-			var value = $(this).attr("facet_value");
-			if(facet){
-				XPLAIN.activeWorkspaceState.currentOperation.removeRelationRestriction(facet, operator, value);
-			} else{
-				XPLAIN.activeWorkspaceState.currentOperation.removeSimpleRestriction(operator, value);
-			}
-			
-			var tableCell = $(this).parent().parent()
-			if($(tableCell).prev().hasClass("filter_connector")){
-				$(tableCell).prev().remove();
-			} else if($(tableCell).parent().prev().hasClass("filter_connector")) {
-				$(tableCell).parent().prev().remove();
-			}
-			if($(tableCell).next().hasClass("filter_connector")){
-				$(tableCell).next().remove();
-			} else if($(tableCell).parent().next().hasClass("filter_connector")) {
-				$(tableCell).parent().next().remove();
-			}
+			var filter_text = $(this).prev().text();
+			XPLAIN.activeWorkspaceState.currentOperation.removeFilter(filter_text);
+			that.updateFiltersTable();
 
-			$(tableCell).remove();
-			if(XPLAIN.activeWorkspaceState.currentOperation.isEmpty()){
-				$(this.connectorsDivSel).hide();
-			}
 		});
 	},
 	

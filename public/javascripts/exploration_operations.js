@@ -50,6 +50,7 @@ function Relation(data){
 	this.data = data;
 	this.id = data.item;
 	this.getExpression = function(){
+
 		var exp = "\"" + data.item + "\"";
 		
 		if(data.inverse == "true"){
@@ -335,6 +336,7 @@ function Refine(inputDependencies, isVisual){
 	// this.filterParams = {};
 	this.relations = [];
 
+	//TODO remove this method
 	this.setParams = function(params){
 		var valuesArray = XPLAIN.activeWorkspaceWidget.params_hash.get("values");
 		var filterParams = {};
@@ -507,6 +509,7 @@ function RelationRestriction(relation, operator, value, connector){
 		this.addRestriction(operator, value)
 	}
 
+
 	this.addRestriction = function(operator, value){
 		var already_added = false
 		for(var i in this.restrictions){
@@ -557,13 +560,6 @@ function RelationRestriction(relation, operator, value, connector){
 	}
 };
 
-function CompositeRestrictionAnd(){
-	this.restrictions = []
-	
-	this.addRestriction = function(restriction){
-		
-	}
-};
 
 function KeywordSearch(keywords, isVisual){
 	Operation.call(this, null, isVisual);
@@ -590,117 +586,86 @@ function FacetedSearch(inputDependencies, isVisual){
 	this.connector = "And";
 	this.simpleRestrictionsHash = new Hashtable();
 	this.restrictionsByRelationHash = new Hashtable();
+	this.filters = []
 	this.position = "2";
 	
 	this.isEmpty = function(){
 		return (this.simpleRestrictionsHash.isEmpty() && this.restrictionsByRelationHash.isEmpty());
 	},
-	
-	this.addRestriction = function(restriction){
-		debugger;
-		if(restriction.constructor.name == "RelationRestriction"){
-			if(!this.restrictionsByRelationHash.containsKey(restriction.relation.getExpression())){
-				this.restrictionsByRelationHash.put(restriction.relation.getExpression(), restriction);
-			}
-			relationRestriction = this.restrictionsByRelationHash.get(restriction.relation.getExpression());
-			relationRestriction.addRestriction(restriction.operator, restriction.value);
-			relationRestriction.connector = restriction.connector;
-			
-		} else {
-			if(!this.simpleRestrictionsHash.containsKey(restriction.getExpression())){
-				this.simpleRestrictionsHash.put(restriction.getExpression(), restriction);
-				this.simpleRestrictionsHash.values().forEach(function(addedRes){addedRes.connector = restriction.connector})
-			}
+
+	this.addFilter = function(name, code){
+		var filter_code = "c_filter(";
+		if (name) {
+			filter_code += " name: \"" + name +"\", code:";
+
+		}
+		filter_code += " '" + code + "')";
+		if (this.filters.indexOf(filter_code) < 0){
+			this.filters.push(filter_code);
+		}
+
+	},
+	this.getComparatorExp = function(operator){		
+		switch(operator){
+		case "=":
+			return "equals";			
+		case "<":
+			return "less_than";
+		case "<=":
+			return "less_than_equal";
+		case ">":
+			return "greater_than";
+		case ">=":
+			return "greater_than_equal";			
+		default:
+			return operator;
 		}
 	},
-	this.addFacet = function(relation, operator, value, connector){
-		var added = false;
 
-		for(var i in this.facets){
-
-			if(this.equalFacets(this.facets[i][0], relation)){
-
-				this.facets[i][1].push([operator, value]);
-
-				if(connector){
-					this.facets[i].push(connector);
-				} else {
-					this.facets[i].push("And");
-				}
-
-
-				added = true;
-			}
-
-		}
-
-		if(!added){
-			this.facets.push([relation, [[operator, value]]])
-		}
+	this.toDSL = function(comparator, relationObj, valueObj){
 		
+		if (!valueObj){
+			alert("You should provide at least one comparison value!");
+			return;
+		}
+
+		if (!relationObj) {
+			relationObj = this.input[0];
+		}
+
+		if(!comparator){
+			comparator = "equals";
+		} else{
+			comparator = this.getComparatorExp(comparator);
+		}
+
+		var restrictionDSL = comparator + " { relation " + relationObj.getExpression() + "; " +  valueObj.getExpression() + " } ";
+		return restrictionDSL;
+	},
+	
+	this.addRestriction = function(comparator, relation, value){
+		debugger
+
+		var dslCode = this.toDSL(comparator, relation, value);
+		debugger
+		if (this.filters.indexOf(dslCode) < 0){
+			this.filters.push(dslCode);
+		}
 	},
 	
 	this.toHtml = function(){
 		var html = "";
-		var that = this;
-		for(var i in this.restrictionsByRelationHash.keys()){
-			relationExpr = this.restrictionsByRelationHash.keys()[i];
-			facet = this.restrictionsByRelationHash.get(relationExpr);
-			relationExpr = facet.relation.id
-			facetHtml = facet.restrictions.map(function(restriction){
-				var restriction_div = "";
-				restriction_div += "<td><span>" + relationExpr + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator= \""+restriction.operator+"\" facet='"+facet.relation.getExpression()+"' facet_value='"+restriction.value.id+"'>x</span></span>" + "</td>";
-				debugger;
-				return restriction_div;
-			}).join(" <td class=\"filter_connector\"><span >" + facet.connector + " </span></td>");
-			html += "<tr>" + facetHtml + "</tr>";
-		}
-		
-		var simpleResTableCols = this.simpleRestrictionsHash.values().map(function(restriction){
-			var restriction_div = "";
-			restriction_div += "<td><span>" + that.position + " "+ restriction.operator + " " + restriction.value.text + "<span class='close' operator=\""+restriction.operator+"\" facet_value='"+restriction.value.id+"'>x</span></span>" + "</td>";
-			debugger;
-			return restriction_div
-		});
-		var simpleResHtml =  ""
-		if(simpleResTableCols.length > 0){
-			simpleResHtml = simpleResTableCols.join(" <td class=\"filter_connector\"><span >" + this.simpleRestrictionsHash.values()[0].connector + " </span></td>");;
-		}
-		html += "<tr>" + simpleResHtml + "</tr>";
-		
+
+		var c_filter_cols = this.filters.map(function(filterSpec){
+			return "<td><span>" + filterSpec + "</span>"+"<span class='close filter_remove'>x</span>"+"</td>";
+		}).join(" <td class=\"filter_connector\"><span >" + this.connector + "</span></td>");
+		debugger;
+		html += "<tr>" + c_filter_cols + "</tr>";
 		return html;
 	},
-	this.getComparable = function(facet){
-		if(facet.constructor.name == "Operation"){
-			relationComparable = facet.getExpression();
-		} else if(facet.constructor.name == "Array") {
-			relationComparable = facet.map(function(r){return r.item}).join();
-		} else {
-			relationComparable = facet.item
-		}
-		return relationComparable;
-	},
-	
-	this.equalFacets = function(facet1, facet2){
-		
-		var relationComparable = this.getComparable(facet1);
-		var relationToRemoveComparable = this.getComparable(facet2);
-		return (relationComparable == relationToRemoveComparable)
-	},
-	this.setConnector = function(connector){
-		this.connector = connector;
-	},
-	this.removeRelationRestriction = function(relationToRemove, operatorToRemove, valueToRemove){
-		restriction = this.restrictionsByRelationHash.get(relationToRemove);
-		restriction.removeRestriction(operatorToRemove, valueToRemove);
-		if (restriction.restrictions.length == 0){
-			this.restrictionsByRelationHash.remove(relationToRemove);
-		}
-	},
-	this.removeSimpleRestriction = function(operatorToRemove, valueToRemove){
-		restriction = new Restriction(operatorToRemove, new Item({expression: valueToRemove}));
-		
-		this.simpleRestrictionsHash.remove(restriction.getExpression());
+
+	this.removeFilter = function(filterCode){
+		this.filters.splice(this.filters.indexOf(filterCode));
 	},
 	
 	this.getExpression = function(){
@@ -710,14 +675,14 @@ function FacetedSearch(inputDependencies, isVisual){
 		if (this.position) {			
 			expr += "(level: " + this.position + ")";
 		}
+		if (this.isVisual){
+			//TODO IMPLEMENT
+		}
+
 
 		expr += "{"+this.connector+"{[";
 
-		if(this.isVisual){
-			prefix = "v_";
-		}
-
-		expr += this.restrictionsByRelationHash.values().map(function(restriction){return restriction.getExpression()}).join(", ");
+		expr += this.filters.join(", ");
 		expr += "]}}";
 		return this.input[0].getExpression() + expr	;
 	},

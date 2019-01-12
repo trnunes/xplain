@@ -1,0 +1,31 @@
+<div class="modal fade" id="section_list_modal"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+            	
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+
+		
+            <div class="modal-body">
+				<h4 class="modal-title">Select a Session</h4>
+				<div class="form-group" >
+					<% @section_list.each do |title| %>
+						<div class="radio">
+						  <label><input type="radio" class = "param" name="radio_session" checked><%=title%></label>
+						</div>
+					<%end%>
+				</form>
+			</div>
+		   <div class="modal-footer">
+		       <button type="button" id="load_session" onclick= "XPLAIN.activeWorkspaceWidget.load_session()" class="exec btn btn-default" data-dismiss="modal" >Load</button>
+			   <button type="button" id="cancel" class="cancel btn btn-default" data-dismiss="modal">Cancel</button>
+	       </div>
+
+			<!-- /.modal-content -->
+		</div>
+        
+        
+    </div>
+    <!-- /.modal-dialog -->
+</div>
