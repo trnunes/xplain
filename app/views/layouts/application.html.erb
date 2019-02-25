@@ -62,7 +62,7 @@
 		<%= render :partial => 'layouts/search_bar' %>
 		<div id="current_session" style="position: absolute;top: 37px;">
 			
-			<span style="color: mediumblue;font-weight: 600;">Current Session: <%= session[:current_session].title%></span>
+			<span style="color: mediumblue;font-weight: 600;">Current Session: <%= Xplain::Session.load(session[:current_session]).title%></span>
 		</div>
 		<%= render :partial => 'layouts/landmarks'%>
 

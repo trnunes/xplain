@@ -134,7 +134,7 @@ XPLAIN.graph = new function(){
 				    }
 				}
 				if (!resultedFromFound) {
-					for (var i in setJson.history){
+					for (var i = setJson.history.length-1; i >= 0; i--){
 						if (this.nodes.get(setJson.history[i].id)){
 							this.edges.add({
 								from: setJson.history[i].id,

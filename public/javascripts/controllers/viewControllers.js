@@ -736,9 +736,6 @@ XPLAIN.controllers.MapController = function(setId){
 		XPLAIN.activeWorkspaceState.currentOperation.relations = this.getSelection();
 		XPLAIN.activeWorkspaceState.currentOperation.position = this.getLevel();
 		debugger
-		if (!this.getSelection().length) {
-			XPLAIN.activeWorkspaceState.currentOperation.position -= 1 ;
-		}
 		
 		if(selectedFunction == "user_defined"){
 			this_controller.handleUserDefinedFunctionFormSubmit();

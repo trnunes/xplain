@@ -832,7 +832,7 @@ function Map(inputDependencies, isVisual){
 				functionExpression += "(["+ this.functionParams.join(",")+"])";
 			}
 			
-			expression += ".xmap"
+			expression += ".aggregate"
 			if (this.position){
 				expression += "(level: "+this.position+")";
 			}

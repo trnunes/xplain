@@ -215,6 +215,8 @@ XPLAIN.widgets.DefaultSetWidget.prototype.register_ui_window_behaviour = functio
     $view.find('._remove').each(function(item){
         $(this).click(function(e){
 
+        	//TODO duplicated code: workspace.js#onDeleteSet()
+
             $(this).parents('.hideable').first().ui_remove();
             var setToRemove = $(this).parents('._WINDOW').attr("data-id");
         	XPLAIN.graph.removeSet(setToRemove);

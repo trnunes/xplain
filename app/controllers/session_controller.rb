@@ -1,10 +1,11 @@
 require 'timeout'
 class SessionController < ApplicationController
+  protect_from_forgery except: :new
   before_filter :load_temp_session
   
   def load_temp_session
     if !session[:current_session]
-      session[:current_session] = Xplain::Session.new(SecureRandom.uuid, "Unnamed")
+      session[:current_session] = Xplain::Session.new(title: "Unnamed").id
     end
   end
   
@@ -77,7 +78,8 @@ class SessionController < ApplicationController
     start = Time.now
     begin      
       @resourceset = eval(params[:exp].gsub("%23", "#"))
-      session[:current_session] << @resourceset
+      
+      Xplain::Session.load(session[:current_session]) << @resourceset
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -103,7 +105,7 @@ class SessionController < ApplicationController
   end
   
   def namespace
-    
+      
     if params[:namespace_list]
       Xplain::Namespace.update(params[:namespace_list])
     end
@@ -146,7 +148,7 @@ class SessionController < ApplicationController
   def list_sessions
     @section_list = Xplain::Session.list_titles
     @section_list.delete("Unnamed")
-    @section_list.delete(session[:current_session].title)
+    @section_list.delete(Xplain::Session.load(session[:current_session]).title)
     view = ActionView::Base.new(ActionController::Base.view_paths, {section_list: @section_list})
     template_html = view.render({partial: "session/section_list"})
     
@@ -154,18 +156,43 @@ class SessionController < ApplicationController
       format.json{render :json => Jbuilder.new{|set_json| set_json.html template_html}.target!}
     end
   end
-    
+  
+  def delete_set
+    current_session = Xplain::Session.load(session[:current_session])
+    set_to_delete = Xplain::ResultSet.load(params[:id])
+    current_session.remove_result_set_permanently(set_to_delete)
+    respond_to do |format|
+      format.json{render :json => Jbuilder.new(){|json| json.removed_set params[:id]}.target!}
+    end
+  end
+  
   def save_session
-    name = params[:name]
-    if !name.empty? && name != session[:current_session].title
-      new_session = Xplain::Session.new(SecureRandom.uuid, name)
-      session[:current_session].each_result_set_tsorted do |rs|
+    name = params[:name].to_s
+    current_session = Xplain::Session.load(session[:current_session])
+    if !name.empty? && name != current_session.title
+      new_session = Xplain::Session.create(title: name)
+      puts "FROM: #{current_session.title} TO: #{new_session.title}"
+      current_session.each_result_set_tsorted do |rs|
+        puts "  Saving: #{rs.title}"
         new_session << rs
       end
-      if session[:current_session].title == "Unnamed"
-        session[:current_session].delete
+      if current_session.title == "Unnamed"
+        current_session.delete
       end
-      session[:current_session] = new_session
+      begin
+        new_session.save
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace
+      end
+      session[:current_session] = new_session.id
+    else
+      begin
+        current_session.save
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace
+      end
     end
     
     respond_to do |format|
@@ -189,7 +216,7 @@ class SessionController < ApplicationController
   
   def load_all_resultsets
     begin
-      all_result_sets_ordered = session[:current_session].each_result_set_tsorted(exploration_only: true)
+      all_result_sets_ordered = Xplain::Session.load(session[:current_session]).each_result_set_tsorted(exploration_only: true)
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -203,13 +230,13 @@ class SessionController < ApplicationController
   def load_session
     
     if params[:name]
-      session_name = params[:name]
-      session_found = Xplain::Session.find_by_title(session_name).first
+      session_id = params[:name]
+      session_found = Xplain::Session.find_by_title(session_id).first
     end
 
     respond_to do |format|
       if session_found
-        session[:current_session] = session_found
+        session[:current_session] = session_found.id
         begin
           result_sets_json = "[#{session_found.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}.join(", ")}]"
         rescue Exception => e
@@ -239,6 +266,10 @@ class SessionController < ApplicationController
 
     
   def new
+    current_session = Xplain::Session.load(session[:current_session])
+    respond_to do |format|
+      format.js
+    end
   end
   
   

@@ -1,0 +1,11 @@
+var current_session_title = $("#current_session span").text();
+
+if (current_session_title.indexOf("Unnamed") >=0 ) {
+	var confirmation = confirm("Creating a new session will lose all your current work! Shall we continue?", "");
+	if (confirmation) {
+		XPLAIN.activeWorkspaceWidget.create_session();
+	}
+} else {
+	XPLAIN.activeWorkspaceWidget.create_session();
+}
+

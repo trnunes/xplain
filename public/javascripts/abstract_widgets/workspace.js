@@ -55,6 +55,13 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.onAddSet = function(eventJson){
 	
 }
 
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.onDeleteSet = function(eventJson){
+	var removedSetId = eventJson.data.removedSet;
+	debugger;
+	$("[data-id='" + removedSetId + "']").ui_remove();
+	XPLAIN.graph.removeSet(removedSetId);
+}
+
 	
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = function(){
 	var thisWidget = this;
@@ -93,7 +100,20 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
             XPLAIN.AjaxHelper.get(url);
         }
        
-     });    
+     });
+
+     $('#set_delete').unbind().click(function(){
+     	if (!$('.SELECTED.set').length) {
+     		alert("Please select at least one exploration set!");
+     		return;
+     	}
+
+     	for (var i = 0; i < $('.SELECTED.set').length; i++){
+     		var setId = $($('.SELECTED.set')[i]).attr("data-id");
+     		thisWidget.state.deleteSetState(setId);
+     	}
+     	
+     });
 
 
 }
@@ -125,13 +145,49 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session = function(){
 	});
 }
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(){
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(){
 	var thisWidget = this;
 	debugger;
-	var session_name = prompt("Please enter the session name", "");
+	var name = prompt("Save session: please enter the session name", "");
+	$("#current_session span").text("Saving session...");
+	this.save_session(name);
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(name){
+	var thisWidget = this;
+	debugger;
+	var save_url = "/session/save_session.json";
+	var session_text = $("#current_session span").text();
+	if (session_text.indexOf("Unnamed") > 0 ) {
+		return this.save_session_as();
+	}
+
+	if (name) {
+		save_url += "?name=" + name;
+		session_text = "Current Session: " + name;
+
+	} 
+	XPLAIN.AjaxHelper.get(save_url, "json", function(data){
+		debugger;
+		alert("Session has been saved!");
+		$("#current_session span").text(session_text);
+	});
+
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.new_session = function(){
+    
+    XPLAIN.AjaxHelper.get("/session/new.js", "js");
+
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.create_session = function(){
+	var thisWidget = this;
+	debugger;
+	var session_name = prompt("Please inform the name of the new session", "");
 	if (session_name) {
 		XPLAIN.AjaxHelper.get("/session/save_session.json?name=" + session_name, "json", function(data){
-			debugger;
+			$('.set').find("._remove").click();
 			$("#current_session span").text("Current Session: " + session_name);
 		});
 	}
@@ -432,4 +488,22 @@ XPLAIN.states.WorkspaceState.prototype.addSetState = function(setState){
 	};
 	
 	this.change('addSet', updateFunction);
+};
+
+XPLAIN.states.WorkspaceState.prototype.deleteSetState = function(setId){
+	var url = "/session/delete_set?id=" + setId;
+	var thisState = this;
+	XPLAIN.AjaxHelper.get(url, "json", function() {
+		thisState.change('deleteSet', function(){ 
+			var i = 0;
+			debugger;
+			for(var i = 0; i < thisState.sets.length; i++){
+				if (thisState.sets[i].setJson.id == setId){
+					thisState.sets.splice(i);
+				}
+			}
+			return {removedSet: setId};
+		});
+	});
+	
 };

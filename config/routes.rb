@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get 'session/list_sessions'
   get 'session/load_session'
   get 'session/save_session'
+  get 'session/delete_set'
   get 'session/execute_update'
   get 'session/load_all_resultsets'
   get 'session/domain'

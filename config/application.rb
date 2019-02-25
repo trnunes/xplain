@@ -23,6 +23,7 @@ module Wxplain
     # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
+    config.encoding = "utf-8"
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     DEFAULT_SET_VIEW = 'tree'
@@ -33,6 +34,8 @@ module Wxplain
 
     # setting the blazegraph server as the default data server for the exploration tasks
     Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000
+    
+    Xplain.lazy = true
     
     # setting the session information repository
     Xplain.set_exploration_repository Xplain.default_server    
