@@ -68,6 +68,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 
 	$(".help").empty();
 	//TODO correct the level selection
+	$(this.positionDivSel + " .radio").remove()
 	if(XPLAIN.SetController.countLevels(this.setId) > 1){
 		$(this.positionDivSel).show();
 		this.radioAddLevels();
@@ -98,10 +99,14 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.getLevel = function
 };
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.radioAddLevels = function(){
-	var lastRadio = $(this.positionDivSel).find('.radio').first().clone();
+	
 	
 	$(this.positionDivSel + " .radio").remove();
-	for (var i=1; i<=XPLAIN.SetController.countLevels(this.setId); i++)
+	debugger;
+	var radio_html = "<div class=\"radio\"><label><input type=\"radio\" id=\"domain\" name = \"" + this.setId + "_radio\" class = \"param position_radio_input\" param = \"position\" param_value = \"2\"><span>Level 1</span></label></div>"
+	$(this.positionDivSel).append(radio_html);
+	var lastRadio = $(this.positionDivSel).find('.radio').first().clone();
+	for (var i=2; i<=XPLAIN.SetController.countLevels(this.setId); i++)
 	{
 		var clonedRadio = lastRadio.clone();
 		clonedRadio.find('input').attr('name', this.setId + "_radio");
