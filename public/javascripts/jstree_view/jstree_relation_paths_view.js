@@ -177,7 +177,7 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 				resultedFrom: item.resultedFrom
 			}
 		}
-		
+		debugger
 		if (item_node.type == "Xplain::SchemaRelation"){
 			item_node.li_attr.inverse = item.inverse
 		}else if ((item.type == "Xplain::Literal") && item.datatype ){

@@ -119,7 +119,7 @@ XPLAIN.graph = new function(){
                 label: setJson.title,
 				color: this.nodeColor
             });
-			debugger;
+			
 			if (setJson.resultedFrom.length > 0){
 				var resultedFromFound = false;
 				for (var i in setJson.resultedFrom){

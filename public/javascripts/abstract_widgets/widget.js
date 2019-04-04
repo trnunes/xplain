@@ -21,6 +21,7 @@ XPLAIN.widgets.Widget.prototype = {
 	parent: null,
 	update: function(eventJson){
 		var eventName =  eventJson.event.charAt(0).toUpperCase() + eventJson.event.slice(1);
+		debugger
 		if (this["on" + eventName]){
 			
 			this["on" + eventName].call(this, eventJson);
@@ -61,7 +62,7 @@ XPLAIN.states.State.prototype = {
 	observers: [],
 	addObserver: function(observer){
 		this.observers = this.observers || [];
-		debugger;
+		
 		this.observers.push(observer);
 	},
 	notifyStateChange: function(eventJson){

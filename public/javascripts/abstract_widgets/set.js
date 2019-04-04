@@ -79,6 +79,16 @@ XPLAIN.states.SetState.prototype.setPage = function(page){
 	});
 }
 
+XPLAIN.states.SetState.prototype.calculateExtension = function(){
+	that = this;
+	XPLAIN.AjaxHelper.get("/session/calculate_extension.json?set=" + that.setJson.id, "json", function(data){
+		that.change('calculateExtension', function(){
+			that.setJson = data;
+		});
+	});
+
+}
+
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }

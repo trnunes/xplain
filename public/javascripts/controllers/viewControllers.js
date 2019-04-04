@@ -195,8 +195,8 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.beforePivotBranchSe
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected = function(pathRelation){
 	
 	var relation = pathRelation.relations[pathRelation.relations.length - 1];
-	var expression =  "Xplain::ResultSet.find_by_node_id(\""+relation.data.setNode+"\")";
-	expression += ".first.resulted_from.first";
+	var expression =  "Xplain::ResultSet.load(\""+relation.data.set+"\")";
+	expression += ".resulted_from.first";
 	var pivot = new Pivot(new Expression(expression));
 	pivot.visual = true;
 	debugger;
@@ -209,7 +209,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelecte
 	this_controller.beforePivotBranchSelected(pivot);
 
 	//TODO put a limit to the pivot operation
-	pivot.uniq().execute("json", function(data){
+	new Uniq(pivot, true).execute("json", function(data){
 		debugger;
 		this_controller.updateValuesList(data.extension, data.id);
 	});
@@ -271,7 +271,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree =
 	if (level) {
 		levelExpr = "level: "+level;
 	}
-	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(visual: true, "+levelExpr+"){ relation \"relations\"}.execute"
+	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(limit:50, visual: true, "+levelExpr+"){ relation \"relations\"}.execute"
 	
 	this.tree.loadData(expression);
 
@@ -587,7 +587,7 @@ XPLAIN.controllers.PivotController = function(setId){
 	
 	this.initController = function(){
 		this.treeParams.allowMultipleSelection = true;
-		XPLAIN.activeWorkspaceState.currentOperation = new Pivot(new Load(this.setId)).uniq();
+		XPLAIN.activeWorkspaceState.currentOperation = new Pivot(new Load(this.setId));
 		$(this_controller.viewSelector + " #group_by_domain").prop("checked", false);
 	},
 

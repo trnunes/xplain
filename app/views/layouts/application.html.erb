@@ -61,8 +61,12 @@
 		<%= render :partial => '/layouts/loading' %>
 		<%= render :partial => 'layouts/search_bar' %>
 		<div id="current_session" style="position: absolute;top: 37px;">
+			<span style="color: mediumblue;font-weight: 600;">Current Session:&nbsp;</span> 
+			<span id="session_name"><%= Xplain::Session.load(session[:current_session]).title%></span>
+			<span style="font-weight: 600;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+			<span style="color: mediumblue;font-weight: 600;">Active Endpoint:&nbsp;</span>
+			<span id="endpoint_url"><%= Xplain::Session.load(session[:current_session]).server.url%></span>
 			
-			<span style="color: mediumblue;font-weight: 600;">Current Session: <%= Xplain::Session.load(session[:current_session]).title%></span>
 		</div>
 		<%= render :partial => 'layouts/landmarks'%>
 

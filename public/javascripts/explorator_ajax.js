@@ -38,12 +38,14 @@ XPLAIN.AjaxHelper = {
 				
 
 				$('#loadingtext').innerHTML = loading_text;
-	            $('#loadwindow').hide();			
+	            	
 				success_function(data);
+				$('#loadwindow').hide();		
 			},
 			error: function(data, status, jqrequest){
-				$('#loadwindow').hide();
-
+				
+				alert("Something went wrong: " + jqrequest);
+				$('#loadwindow').hide();		
 				console.log(data);
 				clear();
 			}

@@ -15,6 +15,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 	XPLAIN.widgets.Widget.prototype.build.call(this);
 	var setJson = this.getContextState().setJson;
 	var $view = $(this.view)
+
 	$view.find('._items_area').replaceWith(this.children[0].view);
 	
 	$view.find('#windowtitlemin').hide();
@@ -83,6 +84,17 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 
 		
 	});
+
+	$view.find("#load_ext").click(function(){
+		that.getContextState().calculateExtension();
+
+
+	});
+
+	if (setJson.extension.length > 0) {
+		$view.find("#load_ext").remove();
+
+	}
 	
 	$view.find('._show').hide();
 	$view.find('#add_view').click(function(e){
@@ -101,7 +113,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 		
 	});
 
-	debugger;
+	
 	var to=false;
 	$view.find('.search-input').keyup(function () {
 		debugger
@@ -132,10 +144,19 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 
 
 	this.register_ui_behaviour($view);
-	
+	this.view = $view;
 	this.html = $view;
 
 	
+}
+
+XPLAIN.widgets.DefaultSetWidget.prototype.onCalculateExtension = function(eventJson){
+	
+	console.log(this.getContextState().setJson)
+	debugger
+	$(this.view).find("#load_ext").remove();
+	this.init_pagination_list(this.view, this.getContextState().setJson);
+	$view.find("#size").html(this.getContextState().setJson.size + " Items");
 }
 	
 XPLAIN.widgets.DefaultSetWidget.prototype.setTitle = function(title, $view){
@@ -260,7 +281,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.register_ui_selection_behaviour = func
 			$(this).draggable();
 			$(this).resizable();				
 		});
-		debugger;
+		
 		//TODO figure out a better way to improve the set selection interaction
 		var fire_set_select = $(event.target).hasClass('set') || !($(event.target).hasClass('no_set_select') || $(event.target).parents('.no_set_select').length || $(event.target).parents('._items_area').length);
 		if(fire_set_select){
@@ -342,8 +363,9 @@ XPLAIN.widgets.DefaultSetWidget.prototype.init_pagination_list = function($view,
 	first_page = $view.find(".pagination").children()[1];
 	
 	if(setJson.pages_count <= 1){
-		$view.find(".pagination_div").remove();
+		$view.find(".pagination_div").hide();
 	} else {
+		$view.find(".pagination_div").show()
 		var pagesList = []
 		if(setJson.pages_count >= 5){
 			for(var i=2; i<=5; i++){

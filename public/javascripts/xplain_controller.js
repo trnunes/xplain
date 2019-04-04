@@ -13,10 +13,11 @@ XPLAIN = {
 		//TODO develop the save and load workspace state
 		var workspace = new XPLAIN.states.WorkspaceState();
 		var workspaceWidget = new XPLAIN.widgets.DefaultWorkspaceWidget(workspace);
-		debugger;
+		
 		workspaceWidget.build();
 		this.activeWorkspaceWidget = workspaceWidget;
 		this.activeWorkspaceState = workspace;
+		
 	},
 	
 	guid: function() {

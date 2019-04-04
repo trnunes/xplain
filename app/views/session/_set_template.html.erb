@@ -9,9 +9,20 @@
 	<div class="search-div no_set_select">
 		<input class="search-input form-control" style="width: 100%;">
 	</div>
+	<%if @set.is_a?(Xplain::RemoteSet) && @set && !@set.fetched%>
+		 	
+		
+	  <button class="btn btn-primary btn-lg btn-block" type="button" id="load_ext">
+	    Click Here to Load the Items!
+	  </button>
+  	
+  	<%end%>
 
 	<div class = "_items_area">
+
+		
 		<%= yield :extension_view %>
+		
 	</div>
 	
 	<div class="no_set_select" style="position: absolute; width: 335px; margin: 0;bottom: 0px;">

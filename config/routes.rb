@@ -1,11 +1,15 @@
 Rails.application.routes.draw do
 
   get 'session/execute'
+  get 'session/calculate_extension'
   get 'session/search'
   get 'session/update_title'
   get 'session/list_sessions'
   get 'session/load_session'
+  get 'session/create'
+  get 'session/load_last_active_session'
   get 'session/save_session'
+  get 'session/close'
   get 'session/delete_set'
   get 'session/execute_update'
   get 'session/load_all_resultsets'

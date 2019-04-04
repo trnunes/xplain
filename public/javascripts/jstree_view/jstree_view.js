@@ -146,6 +146,12 @@ XPLAIN.widgets.JstreeView.prototype.onPageChange = function(eventJson){
 	this.populate($jstreeListView, this.getContextState().setJson);
 }
 
+XPLAIN.widgets.JstreeView.prototype.onCalculateExtension = function(eventJson){
+	$jstreeListView = $('#' + this.id);
+	this.clearTree($jstreeListView);
+	this.populate($jstreeListView, this.getContextState().setJson);
+}
+
 XPLAIN.widgets.JstreeView.prototype.onKeywordSearch = function(eventJson){
 	var $div = $("#"+this.id);
 	debugger;
@@ -329,7 +335,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 							var pivot = new Pivot(new Select(new Load(setId), [$node.li_attr.item]));
 							pivot.addRelation(new Relation({item: "rdf:type", inverse: "true"}));
 							
-							pivot.uniq().execute("json");
+							pivot.execute("json");
 		                }
 		            },
 		            "relations": {
@@ -434,22 +440,22 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 				var expression= "";
 				
 				if(relation_id.indexOf(":")){
-					expression = "Xplain::Entity.new(\""+item_id+"\")." + relation_id.replace(":", "__");
+					expression = "Xplain::Entity.create(\""+item_id+"\")." + relation_id.replace(":", "__");
 					if (is_inverse) {
 						debugger
 
-					    expression = "Xplain::Entity.new(\""+item_id+"\")." + relation_id.replace(":", "__") + " :inverse";
+					    expression = "Xplain::Entity.create(\""+item_id+"\")." + relation_id.replace(":", "__") + " :inverse";
 					}
 					
 				} else {
 
-					expression = "Xplain::SchemaRelation.new(id: \""+relation_id+"\", inverse: "+is_inverse+").restricted_image([Entity.new(\""+item_id+"\"])";
+					expression = "Xplain::SchemaRelation.create(\""+relation_id+"\", inverse: "+is_inverse+").restricted_image([Entity.create(id:\""+item_id+"\"])";
 
 				}
 				XPLAIN.AjaxHelper.execute(expression, tree_update_function);
 			} else {
 			    
-			    var expression = "Xplain::Entity.new(\""+node_to_open.li_attr.item+"\").relations"
+			    var expression = "Xplain::Entity.create(\""+node_to_open.li_attr.item+"\").relations"
 			    XPLAIN.AjaxHelper.execute(expression, tree_update_function);
 			}
 			

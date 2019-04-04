@@ -5,15 +5,25 @@ class SessionController < ApplicationController
   
   def load_temp_session
     if !session[:current_session]
-      session[:current_session] = Xplain::Session.new(title: "Unnamed").id
+      session[:current_session] = Xplain::Session.create(title: "Unnamed").id
     end
   end
   
-  def render_template(template_path, context={})
+  def load_last_active_session
+    current_session = Xplain::Session.load(session[:current_session])
+    
+    respond_to do |format|
+      
+      format.json {render :json =>  render_session_json(current_session)}
+    end
+  end
+  
+  def render_template(template_path, context={}, set = nil)
     #TODO change to get the template from a resourceset attribute
     #TODO not actually rendering partial within the template
-    view = ActionView::Base.new(ActionController::Base.view_paths, {})
-    template_html = view.render(file: template_path)
+    view = ActionView::Base.new(ActionController::Base.view_paths, {:set => set})
+    
+    template_html = view.render({:file => template_path})
     puts "HTML: " << template_html
     template_html
   end
@@ -76,10 +86,18 @@ class SessionController < ApplicationController
   def execute
 
     start = Time.now
-    begin      
-      @resourceset = eval(params[:exp].gsub("%23", "#"))
-      
-      Xplain::Session.load(session[:current_session]) << @resourceset
+    begin
+      expression = params[:exp].gsub("%23", "#")
+      current_session = Xplain::Session.load(session[:current_session])
+      if current_session
+        @resourceset = current_session.eval_expression(expression)
+      else
+        @resourceset = eval(expression)
+      end
+
+      if !@resourceset.intention.nil?
+        Xplain::Session.load(session[:current_session]) << @resourceset
+      end
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -97,8 +115,10 @@ class SessionController < ApplicationController
    def set_endpoint
 
     params[:read_timeout] = 3000
-    Xplain.set_default_server params
-
+    current_session = Xplain::Session.load(session[:current_session])
+    current_session.set_server params
+    Xplain::memory_cache.clear
+    current_session.save
     respond_to do |format|
       format.any {render :text => "SUCCESSFUL"}
     end
@@ -166,16 +186,34 @@ class SessionController < ApplicationController
     end
   end
   
+  def calculate_extension
+    resourceset = Xplain::ResultSet.load(params[:set])
+    resourceset.calculate_extension()
+    items_page = 1
+    default_template_file = (Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')
+    respond_to do |format|
+      format.js
+      format.json {render :json => generate_jbuilder(resourceset, render_template(default_template_file), nil, items_page).target!}
+      format.any {render :text => "SUCCESSFUL"}
+    end
+  end
+  
   def save_session
     name = params[:name].to_s
     current_session = Xplain::Session.load(session[:current_session])
     if !name.empty? && name != current_session.title
       new_session = Xplain::Session.create(title: name)
       puts "FROM: #{current_session.title} TO: #{new_session.title}"
-      current_session.each_result_set_tsorted do |rs|
-        puts "  Saving: #{rs.title}"
-        new_session << rs
+      begin
+        current_session.each_result_set_tsorted do |rs|
+          puts "  Saving: #{rs.title}"
+          new_session << rs
+        end
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace        
       end
+
       if current_session.title == "Unnamed"
         current_session.delete
       end
@@ -201,9 +239,14 @@ class SessionController < ApplicationController
   end
   
   def all_types
-    ruby_expression = "Xplain::SchemaRelation.new(id: \"has_type\").image"
+    ruby_expression = "Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image"
+    current_session = Xplain::Session.load(session[:current_session])
+    server = nil
+    if current_session
+      server = current_session.server
+    end
 
-    @result_set = Xplain::ExecuteRuby.new(code: ruby_expression).execute
+    @result_set = Xplain::ExecuteRuby.new(code: ruby_expression).execute(server)
     
     respond_to do |format|
 
@@ -229,24 +272,32 @@ class SessionController < ApplicationController
   
   def load_session
     
-    if params[:name]
+    if params[:id]
+      session_found = Xplain::Session.load(params[:id])
+    elsif params[:name]
       session_id = params[:name]
       session_found = Xplain::Session.find_by_title(session_id).first
     end
+    
+    
 
     respond_to do |format|
       if session_found
         session[:current_session] = session_found.id
-        begin
-          result_sets_json = "[#{session_found.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}.join(", ")}]"
-        rescue Exception => e
-          puts e.message
-          puts e.backtrace
-        end
-        format.json {render :json =>  result_sets_json}
+        format.json {render :json =>  render_session_json(session_found)}
       else
         format.json {render :json =>  "errorMessage: \"Session #{params[:name]} does not exist!\""}
       end
+    end
+
+  end
+  
+  def render_session_json(exp_session)
+    begin
+      result_sets_json = "{\"server\": \"#{exp_session.server.url}\", \"name\":\"#{exp_session.title}\",\"sets\":[#{exp_session.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb', {}, rs)).target!}.join(", ")}]}"
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     end
 
   end
@@ -255,7 +306,7 @@ class SessionController < ApplicationController
     input = Xplain::ResultSet.load(params[:set])
     search_operation = Xplain::KeywordSearch.new(inputs: input, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
     
-    rs = search_operation.execute().uniq!
+    rs = search_operation.uniq.execute()
     respond_to do |format|
 
         format.js { render :file => "/session/execute.js.erb" }
@@ -272,6 +323,33 @@ class SessionController < ApplicationController
     end
   end
   
+  def create
+    current_session = Xplain::Session.load(session[:current_session])
+    server = Xplain.default_server 
+    if current_session
+      server = current_session.server
+    end
+    new_session = Xplain::Session.create(title: params[:name])
+    new_session.server = server
+    new_session.save
+    session[:current_session] = new_session.id
+    respond_to do |format|
+      format.json {render :json => "{\"message\":\"session #{params[:name]} saved\"}"}
+    end
+  end
+  
+  def close
+    if session[:current_session]
+      current_session = Xplain::Session.load(session[:current_session])
+      if current_session && !current_session.title == "Unnamed"
+        current_session.save
+      end
+    end
+    session[:current_session] = Xplain::Session.create(title: "Unnamed").id
+    respond_to do |format|
+      format.any {render :json => "{\"message\":\"session closed\"}"}
+    end
+  end
   
   def generate_jbuilder(result_set, template_html, component_name = 'DefaultSetWidget', page = 1)
     total_by_page = 20
@@ -296,7 +374,7 @@ class SessionController < ApplicationController
       set_json.view_options ['Accordion', 'Grid']
       set_json.extension Jbuilder.new do |ext_json|
         ext_json.array!(result_set.get_page(total_by_page, page)) do |node|
-          to_jbuilder(node, ext_json)
+          to_jbuilder(node, ext_json, result_set)
           
         end
       end
@@ -305,7 +383,7 @@ class SessionController < ApplicationController
   end
   
   
-  def to_jbuilder(node, jbuilder_obj)
+  def to_jbuilder(node, jbuilder_obj, set)
     if node.item.is_a? Xplain::Literal
       jbuilder_obj.id node.item.value
       jbuilder_obj.text node.item.value
@@ -318,11 +396,12 @@ class SessionController < ApplicationController
       jbuilder_obj.text node.item.text
     end
     jbuilder_obj.node node.id
+    jbuilder_obj.set set.id
     jbuilder_obj.type node.item.class.to_s
     jbuilder_obj.inverse node.item.inverse?.to_s if node.item.respond_to? :inverse?
     jbuilder_obj.children Jbuilder.new do |children_json|
       children_json.array!(node.children) do |child_node|
-        to_jbuilder(child_node, children_json)      
+        to_jbuilder(child_node, children_json, set)      
       end      
     end
   end

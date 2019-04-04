@@ -3,7 +3,7 @@ XPLAIN.states = XPLAIN.states || {}
 
 XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
 	
-	debugger
+	
 	XPLAIN.widgets.Widget.call(this, null, workspaceState);
 	this.params_hash = new Hashtable();
 	
@@ -12,7 +12,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype = Object.create(XPLAIN.widgets.Widget.prototype)
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.build = function(){
-	debugger
+	
 	XPLAIN.widgets.Widget.prototype.build.call(this);
 	this.registerBehavior();
 }
@@ -67,7 +67,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	var thisWidget = this;
 	$("#all_types").unbind().click(function(){
 		debugger;
-		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\").image.sort_asc!').execute"
+		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image.sort_asc!').execute"
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
 			
 			
@@ -76,7 +76,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	});
 
 	$("#all_relations").unbind().click(function(){
-	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\").image').execute"
+	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank.execute"
         XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
 			thisWidget.state.addSetFromJson(data);
 		});
@@ -93,11 +93,15 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
         if ($("#endpoint_modal #blazegraph_search_idx:checked").size()){
             url += "&class=BlazegraphDataServer";            
         } else {
-        	url += "&class=RDFDataServer";
+        	url += "&class=Xplain::RDF::DataServer";
         }
         debugger;
         if (endpoint_url) {
-            XPLAIN.AjaxHelper.get(url);
+            XPLAIN.AjaxHelper.get(url, "json", function(){
+            	$("#endpoint_url").text(endpoint_url);
+            });
+        } else {
+        	alert("The endpoint url cannot be empty!")
         }
        
      });
@@ -135,42 +139,92 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session = function(){
 	debugger;
 	var session_name = $("input:radio[name=radio_session]:checked").parent().text();
 	XPLAIN.AjaxHelper.get("/session/load_session.json?name=" + session_name, "json", function(data){
-		debugger;
+		
 		$('.set').find("._remove").click()
-		data.forEach(function(setData){
+		data.sets.forEach(function(setData){
+			debugger;
 			thisWidget.state.addSetFromJson(setData);
 		});
-		$("#current_session span").text("Current Session: " + session_name);
+		$("#session_name").text(session_name);
+		$("#endpoint_url 	").text(data.server);
 		
 	});
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session_by_id = function(id){
+    var thisWidget = this;
+    debugger;
+    
+    XPLAIN.AjaxHelper.get("/session/load_session.json/" + id, "json", function(data){
+        debugger;
+        $('.set').find("._remove").click()
+        data.sets.forEach(function(setData){
+            thisWidget.state.addSetFromJson(setData);
+        });
+        
+        $("#session_name").text(data.name);
+        
+    });
+}
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_last_active_session = function(){
+	var thisWidget = this;
+    XPLAIN.AjaxHelper.get("/session/load_last_active_session.json", "json", function(data){
+        debugger;
+        $('.set').find("._remove").click()
+        data.sets.forEach(function(setData){
+            thisWidget.state.addSetFromJson(setData);
+        });
+        
+        $("#session_name").text(data.name);
+        
+    });
+
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.close_session = function(){
+	var thisWidget = this;
+    XPLAIN.AjaxHelper.get("/session/close", "json", function(data){
+        
+        $('.set').find("._remove").click()
+        
+        $("#session_name").text("Unnamed");
+        
+    });
+
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(){
 	var thisWidget = this;
 	debugger;
-	var name = prompt("Save session: please enter the session name", "");
-	$("#current_session span").text("Saving session...");
+	var name = prompt("Save session: please enter the session name", "").trim();
+	if (!name){
+		alert("The session name cannot be empty!");
+		return
+	}
+	$("#session_name").text("Saving session...");
 	this.save_session(name);
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(name){
+
 	var thisWidget = this;
 	debugger;
 	var save_url = "/session/save_session.json";
-	var session_text = $("#current_session span").text();
-	if (session_text.indexOf("Unnamed") > 0 ) {
+	var session_text = $("#session_name").text();
+	if (session_text.indexOf("Unnamed") >= 0 ) {
 		return this.save_session_as();
 	}
 
 	if (name) {
+		name = name.trim();
 		save_url += "?name=" + name;
-		session_text = "Current Session: " + name;
+		session_text = name;
 
 	} 
 	XPLAIN.AjaxHelper.get(save_url, "json", function(data){
 		debugger;
 		alert("Session has been saved!");
-		$("#current_session span").text(session_text);
+		$("#session_name").text(session_text);
 	});
 
 }
@@ -185,12 +239,18 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.create_session = function(){
 	var thisWidget = this;
 	debugger;
 	var session_name = prompt("Please inform the name of the new session", "");
-	if (session_name) {
-		XPLAIN.AjaxHelper.get("/session/save_session.json?name=" + session_name, "json", function(data){
-			$('.set').find("._remove").click();
-			$("#current_session span").text("Current Session: " + session_name);
-		});
+	session_name = session_name.trim();
+	if (!session_name){
+		alert("The session name cannot be empty!");
+		return;
 	}
+	
+	XPLAIN.AjaxHelper.get("/session/create.json?name=" + session_name, "json", function(data){
+		$('.set').find("._remove").click();
+		debugger;
+		$("#session_name").text(session_name);
+	});
+	
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
@@ -255,7 +315,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
     });
 
     $('._equal').unbind().each(function(item){
-		debugger;
+		
         $(this).on("click", function(){
 			debugger;
 

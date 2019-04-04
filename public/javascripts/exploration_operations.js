@@ -161,6 +161,36 @@ Operation.prototype = {
 	
 };
 
+Uniq = function(inputDependencies, isVisual) {	
+	Operation.call(this, inputDependencies, isVisual);
+	this.isPath = false;
+	this.relations = [];
+	this.isForward = true;
+	this.limit = null;
+	this.position = null;
+	this.group_by_domain = false;
+	this.debug = false;
+	
+}
+Uniq.prototype = Object.create(Operation.prototype);
+
+Uniq.prototype.validate = function() {
+	//TODO implement
+	return true;
+}
+
+Uniq.prototype.getExpression = function(){
+	var expr = this.input[0].getExpression();
+	var constr = "";
+	if(this.isVisual){
+		constr = "visual: true";
+	}
+
+	expr = expr + ".uniq(" + constr + ")";
+	return expr;		
+}
+
+
 Pivot = function (inputDependencies, isVisual) {	
 	Operation.call(this, inputDependencies, isVisual);
 	this.isPath = false;
@@ -255,12 +285,6 @@ Pivot.prototype.getExpression = function(){
 	return setExpr + pivotExpr;		
 }
 
-Pivot.prototype.uniq = function(){
-	this.postProcessingExpression += ".uniq!.sort_asc!";
-	return this;
-}
-
-
 
 function FindRelations(inputDependencies, position, isVisual){
 	Operation.call(this, inputDependencies, isVisual);
@@ -280,7 +304,7 @@ function FindRelations(inputDependencies, position, isVisual){
 		}
 		expression += "(limit: 25, level: " +this.position+")"
 
-		expression = this.input[0].getExpression() + expression;
+		expression = this.input[0].getExpression() + expression + ".uniq(visual:true)";
 		return expression;
 	},
 
@@ -293,11 +317,6 @@ function FindRelations(inputDependencies, position, isVisual){
 		}
 		
 		return true;
-	},
-
-	this.postProcessingExpression = function(){
-		return ".uniq!";
-
 	}
 	
 };
