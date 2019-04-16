@@ -123,7 +123,7 @@ XPLAIN.graph = new function(){
 			if (setJson.resultedFrom.length > 0){
 				var resultedFromFound = false;
 				for (var i in setJson.resultedFrom){
-				    if (this.nodes.get(setJson.resultedFrom[i].id)){
+				    if (setJson.resultedFrom[i] && this.nodes.get(setJson.resultedFrom[i].id)){
                         this.edges.add({
                             from: setJson.resultedFrom[i].id,
                             label: setJson.intention_label,
@@ -133,6 +133,7 @@ XPLAIN.graph = new function(){
                         resultedFromFound = true;
 				    }
 				}
+				debugger
 				if (!resultedFromFound) {
 					for (var i = setJson.history.length-1; i >= 0; i--){
 						if (this.nodes.get(setJson.history[i].id)){

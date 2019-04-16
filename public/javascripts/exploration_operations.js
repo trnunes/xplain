@@ -145,7 +145,7 @@ Operation.prototype = {
 		
 		if(this.validate()){
 			debugger;
-			XPLAIN.AjaxHelper.execute(this.getExpression() + ".execute" + this.postProcessingExpression, successFunction || function(data){
+			XPLAIN.AjaxHelper.execute(this.getExpression() + this.postProcessingExpression, successFunction || function(data){
 				XPLAIN.activeWorkspaceState.addSetFromJson(data);
 			});		
 		} else {
@@ -1024,7 +1024,7 @@ Rank.prototype = Object.create(Operation.prototype)
 function Load(setId){
 	this.setId = setId;
 	this.getExpression = function(){
-		return "Xplain::ResultSet.load('"+this.setId.replace("#", "%23")+"')";
+		return "Xplain::ResultSet.load_intention('"+this.setId.replace("#", "%23")+"')";
 	},
 	this.validate = function(){
 		return true;	

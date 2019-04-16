@@ -24,7 +24,6 @@ class SessionController < ApplicationController
     view = ActionView::Base.new(ActionController::Base.view_paths, {:set => set})
     
     template_html = view.render({:file => template_path})
-    puts "HTML: " << template_html
     template_html
   end
     
@@ -89,14 +88,15 @@ class SessionController < ApplicationController
     begin
       expression = params[:exp].gsub("%23", "#")
       current_session = Xplain::Session.load(session[:current_session])
-      if current_session
-        @resourceset = current_session.eval_expression(expression)
+      eval_results = eval(expression)
+      if !eval_results.is_a? Xplain::ResultSet
+        if current_session
+          @resourceset = current_session.execute(eval_results)
+        else
+          @resourceset = eval_results.execute()
+        end
       else
-        @resourceset = eval(expression)
-      end
-
-      if !@resourceset.intention.nil?
-        Xplain::Session.load(session[:current_session]) << @resourceset
+        @resourceset = eval_results
       end
     rescue Exception => e
       puts e.message
@@ -117,7 +117,6 @@ class SessionController < ApplicationController
     params[:read_timeout] = 3000
     current_session = Xplain::Session.load(session[:current_session])
     current_session.set_server params
-    Xplain::memory_cache.clear
     current_session.save
     respond_to do |format|
       format.any {render :text => "SUCCESSFUL"}
@@ -153,7 +152,9 @@ class SessionController < ApplicationController
   end
   
   def render_page
-    resourceset = Xplain::ResultSet.load(params[:set])
+    current_session = Xplain::Session.load(session[:current_session])
+    
+    resourceset = current_session.execute(Xplain::ResultSet.load_intention(params[:set]))
     
     items_page = params[:page].to_i
     items_page = 1 if(items_page == 0)
@@ -188,7 +189,7 @@ class SessionController < ApplicationController
   
   def calculate_extension
     resourceset = Xplain::ResultSet.load(params[:set])
-    resourceset.calculate_extension()
+    resourceset.fetch()
     items_page = 1
     default_template_file = (Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')
     respond_to do |format|
@@ -202,13 +203,10 @@ class SessionController < ApplicationController
     name = params[:name].to_s
     current_session = Xplain::Session.load(session[:current_session])
     if !name.empty? && name != current_session.title
-      new_session = Xplain::Session.create(title: name)
-      puts "FROM: #{current_session.title} TO: #{new_session.title}"
+      puts "FROM: #{current_session.title} TO: #{name}"
       begin
-        current_session.each_result_set_tsorted do |rs|
-          puts "  Saving: #{rs.title}"
-          new_session << rs
-        end
+        new_session = current_session.deep_copy
+        new_session.title = name
       rescue Exception => e
         puts e.message
         puts e.backtrace        
@@ -246,7 +244,7 @@ class SessionController < ApplicationController
       server = current_session.server
     end
 
-    @result_set = Xplain::ExecuteRuby.new(code: ruby_expression).execute(server)
+    @result_set = Xplain::ExecuteRuby.new(code: ruby_expression)
     
     respond_to do |format|
 
@@ -294,6 +292,7 @@ class SessionController < ApplicationController
   
   def render_session_json(exp_session)
     begin
+      
       result_sets_json = "{\"server\": \"#{exp_session.server.url}\", \"name\":\"#{exp_session.title}\",\"sets\":[#{exp_session.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb', {}, rs)).target!}.join(", ")}]}"
     rescue Exception => e
       puts e.message
@@ -303,10 +302,11 @@ class SessionController < ApplicationController
   end
   
   def search
+    current_session = Xplain::Session.load(session[:current_session])
     input = Xplain::ResultSet.load(params[:set])
-    search_operation = Xplain::KeywordSearch.new(inputs: input, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
+    search_operation = Xplain::KeywordSearch.new(inputs: input.intention, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
     
-    rs = search_operation.uniq.execute()
+    rs = current_session.execute(search_operation.uniq)
     respond_to do |format|
 
         format.js { render :file => "/session/execute.js.erb" }
@@ -341,10 +341,11 @@ class SessionController < ApplicationController
   def close
     if session[:current_session]
       current_session = Xplain::Session.load(session[:current_session])
-      if current_session && !current_session.title == "Unnamed"
+      if current_session && current_session.title != "Unnamed"
         current_session.save
       end
     end
+    Xplain::memory_cache.clear
     session[:current_session] = Xplain::Session.create(title: "Unnamed").id
     respond_to do |format|
       format.any {render :json => "{\"message\":\"session closed\"}"}

@@ -23,6 +23,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 	$view.attr({
 		"id": XPLAIN.guid(),
 		"data-id": setJson.id,
+		"dsl": setJson.dsl,
 		"data-resultedFrom": setJson.resultedFrom,
 	});
 	$view.data(setJson)
@@ -156,7 +157,7 @@ XPLAIN.widgets.DefaultSetWidget.prototype.onCalculateExtension = function(eventJ
 	debugger
 	$(this.view).find("#load_ext").remove();
 	this.init_pagination_list(this.view, this.getContextState().setJson);
-	$view.find("#size").html(this.getContextState().setJson.size + " Items");
+	this.view.find("#size").html(this.getContextState().setJson.size + " Items");
 }
 	
 XPLAIN.widgets.DefaultSetWidget.prototype.setTitle = function(title, $view){

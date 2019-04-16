@@ -67,7 +67,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	var thisWidget = this;
 	$("#all_types").unbind().click(function(){
 		debugger;
-		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image.sort_asc!').execute"
+		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image.sort_asc!')"
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
 			
 			
@@ -76,7 +76,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	});
 
 	$("#all_relations").unbind().click(function(){
-	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank.execute"
+	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank"
         XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
 			thisWidget.state.addSetFromJson(data);
 		});
