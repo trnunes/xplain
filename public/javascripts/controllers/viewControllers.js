@@ -195,8 +195,8 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.beforePivotBranchSe
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected = function(pathRelation){
 	
 	var relation = pathRelation.relations[pathRelation.relations.length - 1];
-	var expression =  "Xplain::ResultSet.load_intention(\""+relation.data.set+"\")";
-	expression += ".inputs.first";
+	var expression =  "Xplain::ResultSet.load(\""+relation.data.set+"\")";
+	expression += ".resulted_from.first";
 	var pivot = new Pivot(new Expression(expression));
 	pivot.visual = true;
 	debugger;
@@ -237,8 +237,8 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.getSelectedPosition
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchOpened = function(relation){
 	debugger;
-	var expression =  "Xplain::ResultSet.load_intention(\""+relation.data.set+"\")";
-	expression += ".inputs.first";
+	var expression =  "Xplain::ResultSet.load(\""+relation.data.set+"\")";
+	expression += ".resulted_from.first";
 	var pivot = new Pivot(new Expression(expression));
 	pivot.visual = true;
 	pivot.addRelation(new Relation(relation.li_attr));
@@ -271,7 +271,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree =
 	if (level) {
 		levelExpr = "level: "+level;
 	}
-	var expression = "Xplain::ResultSet.load_intention(\""+this.setId+"\").pivot(limit:50, visual: true, "+levelExpr+"){ relation \"relations\"}"
+	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(limit:50, visual: true, "+levelExpr+"){ relation \"relations\"}"
 	
 	this.tree.loadData(expression);
 

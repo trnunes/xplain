@@ -1024,7 +1024,7 @@ Rank.prototype = Object.create(Operation.prototype)
 function Load(setId){
 	this.setId = setId;
 	this.getExpression = function(){
-		return "Xplain::ResultSet.load_intention('"+this.setId.replace("#", "%23")+"')";
+		return "Xplain::ResultSet.load('"+this.setId.replace("#", "%23")+"')";
 	},
 	this.validate = function(){
 		return true;	

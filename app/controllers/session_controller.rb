@@ -152,9 +152,9 @@ class SessionController < ApplicationController
   end
   
   def render_page
-    current_session = Xplain::Session.load(session[:current_session])
     
-    resourceset = current_session.execute(Xplain::ResultSet.load_intention(params[:set]))
+    
+    resourceset = Xplain::ResultSet.load(params[:set])
     
     items_page = params[:page].to_i
     items_page = 1 if(items_page == 0)
