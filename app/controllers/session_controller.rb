@@ -306,7 +306,7 @@ class SessionController < ApplicationController
     input = Xplain::ResultSet.load(params[:set])
     search_operation = Xplain::KeywordSearch.new(inputs: input.intention, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
     
-    rs = current_session.execute(search_operation.uniq)
+    rs = current_session.execute(search_operation)
     respond_to do |format|
 
         format.js { render :file => "/session/execute.js.erb" }
