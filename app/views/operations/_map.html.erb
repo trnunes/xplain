@@ -4,20 +4,29 @@
             <div class="modal-header">
             	
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Define Mapping</h4>
             </div>
 
 		
             <div class="modal-body">
 				 <div class="form-group position">
-					 <label>Level</label>
+					 <label>Choose Set Level to Map</label>
  	 				 <div class="radio">
 					   <label><input type="radio" id="domain" class = "param position_radio_input" param = "position" param_value = "1"><span>Level 1</span></label>
 					 </div>
 				 </div>
-				<h4 class="modal-title">Mapping Functions</h4>
+				 
+ 				 <div class="checkbox">
+				   <label><input type="checkbox" class="relation_tree_activator param" id="relation_radio"  value = "relation_compare" name="relation_check">Click to choose a Relation to Map</label>
+				 </div>
+
+ 				<div class = "relation_area form-group">
+				</div>
+
+				<h4 class="modal-title">Map To</h4>
 				<div class="form-group" >
 					<div class="radio">
-					  <label><input type="radio" class = "param" param = "map_function" param_value = "count" name="radio_strategy" checked>Count items</label>
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "count" name="radio_strategy" checked>Items Count</label>
 					</div>
 					<div class="radio">
 					  <label><input type="radio" class = "param" param = "map_function" param_value = "sum" name="radio_strategy" checked>Sum</label>
@@ -26,16 +35,15 @@
 					  <label><input type="radio" class = "param" param = "map_function" param_value = "avg" name="radio_strategy">Average</label>
 					</div>
 					
-					<div class="radio">
+					<!-- <div class="radio">
 					  <label><input type="radio" class = "param" param = "map_function" param_value = "user_defined" name="radio_strategy">Define Custom Function</label>
-					</div>
+					</div> -->
 				</div>
+
 				 <div class="checkbox">
-				   <label><input type="checkbox" class="relation_tree_activator param" id="relation_radio"  value = "relation_compare" name="relation_check">Choose Relations</label>
+				   <label><input type="checkbox" class="param" id="preview">Show Preview</label>
 				 </div>
 
-				<div class = "relation_area form-group">
-				</div>
 				
 				<form class="form-horizontal" id = "function_form">
 				 <div class="form-group" id="relation_input" >

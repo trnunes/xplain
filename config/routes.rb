@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   get 'session/load_all_resultsets'
   get 'session/domain'
   post 'session/execute'
+  get 'session/execute_visual'
   get 'session/trace_subset_domains'
   get 'session/trace_item_domains'
   get 'session/render_page'

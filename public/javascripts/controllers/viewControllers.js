@@ -33,7 +33,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 	// 	}
 	//
 	// });
-	
+	$(this_controller.valuesListSel).parents(' .form-group').hide()
 	$(this.viewSelector + " .clear").click(function(){
 
 		debugger;
@@ -58,6 +58,16 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 			XPLAIN.activeControllers = new Hashtable();
 			$(this_controller.viewSelector).parents('.modal').modal('hide');
 		}
+	});
+	$(this.viewSelector + " #preview").prop("checked", false);
+	$(this.viewSelector +" #preview").unbind().change(function(e){
+		if ($(this_controller.viewSelector + " #preview").is(":checked")){
+			$(this_controller.valuesListSel).parents(' .form-group').show()
+			this_controller.handleBranchSelected(this_controller.getSelection()[0]);
+		} else {
+			$(this_controller.valuesListSel).parents(' .form-group').hide()
+		}
+		
 	});
 
 	$(this.viewSelector +  " #image").prop("checked", true);
@@ -119,10 +129,23 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.radioAddLevels = fu
 	clonedRadio.find('input').prop("checked", true);
 
 	$(this.positionDivSel + " .position_radio_input").change(function(){
-		debugger;
-		if(this_controller.tree){
-			this_controller.loadRelationsTree($(this).attr("param_value"));
-		}
+		
+			if(this_controller.tree){
+				this_controller.loadRelationsTree($(this).attr("param_value"));
+			}
+			if($(this).is(":checked")){
+				debugger
+				if(this_controller.getLevel()-1 == XPLAIN.SetController.countLevels(this_controller.setId)){
+					$(this_controller.viewSelector + " #by_level").prop("checked", false);
+					$(this_controller.viewSelector + " #by_level").parents('.form-group').find('.radio input').first().prop("checked", true);
+					$(this_controller.viewSelector + " #by_level").parents('.radio').hide();
+				} else {
+					$(this_controller.viewSelector + " #by_level").parents('.radio').show();
+					$(this_controller.viewSelector + " #by_level").prop("checked", true);
+				}
+			}
+
+		
 		
 	})
 
@@ -194,6 +217,8 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.beforePivotBranchSe
 
 XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelected = function(pathRelation){
 	
+	if (!pathRelation){ return }
+
 	var relation = pathRelation.relations[pathRelation.relations.length - 1];
 	var expression =  "Xplain::ResultSet.load(\""+relation.data.set+"\")";
 	expression += ".resulted_from.first";
@@ -207,12 +232,12 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.handleBranchSelecte
 
 	pivot.addRelation(relation);
 	this_controller.beforePivotBranchSelected(pivot);
-
+	if($(this_controller.viewSelector + " #preview").is(':checked')) {
 	//TODO put a limit to the pivot operation
-	new Uniq(pivot, true).execute("json", function(data){
-		debugger;
-		this_controller.updateValuesList(data.extension, data.id);
-	});
+		new Uniq(pivot, true).execute("json", function(data){
+			this_controller.updateValuesList(data.extension, data.id);
+		});
+	}
 };
 
 
@@ -314,6 +339,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = 
 
 	this.setIdOfValuesList = setId;
 	that = this;
+	$(this.viewSelector + ' .values_select').parent().parent().show();
 	$(this.viewSelector + ' .values_select').select2({
 		id: function(bond){debugger; return bond;},
 		ajax: {
@@ -408,9 +434,17 @@ XPLAIN.controllers.RankController = function(setId){
 	
 	this.initController = function(){
 		debugger;
-		$(this.viewSelector + " #alpha_rank").prop("checked", true);
+		if (XPLAIN.SetController.countLevels(this.setId) > 1) {
+			$(this.viewSelector +  " #domain").first().prop("checked", true);
+			$(this.viewSelector + " #by_level").parents(".radio").show();
+			$(this.viewSelector + " #by_level").prop("checked", true);
+		} else {
+			$(this.viewSelector + " #alpha_rank").prop("checked", true);
+			$(this.viewSelector + " #by_level").parents('.radio').hide();
+		}
+		
 		$(this.viewSelector + " #asc").prop("checked", true);
-		$(this.viewSelector +  " #domain").prop("checked", true);
+		
 	},
 	
 	this.registerControllerBehavior = function(){
@@ -466,7 +500,9 @@ XPLAIN.controllers.RefineController = function(setId){
 		XPLAIN.activeWorkspaceWidget.params_hash.put("operation", "refine");
 		XPLAIN.activeWorkspaceWidget.params_hash.put("operator", "=");
 		$('#eql_comp').addClass('filter_comparator_active');
-		
+		debugger
+		$(this.viewSelector + " #preview").prop("checked", true);
+		//$(this.viewSelector + " #preview").parent().parent().hide();
 		XPLAIN.activeWorkspaceState.currentOperation = new FacetedSearch(new Load(this.setId));
 		
 		$(this.selectComparatorSel).val("=");
@@ -673,7 +709,10 @@ XPLAIN.controllers.GroupController = function(setId){
 	},
 	
 	this.buildOperation = function(){
+		//TODO the params function: by_image is redundant. Correct!
 		var params = {function: "by_image", functionParams: this.selectedRelations};
+		XPLAIN.activeWorkspaceState.currentOperation.groupFunction = "by_image"
+		
 		XPLAIN.activeWorkspaceState.currentOperation.params = params;
 		return XPLAIN.activeWorkspaceState.currentOperation;
 	}	

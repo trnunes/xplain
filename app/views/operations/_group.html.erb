@@ -3,16 +3,17 @@
         <div class="modal-content" style="overflow: auto; width: 900px">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                 <h4 class="modal-title">Grouping Strategy</h4>
+                 <h4 class="modal-title">Group By</h4>
+                 <div class = "relation_area form-group">
+				 </div>
 				 <div class="form-group" >
-					 <div class="radio">
-					   <label><input type="radio" class = "relation_tree_activator param" param = "grouping_function" param_value = "by_relation" name="radio_strategy" checked>By Schema Relation</label>
-					 </div>
-					 
-					 <div class="radio">
+					 <!-- <div class="radio">
+					   <label><input type="radio" class = "relation_tree_activator param" param = "grouping_function" param_value = "by_relation" name="radio_strategy" checked>Relation</label>
+					 </div> -->
+   				 	
+					 <!-- <div class="radio">
 					   <label><input type="radio" class = "param" param = "grouping_function" param_value = "user_defined" name="radio_strategy">Define Custom Operator</label>
-					 </div>
-					 
+					 </div> -->					 
 					 <!-- <div class="radio">
 					   <label><input type="radio" class = "param" param = "grouping_function" param_value = "clustering" name="radio_strategy">Clustering</label>
 					 </div> -->
@@ -22,10 +23,13 @@
 				<div>
 					
 		            <div class="modal-body">
-						<div class = "relation_area form-group">
-						</div>
+						
+						 <div class="checkbox">
+						   <label><input type="checkbox" class="param" id="preview">Show Preview</label>
+						 </div>
 
 					</div>
+
 				</div>
 					
 				<form class="form-horizontal">
@@ -48,7 +52,7 @@
   					   </select>
   				    </div>
   				  </div>
-					
+
 					  <div class="form-group">
 					    <label class="control-label col-sm-2" for="pwd">Groups Preview</label>
 					    <div class="col-sm-10"> 

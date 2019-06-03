@@ -30,19 +30,22 @@ module Wxplain
     
     #Change this to point to other endpoints
     session_graph_url = "http://localhost:3002/blazegraph/namespace/kb/sparql"
+    # graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
     graph_url = "http://opencitations.net/sparql"
 
     # setting the blazegraph server as the default data server for the exploration tasks
-    Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000
+    Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
     
     Xplain.cache_results = true
     # setting the session information repository
-    Xplain.set_exploration_repository class: BlazegraphDataServer, graph: session_graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000    
+    Xplain.set_exploration_repository class: BlazegraphDataServer, graph: session_graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000  
     
     # Config the repository of session information
     # Persistable.set_session_repository server
 
     #Namespaces
+    Xplain::Namespace.new("iff", "http://web.iff.edu.br/")
+    
     Xplain::Namespace.new("uspat", "http://us.patents.aksw.org/")
     Xplain::Namespace.new("fabio", "http://purl.org/spar/fabio/")
     Xplain::Namespace.new("cito", "http://purl.org/spar/cito/")
@@ -57,15 +60,25 @@ module Wxplain
     
     #Visualization properties config
     module Xplain::Visualization
-      label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "dcterms:title", "c4o:hasContent", "rdfs:label"
-      label_for_type "http://purl.org/spar/fabio/Expression", "dcterms:title"
-      label_for_type "http://purl.org/spar/fabio/JournalArticle", "dcterms:title"
-      label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
-      label_for_type "http://purl.org/spar/biro/BibliographicReference", "http://purl.org/spar/c4o/hasContent"
-      label_for_type "http://purl.org/spar/fabio/Book", "dcterms:title"
+     #--------IBGE LABEL PROPERTIES---------------
+     
+     # label_for_type "iff:uf", "rdf:label"
+     # label_for_type "iff:municipio", "rdf:label"
+     # label_for_type "iff:distrito", "rdf:label"
+     # label_for_type "iff:subdistrito", "rdf:label"
+     # label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "rdf:label"
+     
+     #--------OPENCITATIONS LABEL PROPERTIES---------------
+     
+     label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "dcterms:title", "c4o:hasContent", "rdfs:label"
+     label_for_type "http://purl.org/spar/fabio/Expression", "dcterms:title"
+     label_for_type "http://purl.org/spar/fabio/JournalArticle", "dcterms:title"
+     label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
+     label_for_type "http://purl.org/spar/biro/BibliographicReference", "http://purl.org/spar/c4o/hasContent"
+     label_for_type "http://purl.org/spar/fabio/Book", "dcterms:title"
 
-      label_for_type "http://purl.org/spar/fabio/BookSeries", "dcterms:title"
-      label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "dcterms:title"
+     label_for_type "http://purl.org/spar/fabio/BookSeries", "dcterms:title"
+     label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "dcterms:title"
     end
   end
 end

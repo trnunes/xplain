@@ -178,10 +178,33 @@ class SessionController < ApplicationController
     end
   end
   
+  def execute_visual
+    begin
+      expression = params[:exp].gsub("%23", "#")
+      result_set = eval(expression)
+      
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    end
+    
+    respond_to do |format|
+      format.js
+      format.json {render :json => generate_jbuilder(result_set, "").target!}
+      format.any {render :text => "SUCCESSFUL"}
+    end
+  end
+  
   def delete_set
     current_session = Xplain::Session.load(session[:current_session])
     set_to_delete = Xplain::ResultSet.load(params[:id])
-    current_session.remove_result_set_permanently(set_to_delete)
+    begin
+      current_session.remove_result_set_permanently(set_to_delete)
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace        
+
+    end
     respond_to do |format|
       format.json{render :json => Jbuilder.new(){|json| json.removed_set params[:id]}.target!}
     end

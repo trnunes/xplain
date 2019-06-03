@@ -176,12 +176,12 @@ XPLAIN.widgets.DefaultSetWidget.prototype.onSetTitle = function(eventJson){
 XPLAIN.widgets.DefaultSetWidget.prototype.project = function(relation, setId){
 	debugger;
 	var that = this;
-	new Project(new Load(setId), relation).execute("json", function(data){
-		debugger;
+	new Project(setId, relation).execute(function(data){
+		
 
 		for (var index in that.children){
 			var itemsViewController = that.children[index];
-			itemsViewController.updateText(data.extension);
+			itemsViewController.updateText(data);
 		}
 	});
 }

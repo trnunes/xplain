@@ -121,22 +121,9 @@ XPLAIN.widgets.JstreeView.prototype.clearTree = function($jstreeListView){
 	});
 }
 
-XPLAIN.widgets.JstreeView.prototype.updateText = function(items){
-	for (var index in items){
-		var item = items[index];
-		$('[item="' + item.id + '"').each(function(){
-			debugger;
-			var $items_jstree = $(this).parents('._items_area.jstree');
-			var item_node = $items_jstree.jstree().get_node($(this).attr('id'));
-			if ($items_jstree.length){
-				if (item.children.length) {
-					$items_jstree.jstree('rename_node', item_node , item.children[0].text);
-				}
-				
-			}
-		
-		});
-	}
+XPLAIN.widgets.JstreeView.prototype.updateText = function(setJson){
+	this.clearTree(this.view);
+	this.populate(this.view, setJson);
 	
 }
 
@@ -245,6 +232,19 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 		                }
 		            }
 		        };			
+			} else if(node.type === "Xplain::Literal"){
+				return {
+					"download":{
+						label: "download",
+						"action": function(obj){
+							var link = document.createElement("a");
+							link.download = $node.li_attr.text;
+							link.href = $node.li_attr.item;
+							link.click();
+						},
+
+					}
+				};
 			} else if(node.type === "Xplain::SchemaRelation"){
 				return {
 					"Select": selectSubmenu,
@@ -440,11 +440,11 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 				var expression= "";
 				
 				if(relation_id.indexOf(":")){
-					expression = "Xplain::Entity.create(\""+item_id+"\")." + relation_id.replace(":", "__");
+					expression = "Xplain::ResultSet.new(nodes: [Xplain::Node.new(item: Xplain::Entity.create(\""+item_id+"\"))]).pivot{relation \""+relation_id+"\"}";
 					if (is_inverse) {
 						debugger
 
-					    expression = "Xplain::Entity.create(\""+item_id+"\")." + relation_id.replace(":", "__") + " :inverse";
+					    expression = "Xplain::ResultSet.new(nodes: [Xplain::Node.new(item: Xplain::Entity.create(\""+item_id+"\"))]).pivot{relation inverse(\""+relation_id+"\")}"
 					}
 					
 				} else {

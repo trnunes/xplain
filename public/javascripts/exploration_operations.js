@@ -891,18 +891,6 @@ function Group(inputDependencies, level, isVisual){
 			this.addErrorMessage("Please select a set to group!");
 			return false;
 		}
-		if(!this.groupFunction){
-			this.addErrorMessage("You must choose a grouping function for this operation!");
-			return false;
-		}
-		if(this.groupFunction == "by_image"){
-			
-			if (!(this.params.relations && this.params.relations.length > 0)){
-				this.addErrorMessage("You must select a relation or a relation set in the exploration area!");
-				return false;
-			}
-			
-		}
 		return true;
 		
 	},
@@ -1059,20 +1047,16 @@ function Expression(expression){
 }
 Expression.prototype = Object.create(Operation.prototype)
 
-function Project(inputDependencies, relation){
-	Operation.call(this, inputDependencies, true);
-	
+function Project(setId, relation){
+	this.setId = setId;	
 	this.relation = relation;
-	this.getExpression = function(){
-		var pivot = new Pivot(this.input[0]);
-		pivot.relations = [new Relation({item: this.relation})];
-		pivot.group_by_domain = true;
-		debugger
-		return pivot.getExpression();
-	},
-	this.validate = function(){
-		return true;
+	
+	this.execute = function(successFunction){
+		var expression = "Xplain::ResultSet.load('"+this.setId+"').project(Xplain::SchemaRelation.new(id: '"+this.relation+"'))";
+		XPLAIN.AjaxHelper.get("/session/execute_visual.json?exp="+ expression.replace("#", "%23"), "json", function(data){
+			successFunction(data);
+		});	
 	}
 	
 }
-Project.prototype = Object.create(Operation.prototype)
+
