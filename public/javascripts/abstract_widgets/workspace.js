@@ -95,10 +95,13 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
         } else {
         	url += "&class=Xplain::RDF::DataServer";
         }
-        debugger;
+        
         if (endpoint_url) {
-            XPLAIN.AjaxHelper.get(url, "json", function(){
-            	$("#endpoint_url").text(endpoint_url);
+            XPLAIN.AjaxHelper.get(url, "json", function(data){
+            	if (!data.error){
+            		$("#endpoint_url").text(endpoint_url);
+            	}
+            		
             });
         } else {
         	alert("The endpoint url cannot be empty!")

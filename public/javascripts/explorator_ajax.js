@@ -38,13 +38,18 @@ XPLAIN.AjaxHelper = {
 				
 
 				$('#loadingtext').innerHTML = loading_text;
-	            	
+	            
+	            for(var i in data.error)
+	            {
+	            	alert(data.error[i])	
+	            }
+	            
 				success_function(data);
 				$('#loadwindow').hide();		
 			},
 			error: function(data, status, jqrequest){
 				
-				alert("Something went wrong: " + jqrequest);
+				alert("Something went wrong");
 				$('#loadwindow').hide();		
 				console.log(data);
 				clear();

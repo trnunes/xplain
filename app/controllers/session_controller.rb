@@ -115,11 +115,17 @@ class SessionController < ApplicationController
    def set_endpoint
 
     params[:read_timeout] = 3000
+    params[:method] = 'post' if (params[:method] != 'get' && params[:method] != 'post')
     current_session = Xplain::Session.load(session[:current_session])
-    current_session.set_server params
+    
     current_session.save
     respond_to do |format|
-      format.any {render :text => "SUCCESSFUL"}
+      begin
+        current_session.set_server params
+        format.any {render :text => "SUCCESSFUL"}
+      rescue RepositoryConnectionError => e
+        format.json{render json: { error:  [e.message]}}
+      end    
     end
   end
   

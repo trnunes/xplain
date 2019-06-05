@@ -38,7 +38,10 @@ module Wxplain
     
     Xplain.cache_results = true
     # setting the session information repository
-    Xplain.set_exploration_repository class: BlazegraphDataServer, graph: session_graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000  
+    begin
+      Xplain.set_exploration_repository class: BlazegraphDataServer, graph: session_graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000
+    rescue Exception => e
+    end  
     
     # Config the repository of session information
     # Persistable.set_session_repository server
