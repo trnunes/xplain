@@ -83,7 +83,7 @@ class SessionController < ApplicationController
   
   
   def execute
-
+  Xplain::Visualization.current_profile.text_for "sparpro:isHeldBy", "autores"
     start = Time.now
     begin
       expression = params[:exp].gsub("%23", "#")
@@ -102,7 +102,7 @@ class SessionController < ApplicationController
       puts e.message
       puts e.backtrace
     end
-    
+    Xplain::Visualization.current_profile.set_view_properties(@resourceset.nodes)
     respond_to do |format|
       format.js
       format.json {render :json => generate_jbuilder(@resourceset, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
@@ -274,7 +274,7 @@ class SessionController < ApplicationController
     end
 
     @result_set = Xplain::ExecuteRuby.new(code: ruby_expression)
-    
+    Xplain::Visualization.current_profile.set_view_properties(@result_set.nodes)
     respond_to do |format|
 
 
@@ -336,6 +336,7 @@ class SessionController < ApplicationController
     search_operation = Xplain::KeywordSearch.new(inputs: input.intention, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
     
     rs = current_session.execute(search_operation)
+    Xplain::Visualization.current_profile.set_view_properties(rs.nodes)
     respond_to do |format|
 
         format.js { render :file => "/session/execute.js.erb" }

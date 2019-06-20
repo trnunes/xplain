@@ -501,7 +501,8 @@ XPLAIN.controllers.RefineController = function(setId){
 		XPLAIN.activeWorkspaceWidget.params_hash.put("operator", "=");
 		$('#eql_comp').addClass('filter_comparator_active');
 		debugger
-		$(this.viewSelector + " #preview").prop("checked", true);
+		$(this.viewSelector + " #preview").prop("checked", true).parent().parent().hide();
+
 		//$(this.viewSelector + " #preview").parent().parent().hide();
 		XPLAIN.activeWorkspaceState.currentOperation = new FacetedSearch(new Load(this.setId));
 		
@@ -511,18 +512,26 @@ XPLAIN.controllers.RefineController = function(setId){
 
 		$("#cfilter_form").hide();
 
-		$("#define_filter_form").show();
+		$("#define_filter_form").hide();
 
 		$("#cfilter_check").unbind().change(function(e){
 			if($("#cfilter_check").is(':checked')) {
 				$("#cfilter_form").show();
 				$("#define_filter_form").hide();
 			} else {
-				$("#define_filter_form").show();
 				$("#cfilter_form").hide();
 			}
 			
 		});
+		debugger
+		$(this.viewSelector + " #relation_radio").change(()=>{
+			debugger
+			if($(this_controller.viewSelector + " #relation_radio").is(':checked')) {
+				$("#define_filter_form").show();
+			} else{
+				$("#define_filter_form").hide();
+			}
+		})
 
 		
 		$(this.viewSelector + " .modal-body").show();
