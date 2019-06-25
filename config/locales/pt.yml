@@ -1,0 +1,68 @@
+# Files in the config/locales directory are used for internationalization
+# and are automatically loaded by Rails. If you want to use locales other
+# than English, add the necessary files in this directory.
+#
+# To use the locales, use `I18n.t`:
+#
+#     I18n.t 'hello'
+#
+# In views, this is aliased to just `t`:
+#
+#     <%= t('hello') %>
+#
+# To use a different locale, set it with `I18n.locale`:
+#
+#     I18n.locale = :es
+#
+# This would use the information in config/locales/es.yml.
+#
+# To learn more, please read the Rails Internationalization guide
+# available at http://guides.rubyonrails.org/i18n.html.
+
+pt:
+  rank: "Ordenar"
+  pivot: "Projetar"
+  group: "Agrupar"
+  map: "Transformar"
+  refine: "Filtrar"
+  clear: "Limpar"
+  delete: "Remover"
+  main_menu: "Menu"
+  search: "Buscar"
+  current_session: "Sessão"
+  active_endpoint: "Base de Dados Ativa"
+  ranking_strategy: "Defina o Critério de Ordenação"
+  set_level: "Selecione o Nível do Conjunto"
+  rank_by: "Ordenar por"
+  alpha: "Alfabético"
+  related_value: "Item Relacionado"
+  last_level: "Último Nível"
+  asc: "Ascendente"
+  desc: "Decrescente"
+  go: "Executar"
+  help: "Ajuda"
+  select_pivot_relation: "Selecione uma Relação para Projetar"
+  keep_source_items: "Manter os itens do conjunto de origem"
+  show_preview: "Pré-visualizar o Resultado"
+  values_preview: "Itens a serem Projetados"
+  values: "Itens"
+  select_filters: "Adicione Critérios de Filtragem"
+  set_level_filter: "Selecione o Nível do Conjunto para Filtrar"
+  filter_related_items: "Filtrar por Itens Relacionados"
+  add_filter: "Adicionar Critério"
+  define_cfilter: "Definir um Filtro Customizado"
+  choose_filter_operator: "Comparar por"
+  select_filter_item: "Selecione o Item de Comparação"
+  select_value: "Selecione um Item"
+  and: "E"
+  or: "OU"
+  define_mapping: "Defina a Transformação"
+  set_level_map: "Nível do Conjunto para Transformar"
+  choose_relation_map: "Escolha uma Relação para Transformar"
+  items_count: "Contagem de Itens"
+  map_to: "Transformar em"
+  sum: "Soma"
+  avg: "Média Aritmética"
+  group_by: "Agrupar por"
+  groups_preview: "Pré-visualizar Grupos"
+  grouping_values: "Grupos"

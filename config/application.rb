@@ -22,7 +22,7 @@ module Wxplain
 
     # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
-    # config.i18n.default_locale = :de
+    config.i18n.default_locale = :pt
     config.encoding = "utf-8"
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
@@ -30,8 +30,8 @@ module Wxplain
     
     #Change this to point to other endpoints
     session_graph_url = "http://localhost:3002/blazegraph/namespace/kb/sparql"    
-    # graph_url = "http://opencitations.net/sparql"
-     graph_url = "http://192.168.100.29:3001/blazegraph/namespace/kb/sparql"
+    graph_url = "http://opencitations.net/sparql"
+#     graph_url = "http://192.168.100.29:3001/blazegraph/namespace/kb/sparql"
     # graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
 
     # setting the blazegraph server as the default data server for the exploration tasks

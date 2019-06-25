@@ -4,35 +4,35 @@
             <div class="modal-header">
             	
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Define Mapping</h4>
+                <h4 class="modal-title"><%= t :define_mapping%></h4>
             </div>
 
 		
             <div class="modal-body">
 				 <div class="form-group position">
-					 <label>Choose Set Level to Map</label>
+					 <label><%= t :set_level_map%></label>
  	 				 <div class="radio">
 					   <label><input type="radio" id="domain" class = "param position_radio_input" param = "position" param_value = "1"><span>Level 1</span></label>
 					 </div>
 				 </div>
 				 
  				 <div class="checkbox">
-				   <label><input type="checkbox" class="relation_tree_activator param" id="relation_radio"  value = "relation_compare" name="relation_check">Click to choose a Relation to Map</label>
+				   <label><input type="checkbox" class="relation_tree_activator param" id="relation_radio"  value = "relation_compare" name="relation_check"><%= t :choose_relation_map%></label>
 				 </div>
 
  				<div class = "relation_area form-group">
 				</div>
 
-				<h4 class="modal-title">Map To</h4>
+				<h4 class="modal-title"><%= t :map_to%></h4>
 				<div class="form-group" >
 					<div class="radio">
-					  <label><input type="radio" class = "param" param = "map_function" param_value = "count" name="radio_strategy" checked>Items Count</label>
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "count" name="radio_strategy" checked><%= t :items_count%></label>
 					</div>
 					<div class="radio">
-					  <label><input type="radio" class = "param" param = "map_function" param_value = "sum" name="radio_strategy" checked>Sum</label>
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "sum" name="radio_strategy" checked><%= t :sum%></label>
 					</div>
 					<div class="radio">
-					  <label><input type="radio" class = "param" param = "map_function" param_value = "avg" name="radio_strategy">Average</label>
+					  <label><input type="radio" class = "param" param = "map_function" param_value = "avg" name="radio_strategy"><%= t :avg%></label>
 					</div>
 					
 					<!-- <div class="radio">
@@ -41,7 +41,7 @@
 				</div>
 
 				 <div class="checkbox">
-				   <label><input type="checkbox" class="param" id="preview">Show Preview</label>
+				   <label><input type="checkbox" class="param" id="preview"><%= t :show_preview%></label>
 				 </div>
 
 				
@@ -82,9 +82,9 @@
 				</div>
 			</div>
 		   <div class="modal-footer">
-		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal">Go</button>
-			   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal">Clear</button>
-			   <button type="button" id="map_help_btn" class="btn btn-default help_btn" operation="map">Help</button>
+		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal"><%= t :go%></button>
+			   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal"><%= t :clear%></button>
+			   <button type="button" id="map_help_btn" class="btn btn-default help_btn" operation="map"><%= t :help%></button>
 	       </div>
 
 			<!-- /.modal-content -->
