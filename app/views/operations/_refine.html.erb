@@ -6,6 +6,7 @@
                  <h4 class="modal-title"><%=t :select_filters%></h4>
             </div>
            <div class="modal-body">
+           	<form class="form-horizontal">
  				 <div class="form-group position">
 					 <label><%=t :set_level_filter%> </label>
  	 				 <div class="radio">
@@ -39,6 +40,7 @@
 
       			 <div class="filters" style="padding: 8px;">
       			 </div>
+      			</form>
 				<form id= "define_filter_form" class="form-horizontal">
 				 <!-- <div class="form-group" id="relation_input" >
 				   <label for="relation" class="control-label col-sm-2">Relation</label>
@@ -101,7 +103,7 @@
 						<textarea class="form-control" rows="5" id="filter_code_area"></textarea>
 				    </div>
 				  </div>
-				</form>
+			</form>
 				<div class="form-group"> 
 				    <div class="col-sm-offset-2 col-sm-10">
 				      <button type="button" id="button_add_filter" class="btn btn-default"><%=t :add_filter%></button>
