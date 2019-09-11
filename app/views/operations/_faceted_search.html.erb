@@ -1,0 +1,65 @@
+<div class="modal fade" id="facetedSearchModal"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+           <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                 <h4 class="modal-title"><%=t :select_filters%></h4>
+            </div>
+           <div class="modal-body">
+           	<form class="form-horizontal">
+ 				 <div class="form-group position">
+					 <label><%=t :set_level_filter%> </label>
+ 	 				 <div class="radio">
+					   <label><input type="radio" id="domain" class = "param position_radio_input" param = "position" param_value = "1"><span>Level 1</span></label>
+					 </div>
+				 </div>
+			 	 <div class="checkbox" style="display: none;">
+				   <label><input type="checkbox" class="relation_tree_activator param" id="relation_radio"  value = "relation_compare" name="radio_strategy"><%=t :filter_related_items%></label>
+				 </div>
+      			 <div class="filters" style="padding: 8px; display: inline-flex;">
+
+      			 </div>
+
+				<div class = "facets_area form-group">
+				</div>
+				<div class = "relation_area form-group">
+				</div>
+      			</form>
+				
+				<form id= "define_filter_form" class="form-horizontal">
+				 <!-- <div class="form-group" id="relation_input" >
+				   <label for="relation" class="control-label col-sm-2">Relation</label>
+				   <div class="col-sm-10">
+					   <input type="text" class="form-control" id="input_relation">
+				   </div>
+				 </div> -->
+					
+				  <div class="form-group">
+				    <label class="control-label col-sm-2" for="email"><%=t :choose_filter_operator%>:</label>
+				    <div class="col-sm-10">
+					   <select class="form-control" id="select_comparator">
+						   <option value="=">=</option>
+					       <option value="<=">&le;</option>
+					       <option value="<"><</option>
+					       <option value=">">></option>
+						   <option value=">=">&ge;</option>
+						   
+					   </select>
+				    </div>
+				  </div>
+				</form>
+
+				<div id = "refine_help" class="help">
+				</div>
+			</div>
+ 		   	<div class="modal-footer">
+ 		       <button type="button" id="exec" class="exec btn btn-default" data-dismiss="modal"><%= t :go%></button>
+			   <button type="button" id="clear" class="clear btn btn-default" data-dismiss="modal"><%= t :clear%></button>
+			   <button type="button" id="refine_help_btn" class="btn btn-default help_btn" operation="refine"><%= t :help%></button>
+ 	       </div>
+				
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

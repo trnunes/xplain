@@ -36,7 +36,6 @@ XPLAIN.AjaxHelper = {
 			
 			success: function(data, status, jqrequest){
 				
-
 				$('#loadingtext').innerHTML = loading_text;
 	            
 	            for(var i in data.error)

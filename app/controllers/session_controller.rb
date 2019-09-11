@@ -8,7 +8,7 @@ class SessionController < ApplicationController
       session[:current_session] = Xplain::Session.create(title: "Unnamed").id
     end
   end
-  
+    
   def load_last_active_session
     current_session = Xplain::Session.load(session[:current_session])
     
@@ -30,6 +30,128 @@ class SessionController < ApplicationController
   def index
   end
   
+  def apply_facet
+    current_session = Xplain::Session.load(session[:current_session])
+    set = Xplain::ResultSet.load(params[:id])
+    begin
+    filtered_set = current_session.execute(eval("set.refine{#{params[:filter]}}"))
+      
+    relations_set = current_session.execute(filtered_set.pivot{relation "relations"}) 
+    Xplain::Visualization.current_profile.set_view_properties(relations_set.nodes)
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    end
+
+    respond_to do |format|
+      format.json {render :json => generate_jbuilder(relations_set, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
+    end
+  end
+
+  def render_faceted_search
+
+    current_session = Xplain::Session.load(session[:current_session])
+    set = Xplain::ResultSet.load(params[:id])
+    
+    if params[:relation]
+      inverse = false
+      if params[:inverse]
+        inverse = eval(params[:inverse])
+      end
+      begin
+        relation = Xplain::SchemaRelation.new(id: params[:relation], inverse: inverse)
+        grouped_set =  current_session.execute(set.group{by_image relation})
+        
+        mapped_set = current_session.execute(grouped_set.aggregate{count})
+        
+        facets = []
+        
+        ranked_set = current_session.execute(mapped_set.rank(order: :desc, level: 2){by_level{}})
+        facets_json = {
+          source_set: set.id,
+          facet_group: to_json(relation),
+          facets: ranked_set.nodes.map{|fnode| to_json(fnode.item).merge({size: fnode.children[0].item.value})} 
+        }
+      rescue Exception=>e
+        puts e.message
+        puts e.backtrace
+      end
+      
+      respond_to do |format|
+        format.json{render json: facets_json}
+      end
+    end
+  end
+
+=begin  def render_faceted_search
+
+    current_session = Xplain::Session.load(session[:current_session])
+    set = Xplain::ResultSet.load(params[:id])
+    
+    
+    
+    grouped_sets = []
+    if params[:relation]
+      inverse = false
+      if params[:inverse]
+        inverse = eval(params[:inverse])
+      end
+      
+      relation = Xplain::SchemaRelation.new(id: params[:relation], inverse: inverse)
+      grouped_sets << current_session.execute(set.group{by_image relation})
+    else
+      pivot_rs = current_session.execute(set.pivot{relation "relations"})
+      grouped_sets = pivot_rs.nodes.map{|item_rel| current_session.execute(set.group{by_image item_rel.item})}
+    end
+
+    if params[:filter]
+      grouped_sets = grouped_sets.map do |gset|
+        current_session.execute(eval("gset.refine{#{params[:filter]}}"))
+      end
+    end
+    mapped_sets = []
+    grouped_sets.each{|gset| mapped_sets << current_session.execute(gset.aggregate{count})}
+    
+    facets = []
+    for i in (0..mapped_sets.size-1) do
+      mapped_set = mapped_sets[i]
+      ranked_set = current_session.execute(mapped_set.rank(order: :desc, level: 2){by_level{}})
+      if !params[:relation]
+        relation = pivot_rs.nodes[i].item
+      end
+      
+      facets << [relation, ranked_set]
+    end
+    
+    facets_json = facets.map do |facet|
+        {
+          source_set: set.id,
+          facet_group: to_json(facet[0]),
+          facets: facet[1].nodes.map{|fnode| to_json(fnode.item).merge({size: fnode.children[0].item.value})} 
+        }
+    end
+
+    respond_to do |format|
+      format.json{render json: facets_json}
+    end
+
+  end
+=end
+  def to_json(item)
+    item_json = {
+      text: item.text,
+      type: item.class.name,
+    }
+    if !item.is_a? Xplain::Literal
+      item_json[:id] = item.id
+    else
+      item_json[:id] = item.text,
+      item_json[:datatype] = item.datatype
+    end
+    item_json
+
+  end
+
   def render_operation
     
     respond_to do |format|
@@ -83,7 +205,7 @@ class SessionController < ApplicationController
   
   
   def execute
-  Xplain::Visualization.current_profile.text_for "sparpro:isHeldBy", "autores"
+    Xplain::Visualization.current_profile.text_for "sparpro:isHeldBy", "autores"
     start = Time.now
     begin
       expression = params[:exp].gsub("%23", "#")

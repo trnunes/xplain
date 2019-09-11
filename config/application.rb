@@ -30,9 +30,9 @@ module Wxplain
     
     #Change this to point to other endpoints
     session_graph_url = "http://localhost:3002/blazegraph/namespace/kb/sparql"    
-    graph_url = "http://opencitations.net/sparql"
+    # graph_url = "http://opencitations.net/sparql"
 #     graph_url = "http://192.168.100.29:3001/blazegraph/namespace/kb/sparql"
-    # graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
+    graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
 
     # setting the blazegraph server as the default data server for the exploration tasks
     Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
