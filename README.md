@@ -2,96 +2,35 @@
 
 Xplain is the a highly expressive exploration environment that generalizes the majority of the state-of-the-art environments. We designed Xplain on the top of the most complete framework of data processing operations targeting exploration tasks.
 
-## Getting Started
-### Ubuntu Installation
-1. You must have git installed
-2. Install java runtime environment. Open the terminal and type the following commands:
-2.1. `sudo apt-get update`
-2.2.`sudo apt-get install openjdk-8-jre`
+## Installation
+### Prerequisites
+1. Java JDK and JAVA_HOME properly set
+2. Jruby 9.1.13.0
+3. Rails 4.2.*
+3. Bundler 1.16.2
 
-2. Create your feature branch: `git checkout -b my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request :D
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+### Ubuntu Installation
+You must have git installed
+#### Install Java 
+1. Open the terminal and type the following commands:
+2. `sudo apt-get update`
+3.`sudo apt-get install openjdk-8-jre`
+4. Open /etc/environment in any text editor like nano or gedit and add the following line `JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"`
+5. In terminal: `source /etc/environment` and `echo $JAVA_HOME` to verify if JAVA_HOME has been properly set.
+#### Install Jruby and Bundler
+We recomend the Jruby-9.1.13.0, which is the version we used in Xplain's development environment.
+
+We strongly recomend installing jruby through ruby version management tool rvm. For installing the rvm, follow the steps in https://github.com/rvm/ubuntu_rvm. However, you can also download the binaries and install manually (see https://github.com/jruby/jruby/wiki/GettingStarted). 
+
+Once Jruby is set up, open terminal and install bundler: ` jgem install bundler -v 1.16.2`
+### Setting up Xplain
+Execute the following steps in terminal:
+1. `git clone https://github.com/trnunes/xplain.git`
+2. `cd <cloned-xplain-dir>`
+3. `git fetch`
+4. `bundle install --local`
+5. run xplain with: `jruby -S -J-Xmx4g bin/rails s`
+6. access http://localhost:3000
+
 
 ### Windows Installation (TODO)
-### Prerequisites
-
-What things you need to install the software and how to install them
-
-```
-Give examples
-```
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
