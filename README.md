@@ -1,11 +1,21 @@
-# Project Title
+# Xplain Exploration Environment
 
-One Paragraph of project description goes here
+Xplain is the a highly expressive exploration environment that generalizes the majority of the state-of-the-art environments. We designed Xplain on the top of the most complete framework of data processing operations targeting exploration tasks.
 
 ## Getting Started
+### Ubuntu Installation
+1. You must have git installed
+2. Install java runtime environment. Open the terminal and type the following commands:
+2.1. `sudo apt-get update`
+2.2.`sudo apt-get install openjdk-8-jre`
 
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request :D
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
+### Windows Installation (TODO)
 ### Prerequisites
 
 What things you need to install the software and how to install them
