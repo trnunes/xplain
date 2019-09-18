@@ -2,6 +2,10 @@
 
 Xplain is the a highly expressive exploration environment that generalizes the majority of the state-of-the-art environments. We designed Xplain on the top of the most complete framework of data processing operations targeting exploration tasks.
 
+## Demonstration Videos
+* Demo 1: https://youtu.be/bG9qYv5mvU0
+* Demo 2: https://youtu.be/VkzE2ONZNWA
+
 ## Installation
 ### Prerequisites
 1. Java JDK and JAVA_HOME properly set
