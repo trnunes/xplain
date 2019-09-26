@@ -1,0 +1,19 @@
+<https://w3id.org/oc/corpus/br/6720484> <http://purl.org/dc/terms/title> "\"Correlações entre achados laboratoriais e doença hepática gordurosa não alcoólica em pacientes portadores de obesidade mórbida\""^^"http://www.w3.org/2001/XMLSchema#string".
+<https://w3id.org/oc/corpus/br/7259728> <http://purl.org/dc/terms/title> "\"Prevalência de sobrepeso e obesidade em crianças de escolas públicas e privadas do ensino fundamental da cidade de Franca-SP e alguns fatores de risco associados\""^^"http://www.w3.org/2001/XMLSchema#string".
+<https://w3id.org/oc/corpus/br/6720484> <http://prismstandard.org/namespaces/basic/2.0/publicationDate> "None"^^"http://www.w3.org/2001/XMLSchema#gYear".
+<https://w3id.org/oc/corpus/br/7259728> <http://prismstandard.org/namespaces/basic/2.0/publicationDate> "None"^^"http://www.w3.org/2001/XMLSchema#gYear".
+<https://w3id.org/oc/corpus/br/6720484> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/spar/fabio/Expression>.
+<https://w3id.org/oc/corpus/br/6720484> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/spar/fabio/Thesis>.
+<https://w3id.org/oc/corpus/br/7259728> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/spar/fabio/Expression>.
+<https://w3id.org/oc/corpus/br/7259728> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/spar/fabio/Thesis>.
+<https://w3id.org/oc/corpus/br/6720484> <http://www.w3.org/2000/01/rdf-schema#label> "bibliographic resource 6720484 [br/6720484]"^^"http://www.w3.org/2001/XMLSchema#string".
+<https://w3id.org/oc/corpus/br/7259728> <http://www.w3.org/2000/01/rdf-schema#label> "bibliographic resource 7259728 [br/7259728]"^^"http://www.w3.org/2001/XMLSchema#string".
+<https://w3id.org/oc/corpus/br/6720484> <http://purl.org/spar/datacite/hasIdentifier> <https://w3id.org/oc/corpus/id/13800632>.
+<https://w3id.org/oc/corpus/br/6720484> <http://purl.org/spar/datacite/hasIdentifier> <https://w3id.org/oc/corpus/id/13800633>.
+<https://w3id.org/oc/corpus/br/6720484> <http://purl.org/spar/datacite/hasIdentifier> <https://w3id.org/oc/corpus/id/13800634>.
+<https://w3id.org/oc/corpus/br/7259728> <http://purl.org/spar/datacite/hasIdentifier> <https://w3id.org/oc/corpus/id/14913594>.
+<https://w3id.org/oc/corpus/br/7259728> <http://purl.org/spar/datacite/hasIdentifier> <https://w3id.org/oc/corpus/id/14913595>.
+<https://w3id.org/oc/corpus/br/6720484> <http://purl.org/spar/pro/isDocumentContextFor> <https://w3id.org/oc/corpus/ar/26254553>.
+<https://w3id.org/oc/corpus/br/6720484> <http://purl.org/spar/pro/isDocumentContextFor> <https://w3id.org/oc/corpus/ar/26254554>.
+<https://w3id.org/oc/corpus/br/7259728> <http://purl.org/spar/pro/isDocumentContextFor> <https://w3id.org/oc/corpus/ar/28252674>.
+<https://w3id.org/oc/corpus/br/7259728> <http://purl.org/spar/pro/isDocumentContextFor> <https://w3id.org/oc/corpus/ar/28252675>.

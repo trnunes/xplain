@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   get 'session/save_session'
   get 'session/close'
   get 'session/delete_set'
+  get 'session/export'
   get 'session/execute_update'
   get 'session/load_all_resultsets'
   get 'session/domain'

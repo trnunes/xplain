@@ -317,6 +317,16 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
         });
     });
 
+    $('._export').unbind().click(function(){
+    	var set_id = $('.SELECTED.set').attr("data-id");
+    	debugger
+    	XPLAIN.AjaxHelper.get("/session/export?id="+set_id, "json", function(data){
+    		alert(data);
+    		debugger;
+    	});	
+
+    });
+
     $('._equal').unbind().each(function(item){
 		
         $(this).on("click", function(){

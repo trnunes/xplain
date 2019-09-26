@@ -25,6 +25,7 @@ pt:
   group: "Agrupar"
   map: "Transformar"
   refine: "Filtrar"
+  facets: "Busca Facetada"
   clear: "Limpar"
   delete: "Remover"
   main_menu: "Menu"

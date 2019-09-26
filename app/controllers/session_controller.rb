@@ -34,9 +34,9 @@ class SessionController < ApplicationController
     current_session = Xplain::Session.load(session[:current_session])
     set = Xplain::ResultSet.load(params[:id])
     begin
-    filtered_set = current_session.execute(eval("set.refine{#{params[:filter]}}"))
+    filtered_set = current_session.execute(eval("set.refine(visual: true){#{params[:filter]}}"))
       
-    relations_set = current_session.execute(filtered_set.pivot{relation "relations"}) 
+    relations_set = current_session.execute(filtered_set.pivot(visual: true){relation "relations"}) 
     Xplain::Visualization.current_profile.set_view_properties(relations_set.nodes)
     rescue Exception => e
       puts e.message
@@ -45,6 +45,41 @@ class SessionController < ApplicationController
 
     respond_to do |format|
       format.json {render :json => generate_jbuilder(relations_set, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
+    end
+  end
+
+  def export
+    triples = ""
+    current_session = Xplain::Session.load(session[:current_session])
+    result_set = Xplain::ResultSet.load(params[:id])
+    relations_set = current_session.execute(result_set.pivot{relation "relations"})    
+    relations_map = []
+    relations_set.nodes.map do |item_rel| 
+      if !item_rel.item.inverse?
+        pivoted_set = current_session.execute(result_set.pivot(group_by_domain: true){relation item_rel.item})
+        relations_map << [item_rel.item, pivoted_set]
+      end
+    end
+
+    relations_map.each do |r_map|
+      
+      predicate = "<#{Xplain::Namespace.expand_uri(r_map[0].id)}>"
+      r_map[1].nodes.each do |node|
+        subject = "<#{Xplain::Namespace.expand_uri(node.item.id)}>"
+
+        node.children.each do |cnode|
+          if cnode.item.is_a? Xplain::Literal
+            object = "\"#{cnode.item.text.gsub('"', '\"')}\"^^\"#{Xplain::Namespace.expand_uri(cnode.item.datatype)}\""
+          else
+            object = "<#{Xplain::Namespace.expand_uri(cnode.item.id)}>"
+          end
+          triples << "#{subject} #{predicate} #{object}.\n"
+        end
+      end      
+    end
+    File.open("rdf_export.txt", 'w'){|f| f.write(triples)}
+    respond_to do |format|
+      format.any {render :text => triples}
     end
   end
 
@@ -60,13 +95,13 @@ class SessionController < ApplicationController
       end
       begin
         relation = Xplain::SchemaRelation.new(id: params[:relation], inverse: inverse)
-        grouped_set =  current_session.execute(set.group{by_image relation})
+        grouped_set =  current_session.execute(set.group(visual: true){by_image relation})
         
-        mapped_set = current_session.execute(grouped_set.aggregate{count})
+        mapped_set = current_session.execute(grouped_set.aggregate(visual: true){count})
         
         facets = []
         
-        ranked_set = current_session.execute(mapped_set.rank(order: :desc, level: 2){by_level{}})
+        ranked_set = current_session.execute(mapped_set.rank(visual: true, order: :desc, level: 2){by_level{}})
         facets_json = {
           source_set: set.id,
           facet_group: to_json(relation),
@@ -225,6 +260,7 @@ class SessionController < ApplicationController
       puts e.backtrace
     end
     Xplain::Visualization.current_profile.set_view_properties(@resourceset.nodes)
+    
     respond_to do |format|
       format.js
       format.json {render :json => generate_jbuilder(@resourceset, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}

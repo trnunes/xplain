@@ -995,7 +995,7 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 	},
 	this.addFacetRelations = function(){
 
-		XPLAIN.AjaxHelper.get("/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot{relation \"relations\"}", "json", function(data){
+		XPLAIN.AjaxHelper.get("/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot{visual: true, relation \"relations\"}", "json", function(data){
 
 			var $jstreeListView	= $("#facetedSearchModal .facets_area");
 			debugger;
