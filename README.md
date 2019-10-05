@@ -8,7 +8,7 @@ Xplain is the a highly expressive exploration environment that generalizes the m
 
 ## Docker Installation
 1. You must have docker installed. Refer to https://docs.docker.com/install/
-2. Pull the container: `docker pull trnunes/xplain:0.0.1`
+2. Pull the container: `sudo docker pull trnunes/xplain:0.0.1`
 3. `mkdir xplain`
 4. Download the docker-compose.yml at https://github.com/trnunes/xplain/blob/faceted_search/docker-compose.yml
 5. Move the docker-compose.yml to your xplain dir
