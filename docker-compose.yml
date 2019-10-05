@@ -1,0 +1,24 @@
+version: "3"
+services:
+  web:
+    # replace username/repo:tag with your name and image details
+    image: trnunes/xplain:0.0.1
+    command: bin/rails server --port 3000 --binding 0.0.0.0
+    deploy:
+      replicas: 1      
+      restart_policy:
+        condition: on-failure
+
+    network_mode: "host"
+    ports:
+      - "3000:3000"
+    networks:
+      - webnet
+  blazegraph:
+    image: lyrasis/blazegraph:2.1.5        
+    ports:
+      - "8889:8080"
+      - "8080:8889"
+    network_mode: "host"
+networks:
+  webnet:
