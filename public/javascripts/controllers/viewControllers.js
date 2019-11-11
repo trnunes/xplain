@@ -296,9 +296,9 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.loadRelationsTree =
 	if (level) {
 		levelExpr = "level: "+level;
 	}
-	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(limit:50, visual: true, "+levelExpr+"){ relation \"relations\"}"
-	
-	this.tree.loadData(expression);
+	var expression = "Xplain::ResultSet.load(\""+this.setId+"\").pivot(limit: 50, visual: true, "+levelExpr+"){ relation \"relations\"}"
+	debugger
+	this.tree.loadData(expression, false);
 
 	this.tree.onBranchSelected(this.handleBranchSelected);
 	this.tree.onBranchOpened(this.handleBranchOpened);
@@ -638,7 +638,7 @@ XPLAIN.controllers.PivotController = function(setId){
 	},
 
 	this.beforePivotBranchSelected = function(pivot) {
-		pivot.limit = 15;
+		pivot.limit = 50;
 	},
 	
 	this.buildOperation = function(){
@@ -765,7 +765,7 @@ XPLAIN.controllers.MapController = function(setId){
 		
 	},
 	this.beforePivotBranchSelected = function(pivot) {
-		pivot.limit = 15;
+		pivot.limit = 50;
 	},
 
 	
@@ -995,7 +995,7 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 	},
 	this.addFacetRelations = function(){
 
-		XPLAIN.AjaxHelper.get("/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot{visual: true, relation \"relations\"}", "json", function(data){
+		XPLAIN.AjaxHelper.get("/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot(visual: true){relation \"relations\"}", "json", function(data){
 
 			var $jstreeListView	= $("#facetedSearchModal .facets_area");
 			debugger;

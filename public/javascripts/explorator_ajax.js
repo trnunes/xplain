@@ -13,7 +13,7 @@ XPLAIN.AjaxHelper = {
 		}
 		return url;
 	},
-	execute: function(expression, successFunction, format, page) {
+	execute: function(expression, successFunction, format, page, should_paginate) {
 		
 		var executeOperationUrl = "/session/execute";
 
@@ -23,6 +23,10 @@ XPLAIN.AjaxHelper = {
 		if(page){
 			executeOperationUrl += "&page=" + page;
 		}
+		debugger
+		
+		executeOperationUrl += "&should_paginate=" + should_paginate;
+		
 		XPLAIN.AjaxHelper.post(executeOperationUrl, format, successFunction);
 	},
 	

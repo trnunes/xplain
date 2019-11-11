@@ -272,11 +272,38 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function()
 	}
 }
 
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
+	var thisWidget= this
+	var inputValues = $("#seachbykeyword").val();
+	
+
+	if (inputValues === '') {
+		$("#seachbykeyword").fadeOut(50).promise().done(function () {
+	        $(this).toggleClass("blink-class").fadeIn(50);
+	    });
+
+		alert("Please, type the URI to derreferentiate!");
+		return this;
+	} else {
+
+		var expression =  "Xplain::ExecuteRuby.new(code: 'Xplain::ResultSet.new(nodes: [Xplain::Entity.new(\""+inputValues+"\")])')";		
+		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
+			
+			
+			thisWidget.state.addSetFromJson(data);
+		});
+	}
+}
+
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = function(){
 	var thisWidget = this;
     $('#search').unbind().click(function(){
         thisWidget.ajax_keyword_search();
+    });  
+	$('#derref').unbind().click(function(){
+        thisWidget.ajax_derref();
     });    
+  
 
 	$("#seachbykeyword").unbind().keyup(function(e){
 	
@@ -321,8 +348,18 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
     	var set_id = $('.SELECTED.set').attr("data-id");
     	debugger
     	XPLAIN.AjaxHelper.get("/session/export?id="+set_id, "json", function(data){
-    		alert(data);
-    		debugger;
+			var blob = new Blob([data], { type: 'text/plain' });
+			var link = document.createElement('a');
+			link.href = window.URL.createObjectURL(blob);
+			link.download = "export.txt";
+
+			document.body.appendChild(link);
+
+			link.click();
+
+			document.body.removeChild(link);
+    		
+    		
     	});	
 
     });

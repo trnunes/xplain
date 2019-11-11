@@ -33,6 +33,7 @@ class SessionController < ApplicationController
   def apply_facet
     current_session = Xplain::Session.load(session[:current_session])
     set = Xplain::ResultSet.load(params[:id])
+
     begin
     filtered_set = current_session.execute(eval("set.refine(visual: true){#{params[:filter]}}"))
       
@@ -69,7 +70,7 @@ class SessionController < ApplicationController
 
         node.children.each do |cnode|
           if cnode.item.is_a? Xplain::Literal
-            object = "\"#{cnode.item.text.gsub('"', '\"')}\"^^\"#{Xplain::Namespace.expand_uri(cnode.item.datatype)}\""
+            object = "\"#{cnode.item.text.gsub('"', '\"')}\"^^<#{cnode.item.datatype}>"
           else
             object = "<#{Xplain::Namespace.expand_uri(cnode.item.id)}>"
           end
@@ -77,7 +78,7 @@ class SessionController < ApplicationController
         end
       end      
     end
-    File.open("rdf_export.txt", 'w'){|f| f.write(triples)}
+    #File.open("rdf_export.txt", 'a'){|f| f.write(triples)}
     respond_to do |format|
       format.any {render :text => triples}
     end
@@ -240,8 +241,9 @@ class SessionController < ApplicationController
   
   
   def execute
-    Xplain::Visualization.current_profile.text_for "sparpro:isHeldBy", "autores"
+    
     start = Time.now
+    should_paginate = params[:should_paginate] != "false"
     begin
       expression = params[:exp].gsub("%23", "#")
       current_session = Xplain::Session.load(session[:current_session])
@@ -263,7 +265,7 @@ class SessionController < ApplicationController
     
     respond_to do |format|
       format.js
-      format.json {render :json => generate_jbuilder(@resourceset, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
+      format.json {render :json => generate_jbuilder(@resourceset, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb'), 'DefaultSetWidget', 1, should_paginate).target!}
       format.any {render :text => "SUCCESSFUL"}
       finish = Time.now 
       puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"
@@ -540,8 +542,13 @@ class SessionController < ApplicationController
     end
   end
   
-  def generate_jbuilder(result_set, template_html, component_name = 'DefaultSetWidget', page = 1)
-    total_by_page = 20
+  def generate_jbuilder(result_set, template_html, component_name = 'DefaultSetWidget', page = 1, should_paginate=true)
+    if should_paginate
+      total_by_page = 20
+    else
+      total_by_page = result_set.size
+    end
+    puts "TOTAL BY PAGE: #{total_by_page}"
     json = Jbuilder.new do |set_json|
       set_json.id result_set.id
       set_json.title result_set.title

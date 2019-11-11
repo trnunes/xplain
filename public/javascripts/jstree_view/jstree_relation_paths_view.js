@@ -202,13 +202,14 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		
 	},
 	
-	this.loadData = function(expression){
+	this.loadData = function(expression, should_paginate){
 		if (!this.$treeDiv.hasClass("jstree")) {
 		  this.createTree();
 		}
+		debugger
 		XPLAIN.AjaxHelper.execute(expression, function(data){
 			this_projection.populate(data.extension, data.id, data.resultedFrom);
-		});
+		},"json",1,false);
 		
 		
 	},

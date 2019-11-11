@@ -37,13 +37,15 @@ module Wxplain
     ip_str = ip_address.join(".") << ".1"
 
     session_graph_url = "http://#{ip_str}:8889/bigdata/namespace/kb/sparql"
-    puts "IP ADDRESS: " << ip_str
+    puts "IP ADDRESS: " << ip_str   
+    #graph_url = "http://dsbox02.isi.edu:8888/bigdata/namespace/wdq/sparql"
     graph_url = "http://opencitations.net/sparql"
 #     graph_url = "http://192.168.100.29:3001/blazegraph/namespace/kb/sparql"
     #graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
 
     # setting the blazegraph server as the default data server for the exploration tasks
     Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
+    #Xplain.set_default_server class: Xplain::RDF::DataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
     
     Xplain.cache_results = true
     # setting the session information repository
@@ -69,6 +71,10 @@ module Wxplain
     Xplain::Namespace.new("sparpro", "http://purl.org/spar/pro/")
     Xplain::Namespace.new("frbr", "http://purl.org/vocab/frbr/core#")
     Xplain::Namespace.new("w3iont", "https://w3id.org/oc/ontology/")
+    Xplain::Namespace.new("schema", "http://schema.org/")
+    Xplain::Namespace.new("skos", "http://www.w3.org/2004/02/skos/core#")
+    Xplain::Namespace.new("wikidata", "http://www.wikidata.org/")
+    Xplain::Namespace.new("wikibase", "http://wikiba.se/ontology#")
     
     #Visualization properties config
     module Xplain::Visualization
@@ -82,18 +88,7 @@ module Wxplain
      
      #--------OPENCITATIONS LABEL PROPERTIES---------------
      
-     current_profile.label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "dcterms:title", "c4o:hasContent", "rdfs:label"
-     current_profile.label_for_type "http://purl.org/spar/fabio/Expression", "dcterms:title"
-     current_profile.label_for_type "http://purl.org/spar/fabio/JournalArticle", "dcterms:title"
-     current_profile.label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
-     current_profile.label_for_type "http://purl.org/spar/biro/BibliographicReference", "http://purl.org/spar/c4o/hasContent"
-     current_profile.label_for_type "http://purl.org/spar/fabio/Book", "dcterms:title"
-
-     current_profile.label_for_type "http://purl.org/spar/fabio/BookSeries", "dcterms:title"
-     current_profile.label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "dcterms:title"
-     current_profile.text_for "biro:references", "referências"
-     current_profile.text_for "c4o:hasContent", "conteúdo"
-     current_profile.text_for "cito:cites", "cita"
+=begin     
      current_profile.text_for "foaf:name", "nome"
      current_profile.text_for "foaf:givenName", "nome"
      current_profile.text_for "foaf:familyName", "sobrenome"
@@ -134,8 +129,73 @@ module Wxplain
      
      
      current_profile.inverse_relation_text_for "w3iont:hasNext", "contexto anterior"
+     current_profile.label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "dcterms:title", "c4o:hasContent", "rdfs:label", "schema:name", "schema:keywords", "schema:text"
+     current_profile.label_for_type "http://purl.org/spar/fabio/Expression", "dcterms:title"
+     current_profile.label_for_type "http://purl.org/spar/fabio/JournalArticle", "dcterms:title"
+     current_profile.label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
+     current_profile.label_for_type "http://purl.org/spar/biro/BibliographicReference", "http://purl.org/spar/c4o/hasContent"
+     current_profile.label_for_type "http://purl.org/spar/fabio/Book", "dcterms:title"
+
+     current_profile.label_for_type "http://purl.org/spar/fabio/BookSeries", "dcterms:title"
+     current_profile.label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "dcterms:title"
+     current_profile.text_for "biro:references", "referências"
+     current_profile.text_for "c4o:hasContent", "conteúdo"
+     current_profile.text_for "cito:cites", "cita"
+=end
+     current_profile.text_for "foaf:name", "name"
+     current_profile.text_for "foaf:givenName", "first name"
+     current_profile.text_for "foaf:familyName", "last name"
+     current_profile.text_for "prismstandard:startingPage", "starting page"
+     current_profile.text_for "prismstandard:endingPage", "ending page"
+     current_profile.inverse_relation_text_for "cito:cites", "cited by"
+     current_profile.text_for "frbr:part", "has part"
+     current_profile.text_for "frbr:partOf", "is part of"
+     current_profile.text_for "frbr:embodiment", "has format"
+     current_profile.text_for "rdf:type", "types"
+     current_profile.text_for "rdfs:label", "labels"
+     current_profile.text_for "spardatacite:hasIdentifier", "ids"
+     current_profile.text_for "sparpro:isDocumentContextFor", "context for"
+     current_profile.text_for "sparpro:isHeldBy", "authors/editors"
+     current_profile.text_for "sparpro:withRole", "role"
+     current_profile.text_for "dcterms:title", "title"
+     current_profile.text_for "w3iont:hasNext", "next context"
+     current_profile.text_for "fabio:hasPublicationYear", "publication year"
+     current_profile.text_for "fabio:Expression", "Cited Document"
+     current_profile.text_for "fabio:ExpressionCollection", "Citation Sets"
+     current_profile.text_for "fabio:JournalArticle", "Journal Articles"
+     current_profile.text_for "fabio:JournalIssue", "Edition"
+     current_profile.text_for "fabio:ProceedingsPaper", "Proceedings Paper"
+     current_profile.text_for "fabio:AcademicProceedings", "Proceedings"
+     current_profile.text_for "fabio:ReportDocument", "Report"
+     current_profile.text_for "fabio:Thesis", "Thesis"
+     current_profile.text_for "fabio:Book", "Book"
+     current_profile.text_for "fabio:BookSeries", "Book Set"
+     current_profile.text_for "fabio:BookSet", "Book Box"
+     current_profile.text_for "fabio:Series", "Series"
+     current_profile.text_for "fabio:Manifestation", "Format"
+     current_profile.text_for "fabio:BookChapter", "Book Chapter"
+     current_profile.text_for "fabio:DataFile", "Data File"
+     current_profile.text_for "fabio:Journal", "Journal"
+     current_profile.text_for "fabio:JournalVolume", "Volume"
+     
+     current_profile.text_for "biro:BibliographicReference", "Bibliographic Reference"
+     
+     
+     current_profile.inverse_relation_text_for "w3iont:hasNext", "previous context"
+     current_profile.label_for_type "http://www.w3.org/2000/01/rdf-schema#Resource", "dcterms:title", "c4o:hasContent", "rdfs:label", "schema:name", "schema:keywords", "schema:text"
+     current_profile.label_for_type "http://purl.org/spar/fabio/Expression", "dcterms:title"
+     current_profile.label_for_type "http://purl.org/spar/fabio/JournalArticle", "dcterms:title"
+     current_profile.label_for_type "foaf:Agent", "foaf:name", "foaf:givenName"
+     current_profile.label_for_type "http://purl.org/spar/biro/BibliographicReference", "http://purl.org/spar/c4o/hasContent"
+     current_profile.label_for_type "http://purl.org/spar/fabio/Book", "dcterms:title"
+
+     current_profile.label_for_type "http://purl.org/spar/fabio/BookSeries", "dcterms:title"
+     current_profile.label_for_type "http://purl.org/spar/fabio/ProceedingsPaper", "dcterms:title"
+     current_profile.text_for "biro:references", "references"
+     current_profile.text_for "c4o:hasContent", "content"
+     current_profile.text_for "cito:cites", "cites"
      
     end
-    Xplain::SchemaRelation.inverse_suffix = "de"
+    Xplain::SchemaRelation.inverse_suffix = "of"
   end
 end
