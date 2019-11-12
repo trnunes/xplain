@@ -281,6 +281,7 @@ class SessionController < ApplicationController
     current_session.save
     respond_to do |format|
       begin
+        
         current_session.set_server params
         format.any {render :text => "SUCCESSFUL"}
       rescue RepositoryConnectionError => e

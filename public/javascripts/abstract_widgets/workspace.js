@@ -76,19 +76,20 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	});
 
 	$("#all_relations").unbind().click(function(){
-	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank"
+	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!')"
         XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
 			thisWidget.state.addSetFromJson(data);
 		});
 	});
     
     $('#set_endpoint_btn').click(function () {
-        var endpoint_url = $('#input_url').val();
+        var endpoint_url = $('#input_url').val().trim();
+        var named_graph_uri = $('#ngraph_uri').val().trim();
         var http_method = $("#endpoint_modal [name=http-method]:checked").val();
-        var max_items_per_query = $("#endpoint_modal #max_items").val();
+        var max_items_per_query = $("#endpoint_modal #max_items").val().trim();
         
         // mounting endpoint config url
-        var url = "/session/set_endpoint?method="+http_method+"&items_limit=" + max_items_per_query + "&graph=" +  encodeURIComponent(endpoint_url);
+        var url = "/session/set_endpoint?method="+http_method+"&items_limit=" + max_items_per_query + "&graph=" +  encodeURIComponent(endpoint_url)+ "&named_graph=" +  encodeURIComponent(named_graph_uri);
 
         if ($("#endpoint_modal #blazegraph_search_idx:checked").size()){
             url += "&class=BlazegraphDataServer";            
@@ -257,7 +258,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.create_session = function(){
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
-	var inputValues = $("#seachbykeyword").val();
+	var inputValues = $("#seachbykeyword").val().trim();
 	
 
 	if (inputValues === '') {
@@ -274,7 +275,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function()
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
 	var thisWidget= this
-	var inputValues = $("#seachbykeyword").val();
+	var inputValues = $("#seachbykeyword").val().trim();
 	
 
 	if (inputValues === '') {
@@ -510,7 +511,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 	};
 
 	var validate_ns = function($ns_row){
-		return ($ns_row.find(".ns-prefix").val() && $ns_row.find(".ns-uri").val());
+		return ($ns_row.find(".ns-prefix").val().trim() && $ns_row.find(".ns-uri").val().tim());
 	};
 
 	var save_namespace_list = function(){
@@ -518,8 +519,8 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 		var has_invalid_ns = false;
 		$('#namespace_modal .row').first().siblings().each(function(){
 			if(validate_ns($(this))){
-				var prefix = $(this).find(".ns-prefix").val();
-				var uri = $(this).find(".ns-uri").val();                
+				var prefix = $(this).find(".ns-prefix").val().trim();
+				var uri = $(this).find(".ns-uri").val().trim();                
 				ns_json[prefix] = uri;
 			} else {
 				has_invalid_ns = true;
@@ -546,7 +547,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 	$('#namespace_modal .row').first().find(".ns-add-btn").off("click").click(function(){
 		var $new_ns_row = $(this).parents('.row');
 		if (validate_ns($new_ns_row)){
-			add_ns($new_ns_row.find(".ns-prefix").val(), $new_ns_row.find(".ns-uri").val());
+			add_ns($new_ns_row.find(".ns-prefix").val().trim(), $new_ns_row.find(".ns-uri").val().trim());
 			$new_ns_row.find(".ns-prefix").val("");
 			$new_ns_row.find(".ns-uri").val("");
 		} else {
