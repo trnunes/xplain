@@ -34,6 +34,10 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 				"Xplain::SchemaRelation" : {
 					"icon" : "glyphicon glyphicon-flash"
 				},
+				"Xplain::PathRelation" : {
+					"icon" : "glyphicon glyphicon-flash"
+				},
+
 				"Xplain::ComputedRelation" : {
 					"icon" : "glyphicon glyphicon-flash"
 				},
@@ -174,11 +178,12 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 				item_type: item.type,
 				set: item.set,
 				setNode: item.node,
-				resultedFrom: item.resultedFrom
+				resultedFrom: item.resultedFrom,
+				intention: item.intention				
 			}
 		}
 		debugger
-		if (item_node.type == "Xplain::SchemaRelation"){
+		if (item_node.type == "Xplain::SchemaRelation" || item_node.type == "Xplain::PathRelation"){
 			item_node.li_attr.inverse = item.inverse
 		}else if ((item.type == "Xplain::Literal") && item.datatype ){
 			item_node.data.datatype = item.datatype;

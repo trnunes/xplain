@@ -247,6 +247,7 @@ class SessionController < ApplicationController
     begin
       expression = params[:exp].gsub("%23", "#")
       current_session = Xplain::Session.load(session[:current_session])
+      
       eval_results = eval(expression)
       if !eval_results.is_a? Xplain::ResultSet
         if current_session
@@ -278,11 +279,12 @@ class SessionController < ApplicationController
     params[:method] = 'post' if (params[:method] != 'get' && params[:method] != 'post')
     current_session = Xplain::Session.load(session[:current_session])
     
-    current_session.save
+
     respond_to do |format|
       begin
-        
+
         current_session.set_server params
+        current_session.save
         format.any {render :text => "SUCCESSFUL"}
       rescue RepositoryConnectionError => e
         format.json{render json: { error:  [e.message]}}
@@ -425,6 +427,37 @@ class SessionController < ApplicationController
       format.json{render :json => Jbuilder.new(){|json| json.message "Success"}.target!}
     end 
   end
+
+  def save_path
+    respond_to do |format|
+      begin
+        path_expr = params[:expr]
+        eval(path_expr).save
+        current_session = Xplain::Session.load(session[:current_session])
+        current_session.clear_cache_by_intention_slice("relation \"relations\"")
+        format.js{render :inline=>"alert(\"Relation path has been saved!\")"}
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace
+        format.js {render :inline=>"alert(\"Error! Relation path has not been saved.\")"}
+      end
+    end
+  end
+
+  def endpoint
+    server_list = Xplain::Session.load(session[:current_session]).server.class.load_all()
+    response_json = Jbuilder.new do |json|
+      json.array!(server_list) do |server|
+        #TODO implement accessors for these attrs.
+        json.url server.params[:graph]
+        json.named_graph server.params[:named_graph]
+        json.is_blz_graph server.class == BlazegraphDataServer
+      end
+    end.target!
+    respond_to do |format|
+      format.json{render :json => response_json}
+    end
+  end
   
   def all_types
     ruby_expression = "Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image"
@@ -437,7 +470,6 @@ class SessionController < ApplicationController
     @result_set = Xplain::ExecuteRuby.new(code: ruby_expression)
     Xplain::Visualization.current_profile.set_view_properties(@result_set.nodes)
     respond_to do |format|
-
 
       format.js { render :file => "/session/execute.js.erb" }
       format.json {render :json => generate_jbuilder(@result_set, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
@@ -596,6 +628,7 @@ class SessionController < ApplicationController
     jbuilder_obj.set set.id
     jbuilder_obj.type node.item.class.to_s
     jbuilder_obj.inverse node.item.inverse?.to_s if node.item.respond_to? :inverse?
+    jbuilder_obj.intention node.item.intention if node.item.respond_to? :intention
     jbuilder_obj.children Jbuilder.new do |children_json|
       children_json.array!(node.children) do |child_node|
         to_jbuilder(child_node, children_json, set)      

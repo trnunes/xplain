@@ -9,6 +9,8 @@ Rails.application.routes.draw do
   get 'session/create'
   get 'session/load_last_active_session'
   get 'session/save_session'
+  get 'session/save_path'
+  get 'session/endpoint'
   get 'session/close'
   get 'session/delete_set'
   get 'session/export'

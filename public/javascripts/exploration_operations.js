@@ -50,7 +50,9 @@ function Relation(data){
 	this.data = data;
 	this.id = data.item;
 	this.getExpression = function(){
-
+		if (data.intention){
+			return data.intention;
+		}
 		var exp = "\"" + data.item + "\"";
 		
 		if(data.inverse == "true"){

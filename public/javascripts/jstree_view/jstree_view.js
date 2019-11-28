@@ -245,7 +245,7 @@ XPLAIN.widgets.JstreeView.prototype.createTreeContextMenu = function($treeView){
 
 					}
 				};
-			} else if(node.type === "Xplain::SchemaRelation"){
+			} else if(node.type === "Xplain::SchemaRelation" || node.type === "Xplain::PathRelation"){
 				return {
 					"Select": selectSubmenu,
 		            "Applied To": {
@@ -449,17 +449,16 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 					
 				} else {
 
-					expression = "Xplain::SchemaRelation.create(\""+relation_id+"\", inverse: "+is_inverse+").restricted_image([Entity.create(id:\""+item_id+"\"])";
+					expression = "Xplain::SchemaRelation.create(\""+relation_id+"\", inverse: "+is_inverse+", \"\", current_session.server).restricted_image([Entity.create(id:\""+item_id+"\"])";
 
 				}
 				XPLAIN.AjaxHelper.execute(expression, tree_update_function);
 			} else {
 			    
-			    var expression = "Xplain::Entity.create(\""+node_to_open.li_attr.item+"\").relations"
+			    var expression = "Xplain::Entity.create(\""+node_to_open.li_attr.item+"\", \"\", current_session.server).relations"
+			    
 			    XPLAIN.AjaxHelper.execute(expression, tree_update_function);
 			}
-			
-			
 			
 		}
 	});		
@@ -496,7 +495,7 @@ XPLAIN.widgets.JstreeView.prototype.convertItem = function(item){
 	}
 	
 	item_node.li_attr.node = item.node;
-	if (item_node.type == "Xplain::SchemaRelation"){
+	if (item_node.type == "Xplain::SchemaRelation" || item_node.type == "Xplain::PathRelation"){
 		item_node.li_attr.inverse = item.inverse
 	}else if ((item.type == "Xplain::Literal") && item.datatype ){
 		item_node.data.datatype = item.datatype;

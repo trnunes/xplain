@@ -59,6 +59,35 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 			$(this_controller.viewSelector).parents('.modal').modal('hide');
 		}
 	});
+	
+	$(this_controller.viewSelector + " .save_path").off("click").click(function(){
+		var relation = this_controller.getSelection()[0];
+		debugger;
+		if (!relation){return}
+		var name = prompt("Please inform the path name for: " + relation.getExpression(), "").trim();
+		if (!name){
+			alert("The path name cannot be empty!");
+			return
+		}
+		//TODO move this to exploration_operations#PathRelation
+		exp_gen = function(){
+			let pathExpr = 'Xplain::PathRelation.new(text: "'+name+'", relations: [';
+			pathExpr += relation.relations.map((r_spec)=>{
+				let is_inverse = r_spec.data.inverse
+				if (r_spec.data.inverse === undefined){is_inverse = false}
+				let r_expr = 'Xplain::SchemaRelation.new(id: "'+r_spec.id+ '", inverse: '+is_inverse+')';
+				return r_expr;
+			}).join(", ")
+			pathExpr += '])';
+			return pathExpr;
+		}
+		
+		
+		XPLAIN.AjaxHelper.get('/session/save_path.js?expr='+exp_gen(), "js");
+
+		return 
+	});
+
 	$(this.viewSelector + " #preview").prop("checked", false);
 	$(this.viewSelector +" #preview").unbind().change(function(e){
 		if ($(this_controller.viewSelector + " #preview").is(":checked")){
@@ -1042,7 +1071,7 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 		if (item.type == "Xplain::Literal"){
 			parsed_item.li_attr['datatype'] = item.datatype
 			parsed_item.li_attr.item = item.text
-		} else if (item.type == "Xplain::SchemaRelation") {
+		} else if (item.type == "Xplain::SchemaRelation" || item.type == "Xplain::PathRelation") {
 			parsed_item.item_data['inverse'] =  item.inverse
 			parsed_item.li_attr['inverse'] =  item.inverse
 		}

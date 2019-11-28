@@ -41,6 +41,7 @@ pt:
   asc: "Ascendente"
   desc: "Decrescente"
   go: "Executar"
+  save_path: "Salvar Caminho de Relações"
   help: "Ajuda"
   select_pivot_relation: "Selecione uma Relação para Projetar"
   keep_source_items: "Manter os itens do conjunto de origem"

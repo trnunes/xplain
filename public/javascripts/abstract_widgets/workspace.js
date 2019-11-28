@@ -76,7 +76,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	});
 
 	$("#all_relations").unbind().click(function(){
-	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!')"
+	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank"
         XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
 			thisWidget.state.addSetFromJson(data);
 		});
@@ -256,23 +256,6 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.create_session = function(){
 	});
 	
 }
-
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
-	var inputValues = $("#seachbykeyword").val().trim();
-	
-
-	if (inputValues === '') {
-		$("#seachbykeyword").fadeOut(50).promise().done(function () {
-	        $(this).toggleClass("blink-class").fadeIn(50);
-	    });
-
-		alert("Please, type one or more keywords!");
-		return this;
-	} else {
-		new KeywordSearch([inputValues]).execute("json");
-	}
-}
-
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
 	var thisWidget= this
 	var inputValues = $("#seachbykeyword").val().trim();
@@ -296,15 +279,30 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
 	}
 }
 
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
+	var inputValues = $("#seachbykeyword").val();
+	
+
+	if (inputValues === '') {
+		$("#seachbykeyword").fadeOut(50).promise().done(function () {
+	        $(this).toggleClass("blink-class").fadeIn(50);
+	    });
+
+		alert("Please, type one or more keywords!");
+		return this;
+	} else {
+		new KeywordSearch([inputValues]).execute("json");
+	}
+}
+
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = function(){
 	var thisWidget = this;
-    $('#search').unbind().click(function(){
-        thisWidget.ajax_keyword_search();
-    });  
 	$('#derref').unbind().click(function(){
         thisWidget.ajax_derref();
     });    
-  
+    $('#search').unbind().click(function(){
+        thisWidget.ajax_keyword_search();
+    });    
 
 	$("#seachbykeyword").unbind().keyup(function(e){
 	
@@ -343,26 +341,6 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = fu
         $(this).click(function(){
             thisWidget.clear();
         });
-    });
-
-    $('._export').unbind().click(function(){
-    	var set_id = $('.SELECTED.set').attr("data-id");
-    	debugger
-    	XPLAIN.AjaxHelper.get("/session/export?id="+set_id, "json", function(data){
-			var blob = new Blob([data], { type: 'text/plain' });
-			var link = document.createElement('a');
-			link.href = window.URL.createObjectURL(blob);
-			link.download = "export.txt";
-
-			document.body.appendChild(link);
-
-			link.click();
-
-			document.body.removeChild(link);
-    		
-    		
-    	});	
-
     });
 
     $('._equal').unbind().each(function(item){
@@ -489,10 +467,6 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.removeCSS = function(klass){
 	
 };
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.show_endpoint_modal = function(){
-	$("#endpoint_modal [name=http-method] [value=post]").first().prop('checked', true);
-	$('#endpoint_modal').modal('show');
-};
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal = function(){
 
@@ -511,7 +485,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 	};
 
 	var validate_ns = function($ns_row){
-		return ($ns_row.find(".ns-prefix").val().trim() && $ns_row.find(".ns-uri").val().tim());
+		return ($ns_row.find(".ns-prefix").val() && $ns_row.find(".ns-uri").val());
 	};
 
 	var save_namespace_list = function(){
@@ -519,8 +493,8 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 		var has_invalid_ns = false;
 		$('#namespace_modal .row').first().siblings().each(function(){
 			if(validate_ns($(this))){
-				var prefix = $(this).find(".ns-prefix").val().trim();
-				var uri = $(this).find(".ns-uri").val().trim();                
+				var prefix = $(this).find(".ns-prefix").val();
+				var uri = $(this).find(".ns-uri").val();                
 				ns_json[prefix] = uri;
 			} else {
 				has_invalid_ns = true;
@@ -547,7 +521,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 	$('#namespace_modal .row').first().find(".ns-add-btn").off("click").click(function(){
 		var $new_ns_row = $(this).parents('.row');
 		if (validate_ns($new_ns_row)){
-			add_ns($new_ns_row.find(".ns-prefix").val().trim(), $new_ns_row.find(".ns-uri").val().trim());
+			add_ns($new_ns_row.find(".ns-prefix").val(), $new_ns_row.find(".ns-uri").val());
 			$new_ns_row.find(".ns-prefix").val("");
 			$new_ns_row.find(".ns-uri").val("");
 		} else {
@@ -568,7 +542,61 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal 
 	$('#namespace_modal #save_ns_btn').off("click").click(function(){
 		save_namespace_list();
 	});
-}
+};
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_endpoint_modal = function(){
+
+	var add_endpoint = function(url, named_graph, is_blz_graph){       
+		var div = "<div class=\"row\">";
+		div += "<input class=\"blz_graph\" type=\"hidden\">";
+		div += "<div class=\"col-md-2\">";
+		div += "<label class=\"form-check-label url\"></label>"
+		div += "</div>"
+		div += "<div class=\"col-md-2\">";
+		div += "<label class=\"form-check-label named_graph\" ></label>"
+		div += "</div>"
+		div += "<div class=\"col-md-2\">"
+		div += "<div class=\"form-check\">"
+		div += "<input type=\"checkbox\" class=\"form-check-input\">"
+		div += "</div></div></div>"
+
+		
+
+		cloned_prefix_uri_row = $(div);		
+		$(cloned_prefix_uri_row).find(".url").text(url);
+		$(cloned_prefix_uri_row).find(".named_graph").val(named_graph);
+		if (is_blz_graph){
+			$(cloned_prefix_uri_row).find(".blz_graph").val("true");
+		}
+		debugger;
+
+		$('#endpoint_modal hr').last().after(cloned_prefix_uri_row);
+
+		$(cloned_prefix_uri_row).find(".form-check-input").off('click').click(function(){			
+			debugger;
+			if($(this).is(':checked')){
+				$('#endpoint_modal #input_url').val($(this).parent().parent().parent().find(".url").text());
+				$('#endpoint_modal #ngraph_uri').val($(this).parent().parent().parent().find(".named_graph").val());
+
+				$("#endpoint_modal #blazegraph_search_idx").prop("checked", $(this).parent().parent().parent().find(".blz_graph").val() == "true");
+			}
+		});
+	};
+
+
+	XPLAIN.AjaxHelper.get("/session/endpoint.json", "json", function(data){
+
+		$('#endpoint_modal .row').remove();
+		debugger;
+
+		for (var i in data){
+			add_endpoint(data[i].url, data[i].named_graph, data[i].is_blz_graph);    
+		}
+		$("#endpoint_modal [name=http-method] [value=post]").first().prop('checked', true);
+		$('#endpoint_modal').modal('show');
+	});
+	
+};
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.addChildView = function(viewClass){
 	

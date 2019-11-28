@@ -1,5 +1,14 @@
+
+
+
+
 version: "3"
 services:
+  blazegraph:
+    image: lyrasis/blazegraph:2.1.5        
+    ports:
+      - "8889:8080"
+      - "8080:8889"
   web:
     # replace username/repo:tag with your name and image details
     image: trnunes/xplain:0.0.1
@@ -14,11 +23,5 @@ services:
       - "3000:3000"
     networks:
       - webnet
-  blazegraph:
-    image: lyrasis/blazegraph:2.1.5        
-    ports:
-      - "8889:8080"
-      - "8080:8889"
-    network_mode: "host"
 networks:
   webnet:
