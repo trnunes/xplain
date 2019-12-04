@@ -80,7 +80,8 @@ module Wxplain
     Xplain::Namespace.new("wikidata", "http://www.wikidata.org/")
     Xplain::Namespace.new("wikibase", "http://wikiba.se/ontology#")
     Xplain::Namespace.new("okn", "https://w3id.org/okn/o/sd#")
-    
+
+    Xplain::Namespace.save_all    
     #Visualization properties config
     module Xplain::Visualization
      #--------IBGE LABEL PROPERTIES---------------

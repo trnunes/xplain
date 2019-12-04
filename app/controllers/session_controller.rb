@@ -305,7 +305,7 @@ class SessionController < ApplicationController
   
   def generate_namespace_json
     Jbuilder.new do |json|
-      json.array!(Xplain::Namespace.each) do |namespace|
+      json.array!(Xplain::Namespace.load_all.each) do |namespace|
         json.uri namespace.uri
         json.prefix namespace.prefix
       end
