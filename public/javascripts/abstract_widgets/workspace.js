@@ -467,6 +467,11 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.removeCSS = function(klass){
 	
 };
 
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_view_profiles = function(){
+	$('#view_modal').modal('show');
+	debugger
+
+};
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal = function(){
 

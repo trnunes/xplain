@@ -36,8 +36,8 @@ module Wxplain
 
     ip_str = ip_address.join(".") << ".1"
 
-    session_graph_url = "http://#{ip_str}:8889/bigdata/namespace/kb/sparql"
-    #session_graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
+    #session_graph_url = "http://#{ip_str}:8889/bigdata/namespace/kb/sparql"
+    session_graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
     puts "IP ADDRESS: " << ip_str
     #graph_url = "http://dsbox02.isi.edu:8888/bigdata/namespace/wdq/sparql"
     graph_url = "http://opencitations.net/sparql"
