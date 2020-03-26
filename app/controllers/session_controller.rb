@@ -305,7 +305,7 @@ class SessionController < ApplicationController
   
   def generate_namespace_json
     Jbuilder.new do |json|
-      json.array!(Xplain::Namespace.load_all.each) do |namespace|
+      json.array!(Xplain::Namespace.load_all.sort{|ns1, ns2| (ns1.prefix <=> ns2.prefix) * -1}.each) do |namespace|
         json.uri namespace.uri
         json.prefix namespace.prefix
       end
@@ -491,7 +491,7 @@ class SessionController < ApplicationController
   end
   
   def load_session
-    
+    begin
     if params[:id]
       session_found = Xplain::Session.load(params[:id])
     elsif params[:name]
@@ -500,7 +500,10 @@ class SessionController < ApplicationController
     end
     
     
-
+  rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    end
     respond_to do |format|
       if session_found
         session[:current_session] = session_found.id

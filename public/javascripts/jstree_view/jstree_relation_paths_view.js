@@ -159,7 +159,7 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		var nodeId = this.$treeDiv.jstree().create_node(parentNode, jstreeItem, "last", null, false);
 		return nodeId;
 	},
-	
+	//TODO Urgent! Duplicated code with jstree_view#convertItem
 	this.convertItem = function(item){
 		var item_node = {
 			text: item.text,

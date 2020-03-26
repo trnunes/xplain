@@ -40,6 +40,9 @@ XPLAIN.widgets.JstreeView.prototype.build = function(){
 	      "Xplain::SchemaRelation" : {
 	        "icon" : "glyphicon glyphicon-flash"
 	      },
+	      "Xplain::PathRelation" : {
+	        "icon" : "glyphicon glyphicon-flash"
+	      },
 	      "Xplain::ComputedRelation" : {
 	        "icon" : "glyphicon glyphicon-flash"
 	      },
@@ -432,8 +435,9 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 
 			//exploration expression
 			//TODO move this core to expandRelation(relation) or findRelations(item)
+			
 			if(node_to_open.li_attr.item_type == "Xplain::SchemaRelation"){
-				debugger;
+				
 				var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr.item;
 				var relation_id = $tree.jstree().get_node(node_to_open).li_attr.item;
 				var is_inverse = $tree.jstree().get_node(node_to_open).li_attr.inverse == "true";
@@ -453,6 +457,15 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 
 				}
 				XPLAIN.AjaxHelper.execute(expression, tree_update_function);
+			} else if (node_to_open.li_attr.item_type == "Xplain::PathRelation"){
+				var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr.item;
+
+				expression = "Xplain::ResultSet.new(nodes: [Xplain::Node.new(item: Xplain::Entity.create(\""+item_id+"\"))])";
+				var pivot = new Pivot(new Expression(expression));
+				pivot.visual = true;
+				debugger;
+				pivot.addRelation(new Relation(node_to_open.li_attr));
+				pivot.execute("json", tree_update_function);
 			} else {
 			    
 			    var expression = "Xplain::Entity.create(\""+node_to_open.li_attr.item+"\", \"\", current_session.server).relations"
@@ -490,7 +503,8 @@ XPLAIN.widgets.JstreeView.prototype.convertItem = function(item){
 			item_type: item.type,
 			set: item.set,
 			node: item.node,
-			resultedFrom: item.resultedFrom
+			resultedFrom: item.resultedFrom,
+			intention: item.intention
 		}
 	}
 	

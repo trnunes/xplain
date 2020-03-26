@@ -83,7 +83,7 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 		}
 		
 		
-		XPLAIN.AjaxHelper.get('/session/save_path.js?expr='+exp_gen(), "js");
+		XPLAIN.AjaxHelper.get('/session/save_path.js?expr='+exp_gen().replace(/#/g, "%23"), "js");
 
 		return 
 	});

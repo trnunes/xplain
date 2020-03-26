@@ -36,8 +36,8 @@ module Wxplain
 
     ip_str = ip_address.join(".") << ".1"
 
-    #session_graph_url = "http://#{ip_str}:8889/bigdata/namespace/kb/sparql"
-    session_graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
+    session_graph_url = "http://#{ip_str}:8889/bigdata/namespace/kb/sparql"
+    #session_graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
     puts "IP ADDRESS: " << ip_str
     #graph_url = "http://dsbox02.isi.edu:8888/bigdata/namespace/wdq/sparql"
     graph_url = "http://opencitations.net/sparql"
@@ -62,6 +62,7 @@ module Wxplain
     # Persistable.set_session_repository server
 
     #Namespaces
+    
     Xplain::Namespace.new("iff", "http://web.iff.edu.br/")
     
     Xplain::Namespace.new("uspat", "http://us.patents.aksw.org/")
@@ -80,8 +81,8 @@ module Wxplain
     Xplain::Namespace.new("wikidata", "http://www.wikidata.org/")
     Xplain::Namespace.new("wikibase", "http://wikiba.se/ontology#")
     Xplain::Namespace.new("okn", "https://w3id.org/okn/o/sd#")
-
-    Xplain::Namespace.save_all    
+    Xplain::Namespace.save_all
+    Xplain::Namespace.load_all    
     #Visualization properties config
     module Xplain::Visualization
      #--------IBGE LABEL PROPERTIES---------------
