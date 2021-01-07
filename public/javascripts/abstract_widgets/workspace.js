@@ -1,11 +1,20 @@
 XPLAIN.widgets = XPLAIN.widgets || {}
 XPLAIN.states = XPLAIN.states || {}
 
+XPLAIN.alertErrors = function(errors) {
+	if (errors) {
+		errorStr = ""
+		errors.forEach(function(err){ errorStr += err + "\n"});
+		return alert(errorStr);
+	}
+}
+
 XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
 	
 	
 	XPLAIN.widgets.Widget.call(this, null, workspaceState);
 	this.params_hash = new Hashtable();
+	this.save_url = "/session/save_session.json"
 	
 }
 
@@ -32,9 +41,11 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerBehavior = function(){
 }
 	
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.addWidgetToView = function(widget){
+	debugger;
+	
 	if ($('#exploration_area').find('.set').length > 0) {
 	
-		widget.html.insertBefore($('#exploration_area').find('.set').first());
+		$(widget.html).insertBefore($('#exploration_area').find('.set').first());
 				
 	} else {
 		debugger
@@ -70,14 +81,19 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image.sort_asc!')"
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
 			
-			
+			if (data.errors){
+				return XPLAIN.alertErrors(data.errors)
+			}
 			thisWidget.state.addSetFromJson(data);
 		});
 	});
 
 	$("#all_relations").unbind().click(function(){
 	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank"
-        XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){			
+        XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
+			if (data.errors){
+				return XPLAIN.alertErrors(data.errors)
+			}
 			thisWidget.state.addSetFromJson(data);
 		});
 	});
@@ -206,29 +222,31 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(){
 		return
 	}
 	$("#session_name").text("Saving session...");
-	this.save_session(name);
+	
+	param_str = "?name=" + name;
+
+	XPLAIN.AjaxHelper.get(this.save_url + param_str, "json", function(data){
+		debugger;
+		alert("Session has been saved!");
+		$("#session_name").text(name.trim());
+	});
 }
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(name){
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(){
 
-	var thisWidget = this;
-	debugger;
-	var save_url = "/session/save_session.json";
-	var session_text = $("#session_name").text();
-	if (session_text.indexOf("Unnamed") >= 0 ) {
+	var name = $("#session_name").text().trim();
+	if (name.indexOf("Unnamed") >= 0 ) {
 		return this.save_session_as();
 	}
 
-	if (name) {
-		name = name.trim();
-		save_url += "?name=" + name;
-		session_text = name;
+	XPLAIN.AjaxHelper.get(this.save_url, "json", function(data){
+		debugger
+		if (data.errors){
+			return XPLAIN.alertErrors(data.errors)
+		}
 
-	} 
-	XPLAIN.AjaxHelper.get(save_url, "json", function(data){
-		debugger;
-		alert("Session has been saved!");
-		$("#session_name").text(session_text);
+		alert(data.success);
+		
 	});
 
 }
@@ -272,8 +290,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
 
 		var expression =  "Xplain::ExecuteRuby.new(code: 'Xplain::ResultSet.new(nodes: [Xplain::Entity.new(\""+inputValues+"\")])')";		
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
-			
-			
+			if (data.errors){
+				return XPLAIN.alertErrors(data.errors)
+			}
 			thisWidget.state.addSetFromJson(data);
 		});
 	}
@@ -620,7 +639,15 @@ XPLAIN.states.WorkspaceState.prototype.sets = [];
 XPLAIN.states.WorkspaceState.prototype.currentOperation = null;
 
 XPLAIN.states.WorkspaceState.prototype.addSetFromJson = function(setJson){
-	
+	const viewAlreadyAdded = $('[data-id='+setJson.id+']').length;
+	debugger;
+	if (viewAlreadyAdded){
+		
+		XPLAIN.activeWorkspaceWidget.selectSetAndFocus(setJson.id);
+		XPLAIN.graph.addSet(setJson);
+		return;
+	}
+
 	this.addSetState(new XPLAIN.states.SetState(setJson));
 };
 

@@ -239,52 +239,63 @@ class SessionController < ApplicationController
     
   end
   
-  
+  #TODO receive the endpoint url as parameter
   def execute
     
     start = Time.now
+    
     should_paginate = params[:should_paginate] != "false"
+    response_json = Jbuilder.new
+    expression = params[:exp].gsub("%23", "#")
+    
+    session_id = params[:session] || session[:current_session]
+    
+    current_session = Xplain::Session.load(session_id)
+
+    if !current_session
+      current_session = Xplain::Session.create({:id=>params[:session], :title => "Unnamed"})
+    end
+
     begin
-      expression = params[:exp].gsub("%23", "#")
-      current_session = Xplain::Session.load(session[:current_session])
-      
       eval_results = eval(expression)
-      if !eval_results.is_a? Xplain::ResultSet
-        if current_session
-          @resourceset = current_session.execute(eval_results)
-        else
-          @resourceset = eval_results.execute()
-        end
-      else
-        @resourceset = eval_results
+      @resultset = eval_results      
+      
+      is_exploration_expression = !(eval_results.is_a? Xplain::ResultSet)
+      if is_exploration_expression
+        @resultset = current_session.execute(eval_results)
       end
+
+      Xplain::Visualization.current_profile.set_view_properties(@resultset.nodes)
+      html_template = render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')
+  
+      response_json = generate_jbuilder(@resultset, html_template, 'DefaultSetWidget', 1, should_paginate)
+      
     rescue Exception => e
       puts e.message
       puts e.backtrace
+      response_json.errors ["Something went wrong executing \"#{expression}\": #{e.message}"]
     end
-    Xplain::Visualization.current_profile.set_view_properties(@resourceset.nodes)
     
     respond_to do |format|
-      format.js
-      format.json {render :json => generate_jbuilder(@resourceset, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb'), 'DefaultSetWidget', 1, should_paginate).target!}
-      format.any {render :text => "SUCCESSFUL"}
+      format.any {render :json => response_json.target!}
       finish = Time.now 
       puts "CONTROLLER EXECUTED: #{(finish - start).to_s}"
     end
   end
  
-   def set_endpoint
-
-    params[:read_timeout] = 3000
-    params[:method] = 'post' if (params[:method] != 'get' && params[:method] != 'post')
+  def update_enpdoint(endpoint_params)
+    endpoint_params[:read_timeout] ||= 3000
+    endpoint_params[:method] ||= 'post'
     current_session = Xplain::Session.load(session[:current_session])
-    
+    current_session.set_server params
+    current_session.save
+  end
+
+  def set_endpoint
 
     respond_to do |format|
       begin
-
-        current_session.set_server params
-        current_session.save
+        update_endpoint(params)
         format.any {render :text => "SUCCESSFUL"}
       rescue RepositoryConnectionError => e
         format.json{render json: { error:  [e.message]}}
@@ -292,6 +303,58 @@ class SessionController < ApplicationController
     end
   end
   
+  def fetch_nested_relations
+    set_id = params[:set]
+    relation_id = params[:relation]
+    should_paginate = params[:should_paginate]
+    session_id = params[:session]
+   
+    relation_id_list = relation_id.split("->")
+    pvt_params = {}
+    if params[:limit]
+      pvt_params[:limit] = params[:limit].to_i
+    end
+    
+    if params[:visual]
+      pvt_params[:visual] = true
+    end
+
+    current_session = Xplain::Session.load(session_id)
+    if !current_session
+      current_session = Xplain::Session.create(title: 'Unnamed')
+    end
+
+    
+    rs = Xplain::ResultSet.load(set_id)
+    
+    relation_id_list.each do |rel_id|
+
+      op = rs.pivot(pvt_params.dup) do
+        
+        if rel_id.include? "^"
+          relation  inverse(rel_id.gsub("^", ""))
+        else
+          relation rel_id
+        end
+        
+      end
+      rs = current_session.execute(op)
+      
+    end
+    result_set = current_session.execute(rs.pivot{relation 'relations'})
+
+    Xplain::Visualization.current_profile.set_view_properties(result_set.nodes)
+    
+    respond_to do |format|
+      format.js
+      format.json {render :json => generate_jbuilder(result_set, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb'), 'DefaultSetWidget', 1, should_paginate).target!}
+      format.any {render :text => "SUCCESSFUL"}
+    end
+
+
+
+  end
+
   def namespace
       
     if params[:namespace_list]
@@ -341,7 +404,7 @@ class SessionController < ApplicationController
     @section_list.delete(Xplain::Session.load(session[:current_session]).title)
     view = ActionView::Base.new(ActionController::Base.view_paths, {section_list: @section_list})
     template_html = view.render({partial: "session/section_list"})
-    
+    puts template_html
     respond_to do |format|
       format.json{render :json => Jbuilder.new{|set_json| set_json.html template_html}.target!}
     end
@@ -392,39 +455,26 @@ class SessionController < ApplicationController
   end
   
   def save_session
-    name = params[:name].to_s
     current_session = Xplain::Session.load(session[:current_session])
-    if !name.empty? && name != current_session.title
-      puts "FROM: #{current_session.title} TO: #{name}"
-      begin
-        new_session = current_session.deep_copy
-        new_session.title = name
-      rescue Exception => e
-        puts e.message
-        puts e.backtrace        
-      end
+    name = params[:name].to_s
+    name = current_session.title if name.empty?
+    puts "FROM: #{current_session.title} TO: #{name}"
+    json = Jbuilder.new
 
-      if current_session.title == "Unnamed"
-        current_session.delete
-      end
-      begin
-        new_session.save
-      rescue Exception => e
-        puts e.message
-        puts e.backtrace
-      end
-      session[:current_session] = new_session.id
-    else
-      begin
-        current_session.save
-      rescue Exception => e
-        puts e.message
-        puts e.backtrace
-      end
+    begin
+      current_session.title = name
+      current_session.save
+      json.success "Session #{name} has been saved!"
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+      json.errors ["Oops! A problem has ocurred while saving session \"#{name}\": #{e.message}"]
     end
     
+    session[:current_session] = current_session.id
+    
     respond_to do |format|
-      format.json{render :json => Jbuilder.new(){|json| json.message "Success"}.target!}
+      format.json{render :json => json.target!}
     end 
   end
 

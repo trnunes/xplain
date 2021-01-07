@@ -23,7 +23,7 @@ XPLAIN.AjaxHelper = {
 		if(page){
 			executeOperationUrl += "&page=" + page;
 		}
-		debugger
+		
 		
 		executeOperationUrl += "&should_paginate=" + should_paginate;
 		

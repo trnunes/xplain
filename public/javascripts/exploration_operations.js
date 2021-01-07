@@ -148,6 +148,9 @@ Operation.prototype = {
 		if(this.validate()){
 			debugger;
 			XPLAIN.AjaxHelper.execute(this.getExpression() + this.postProcessingExpression, successFunction || function(data){
+				if (data.errors){
+					return XPLAIN.alertErrors(data.errors)
+				}
 				XPLAIN.activeWorkspaceState.addSetFromJson(data);
 			});		
 		} else {

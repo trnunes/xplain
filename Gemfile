@@ -19,6 +19,8 @@ gem 'jquery-rails'
 
 gem 'jquery-ui-rails'
 
+gem 'rack-cors'
+
 gem 'rdf', '2.1.0'
 
 gem 'linkeddata', '2.0.0'

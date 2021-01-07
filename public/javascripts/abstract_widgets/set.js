@@ -94,7 +94,6 @@ function capitalizeFirstLetter(string) {
 }
 
 XPLAIN.widgets.createView = function(parentWidget, setJson){
-	debugger
 	var state = new XPLAIN.states.SetState(setJson);
 	var setViewId = $(setJson.view).attr('id');
 	var extensionViewId = $(setJson.view).find('.extension_view').attr('id');

@@ -132,6 +132,8 @@ GEM
       spoon (~> 0.0)
     public_suffix (2.0.5)
     rack (1.6.5)
+    rack-cors (1.0.6)
+      rack (>= 1.6.0)
     rack-test (0.6.3)
       rack (>= 1.0)
     rails (4.2.3)
@@ -299,6 +301,7 @@ DEPENDENCIES
   jquery-ui-rails
   linkeddata (= 2.0.0)
   pry
+  rack-cors
   rails (= 4.2.3)
   rdf (= 2.1.0)
   sass-rails (~> 5.0)
@@ -311,4 +314,4 @@ DEPENDENCIES
   xplain
 
 BUNDLED WITH
-   1.16.1
+   1.16.2

@@ -27,7 +27,13 @@ module Wxplain
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     DEFAULT_SET_VIEW = 'tree'
-    
+    config.middleware.insert_before 0, "Rack::Cors" do
+      allow do
+        origins '*'
+        resource '*', headers: :any, methods: [:get, :post, :options]
+      end
+    end
+  
     #Change this to point to other endpoints
     require 'socket'
     ip_address = Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address.split(".")

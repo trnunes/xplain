@@ -72,7 +72,7 @@ XPLAIN.states.State.prototype = {
 		}
 	},
 	change: function(eventId, updateFunction){
-		debugger
+		
 		var newStateData = updateFunction.call();
 		var eventJson = {event: eventId, data: newStateData, originState: this}
 		this.notifyStateChange(eventJson);

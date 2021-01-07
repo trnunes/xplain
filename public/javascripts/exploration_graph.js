@@ -3,6 +3,9 @@ XPLAIN.graph = new function(){
 	var that = this;
 	
     this.options = { 
+    	autoresize: true,
+    	width: '100%',
+    	height: '100%',
         physics: {
           stabilization: false
         },
@@ -166,4 +169,6 @@ XPLAIN.graph = new function(){
 
 $(document).ready(function(){
 	XPLAIN.graph.init();
+	$('#graph_view').resizable();
+	$('#graph_view').draggable();
 })

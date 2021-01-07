@@ -333,10 +333,11 @@ div.windowtoolbar div.filter:hover {
     background-color: #fefefe;
     margin-bottom: 1px;
     overflow: hidden;
-    height: 99%;
+    height: 99%
+    
 }
 .graph_container {
-	height: 313px;
+	height: 80%;
 	/* overflow: auto; */
 }
 

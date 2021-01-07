@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
 
   get 'session/execute'
+  get 'session/fetch_nested_relations'
   get 'session/calculate_extension'
   get 'session/search'
   get 'session/update_title'

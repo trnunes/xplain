@@ -29,6 +29,7 @@ pt:
   clear: "Limpar"
   delete: "Remover"
   main_menu: "Menu"
+  filter_repeated_values: "Filtrar valores repetidos"
   search: "Buscar"
   current_session: "Sessão"
   active_endpoint: "Base de Dados Ativa"

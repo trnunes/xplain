@@ -664,6 +664,7 @@ XPLAIN.controllers.PivotController = function(setId){
 		this.treeParams.allowMultipleSelection = true;
 		XPLAIN.activeWorkspaceState.currentOperation = new Pivot(new Load(this.setId));
 		$(this_controller.viewSelector + " #group_by_domain").prop("checked", false);
+		$(this_controller.viewSelector + " #uniq").prop("checked", false);
 	},
 
 	this.beforePivotBranchSelected = function(pivot) {
@@ -677,6 +678,9 @@ XPLAIN.controllers.PivotController = function(setId){
 		if ($(this_controller.viewSelector + " #group_by_domain:checked").length) {
 			XPLAIN.activeWorkspaceState.currentOperation.group_by_domain = true;
 // 			XPLAIN.activeWorkspaceState.currentOperation.debug = true;
+		}
+		if ($(this_controller.viewSelector + " #uniq:checked").length) {
+			XPLAIN.activeWorkspaceState.currentOperation = new Uniq(XPLAIN.activeWorkspaceState.currentOperation);
 		}
 
 		return XPLAIN.activeWorkspaceState.currentOperation;
@@ -1025,7 +1029,9 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 	this.addFacetRelations = function(){
 
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot(visual: true){relation \"relations\"}", "json", function(data){
-
+			if (data.errors){
+				return XPLAIN.alertErrors(data.errors)
+			}
 			var $jstreeListView	= $("#facetedSearchModal .facets_area");
 			debugger;
 			data.extension.forEach((relation)=>{
@@ -1153,8 +1159,10 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 
 		var expression = "Xplain::ResultSet.load(\""+this.setId+"\").refine{ "+filter_expression+"}"
 		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression.replace(/#/g, "%23"), "json", function(data){
-			
 			debugger
+			if (data.errors){
+				return XPLAIN.alertErrors(data.errors)
+			}
 			XPLAIN.activeWorkspaceState.addSetFromJson(data);
 		});
 
