@@ -1,0 +1,5 @@
+
+class QueryTest < XplainUnitTest
+  
+
+end

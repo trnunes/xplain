@@ -22,3 +22,4 @@
 en:
   hello: "Hello world"
   search: "Search"
+  inverse_relation_suffix: "of"

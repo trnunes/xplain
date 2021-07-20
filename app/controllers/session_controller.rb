@@ -1,20 +1,30 @@
 require 'timeout'
 class SessionController < ApplicationController
   protect_from_forgery except: :new
-  before_filter :load_temp_session
+  before_filter :load_temp_session, :except=>[:render_page, :namespace, :endpoint, :load_session, :list_view_profiles]
   
   def load_temp_session
-    if !session[:current_session]
-      session[:current_session] = Xplain::Session.create(title: "Unnamed").id
+    endpoint_id = params[:endpoint]
+    
+    @current_session = Xplain::Session.load(params[:xplain_session])
+    binding.pry
+    if !@current_session
+      endpoint = Xplain::DataServer.load(endpoint_id)
+      @current_session = Xplain::Session.create({title: "Unnamed", server: endpoint})
+      @current_session.view_profile = Xplain::Visualization.current_profile
     end
+    
+    # @current_session = Xplain::Session.load(session[:current_session])
+    # @current_session.lang = 'en'
+    
   end
     
   def load_last_active_session
-    current_session = Xplain::Session.load(session[:current_session])
+    
     
     respond_to do |format|
       
-      format.json {render :json =>  render_session_json(current_session)}
+      format.json {render :json =>  render_session_json(@current_session)}
     end
   end
   
@@ -31,14 +41,14 @@ class SessionController < ApplicationController
   end
   
   def apply_facet
-    current_session = Xplain::Session.load(session[:current_session])
+    
     set = Xplain::ResultSet.load(params[:id])
 
     begin
-    filtered_set = current_session.execute(eval("set.refine(visual: true){#{params[:filter]}}"))
+    filtered_set = @current_session.execute(eval("set.refine(visual: true){#{params[:filter]}}"))
       
-    relations_set = current_session.execute(filtered_set.pivot(visual: true){relation "relations"}) 
-    Xplain::Visualization.current_profile.set_view_properties(relations_set.nodes)
+    relations_set = @current_session.execute(filtered_set.pivot(visual: true){relation "relations"}) 
+    
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -51,13 +61,13 @@ class SessionController < ApplicationController
 
   def export
     triples = ""
-    current_session = Xplain::Session.load(session[:current_session])
+    
     result_set = Xplain::ResultSet.load(params[:id])
-    relations_set = current_session.execute(result_set.pivot{relation "relations"})    
+    relations_set = @current_session.execute(result_set.pivot{relation "relations"})    
     relations_map = []
     relations_set.nodes.map do |item_rel| 
       if !item_rel.item.inverse?
-        pivoted_set = current_session.execute(result_set.pivot(group_by_domain: true){relation item_rel.item})
+        pivoted_set = @current_session.execute(result_set.pivot(group_by_domain: true){relation item_rel.item})
         relations_map << [item_rel.item, pivoted_set]
       end
     end
@@ -86,7 +96,7 @@ class SessionController < ApplicationController
 
   def render_faceted_search
 
-    current_session = Xplain::Session.load(session[:current_session])
+    
     set = Xplain::ResultSet.load(params[:id])
     
     if params[:relation]
@@ -96,13 +106,13 @@ class SessionController < ApplicationController
       end
       begin
         relation = Xplain::SchemaRelation.new(id: params[:relation], inverse: inverse)
-        grouped_set =  current_session.execute(set.group(visual: true){by_image relation})
+        grouped_set =  @current_session.execute(set.group(visual: true){by_image relation})
         
-        mapped_set = current_session.execute(grouped_set.aggregate(visual: true){count})
+        mapped_set = @current_session.execute(grouped_set.aggregate(visual: true){count})
         
         facets = []
         
-        ranked_set = current_session.execute(mapped_set.rank(visual: true, order: :desc, level: 2){by_level{}})
+        ranked_set = @current_session.execute(mapped_set.rank(visual: true, order: :desc, level: 2){by_level{}})
         facets_json = {
           source_set: set.id,
           facet_group: to_json(relation),
@@ -121,7 +131,7 @@ class SessionController < ApplicationController
 
 =begin  def render_faceted_search
 
-    current_session = Xplain::Session.load(session[:current_session])
+    
     set = Xplain::ResultSet.load(params[:id])
     
     
@@ -134,24 +144,24 @@ class SessionController < ApplicationController
       end
       
       relation = Xplain::SchemaRelation.new(id: params[:relation], inverse: inverse)
-      grouped_sets << current_session.execute(set.group{by_image relation})
+      grouped_sets << @current_session.execute(set.group{by_image relation})
     else
-      pivot_rs = current_session.execute(set.pivot{relation "relations"})
-      grouped_sets = pivot_rs.nodes.map{|item_rel| current_session.execute(set.group{by_image item_rel.item})}
+      pivot_rs = @current_session.execute(set.pivot{relation "relations"})
+      grouped_sets = pivot_rs.nodes.map{|item_rel| @current_session.execute(set.group{by_image item_rel.item})}
     end
 
     if params[:filter]
       grouped_sets = grouped_sets.map do |gset|
-        current_session.execute(eval("gset.refine{#{params[:filter]}}"))
+        @current_session.execute(eval("gset.refine{#{params[:filter]}}"))
       end
     end
     mapped_sets = []
-    grouped_sets.each{|gset| mapped_sets << current_session.execute(gset.aggregate{count})}
+    grouped_sets.each{|gset| mapped_sets << @current_session.execute(gset.aggregate{count})}
     
     facets = []
     for i in (0..mapped_sets.size-1) do
       mapped_set = mapped_sets[i]
-      ranked_set = current_session.execute(mapped_set.rank(order: :desc, level: 2){by_level{}})
+      ranked_set = @current_session.execute(mapped_set.rank(order: :desc, level: 2){by_level{}})
       if !params[:relation]
         relation = pivot_rs.nodes[i].item
       end
@@ -239,6 +249,57 @@ class SessionController < ApplicationController
     
   end
   
+  def execute_operation
+    
+    operation = params[:operation]
+    respond_to do |format|
+      begin
+        if operation == "pivot"
+          input_set =   
+            if params.has_key? :node
+              rs = Xplain::ResultSet.find_by_node_id(params[:node]).first
+              if !rs
+                raise "Inconsistent Operation: the input set does not exist"
+              end
+              @current_session.execute(rs.nodes_select(ids: [params[:node]], visual: true))
+              
+              # i
+            elsif params.has_key? :result_set
+              Xplain::ResultSet.load(params[:result_set])
+            else
+              raise "You must provide an input"
+            end
+          
+            if !params[:relation]
+              raise "You must provide a relation!"
+            end
+          
+          visual = params[:visual] || false
+          
+          relation = Xplain::SchemaRelation.new(params[:relation])
+  
+          pivot = Xplain::Pivot.new(inputs: input_set, visual: visual) do
+            relation relation
+          end
+          result_set = @current_session.execute(pivot)
+                  
+          html_template = render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')
+  
+          response_json = generate_jbuilder(result_set, html_template, 'DefaultSetWidget', 1, false)
+          
+          format.any {render :json => response_json.target!}
+        end
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace
+        format.json {render :json => e.message, :status => :unprocessable_entity}
+
+      end
+    end
+
+  end
+
+  
   #TODO receive the endpoint url as parameter
   def execute
     
@@ -248,26 +309,18 @@ class SessionController < ApplicationController
     response_json = Jbuilder.new
     expression = params[:exp].gsub("%23", "#")
     
-    session_id = params[:session] || session[:current_session]
-    
-    current_session = Xplain::Session.load(session_id)
-
-    if !current_session
-      current_session = Xplain::Session.create({:id=>params[:session], :title => "Unnamed"})
-    end
-
     begin
       eval_results = eval(expression)
       @resultset = eval_results      
       
       is_exploration_expression = !(eval_results.is_a? Xplain::ResultSet)
       if is_exploration_expression
-        @resultset = current_session.execute(eval_results)
+        @resultset = @current_session.execute(eval_results)
       end
 
-      Xplain::Visualization.current_profile.set_view_properties(@resultset.nodes)
+      # Xplain::Visualization.current_profile.set_view_properties(@resultset.nodes)
       html_template = render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')
-  
+      
       response_json = generate_jbuilder(@resultset, html_template, 'DefaultSetWidget', 1, should_paginate)
       
     rescue Exception => e
@@ -283,12 +336,27 @@ class SessionController < ApplicationController
     end
   end
  
-  def update_enpdoint(endpoint_params)
+  #TODO BROKEN
+  def update_endpoint(endpoint_params)
+    if !endpoint_params[:class]
+      raise "You should inform the :class param to create/update the endpoint."
+    end
+
     endpoint_params[:read_timeout] ||= 3000
     endpoint_params[:method] ||= 'post'
-    current_session = Xplain::Session.load(session[:current_session])
-    current_session.set_server params
-    current_session.save
+    
+    klass_modules = endpoint_params[:class].split("::")
+    klass = Object
+    klass_modules.each do |name|
+      klass = klass.const_get(name)
+    end
+
+    endpoint = klass.new(endpoint_params)
+    endpoint.save
+    if @current_session
+      @current_session.server = endpoint
+      @current_session.save
+    end
   end
 
   def set_endpoint
@@ -319,11 +387,6 @@ class SessionController < ApplicationController
       pvt_params[:visual] = true
     end
 
-    current_session = Xplain::Session.load(session_id)
-    if !current_session
-      current_session = Xplain::Session.create(title: 'Unnamed')
-    end
-
     
     rs = Xplain::ResultSet.load(set_id)
     
@@ -338,12 +401,12 @@ class SessionController < ApplicationController
         end
         
       end
-      rs = current_session.execute(op)
+      rs = @current_session.execute(op)
       
     end
-    result_set = current_session.execute(rs.pivot{relation 'relations'})
+    result_set = @current_session.execute(rs.pivot{relation 'relations'})
 
-    Xplain::Visualization.current_profile.set_view_properties(result_set.nodes)
+    # Xplain::Visualization.current_profile.set_view_properties(result_set.nodes)
     
     respond_to do |format|
       format.js
@@ -401,7 +464,7 @@ class SessionController < ApplicationController
   def list_sessions
     @section_list = Xplain::Session.list_titles
     @section_list.delete("Unnamed")
-    @section_list.delete(Xplain::Session.load(session[:current_session]).title)
+    @section_list.delete(@current_session.title)
     view = ActionView::Base.new(ActionController::Base.view_paths, {section_list: @section_list})
     template_html = view.render({partial: "session/section_list"})
     puts template_html
@@ -428,10 +491,10 @@ class SessionController < ApplicationController
   end
   
   def delete_set
-    current_session = Xplain::Session.load(session[:current_session])
+    
     set_to_delete = Xplain::ResultSet.load(params[:id])
     begin
-      current_session.remove_result_set_permanently(set_to_delete)
+      @current_session.remove_result_set_permanently(set_to_delete)
     rescue Exception => e
       puts e.message
       puts e.backtrace        
@@ -455,15 +518,15 @@ class SessionController < ApplicationController
   end
   
   def save_session
-    current_session = Xplain::Session.load(session[:current_session])
+    
     name = params[:name].to_s
-    name = current_session.title if name.empty?
-    puts "FROM: #{current_session.title} TO: #{name}"
+    name = @current_session.title if name.empty?
+    puts "FROM: #{@current_session.title} TO: #{name}"
     json = Jbuilder.new
 
     begin
-      current_session.title = name
-      current_session.save
+      @current_session.title = name
+      @current_session.save
       json.success "Session #{name} has been saved!"
     rescue Exception => e
       puts e.message
@@ -471,7 +534,7 @@ class SessionController < ApplicationController
       json.errors ["Oops! A problem has ocurred while saving session \"#{name}\": #{e.message}"]
     end
     
-    session[:current_session] = current_session.id
+    session[:current_session] = @current_session.id
     
     respond_to do |format|
       format.json{render :json => json.target!}
@@ -483,8 +546,8 @@ class SessionController < ApplicationController
       begin
         path_expr = params[:expr]
         eval(path_expr).save
-        current_session = Xplain::Session.load(session[:current_session])
-        current_session.clear_cache_by_intention_slice("relation \"relations\"")
+        
+        @current_session.clear_cache_by_intention_slice("relation \"relations\"")
         format.js{render :inline=>"alert(\"Relation path has been saved!\")"}
       rescue Exception => e
         puts e.message
@@ -495,13 +558,21 @@ class SessionController < ApplicationController
   end
 
   def endpoint
-    server_list = Xplain::Session.load(session[:current_session]).server.class.load_all()
+    begin
+    server_list = Xplain::DataServer.load_all()
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    end
     response_json = Jbuilder.new do |json|
       json.array!(server_list) do |server|
-        #TODO implement accessors for these attrs.
+        #TODO implement accessors for these attrs.]
+        json.id server.id
         json.url server.params[:graph]
         json.named_graph server.params[:named_graph]
-        json.is_blz_graph server.class == BlazegraphDataServer
+        json.lookup_service server.params[:lookup_service]
+        json.results_limit server.params[:results_limit]
+        json.items_limit server.params[:items_limit]
       end
     end.target!
     respond_to do |format|
@@ -511,10 +582,10 @@ class SessionController < ApplicationController
   
   def all_types
     ruby_expression = "Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image"
-    current_session = Xplain::Session.load(session[:current_session])
+    
     server = nil
-    if current_session
-      server = current_session.server
+    if @current_session
+      server = @current_session.server
     end
 
     @result_set = Xplain::ExecuteRuby.new(code: ruby_expression)
@@ -529,7 +600,7 @@ class SessionController < ApplicationController
   
   def load_all_resultsets
     begin
-      all_result_sets_ordered = Xplain::Session.load(session[:current_session]).each_result_set_tsorted(exploration_only: true)
+      all_result_sets_ordered = @current_session.each_result_set_tsorted(exploration_only: true)
     rescue Exception => e
       puts e.message
       puts e.backtrace
@@ -567,7 +638,6 @@ class SessionController < ApplicationController
   
   def render_session_json(exp_session)
     begin
-      
       result_sets_json = "{\"server\": \"#{exp_session.server.url}\", \"name\":\"#{exp_session.title}\",\"sets\":[#{exp_session.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb', {}, rs)).target!}.join(", ")}]}"
     rescue Exception => e
       puts e.message
@@ -577,12 +647,11 @@ class SessionController < ApplicationController
   end
   
   def search
-    current_session = Xplain::Session.load(session[:current_session])
+    
     input = Xplain::ResultSet.load(params[:set])
     search_operation = Xplain::KeywordSearch.new(inputs: input.intention, keyword_phrase:  params[:str].to_s, inplace: true, visual: true)
     
-    rs = current_session.execute(search_operation)
-    Xplain::Visualization.current_profile.set_view_properties(rs.nodes)
+    rs = @current_session.execute(search_operation)
     respond_to do |format|
 
         format.js { render :file => "/session/execute.js.erb" }
@@ -593,41 +662,84 @@ class SessionController < ApplicationController
 
     
   def new
-    current_session = Xplain::Session.load(session[:current_session])
+    
     respond_to do |format|
       format.js
     end
   end
   
   def create
-    current_session = Xplain::Session.load(session[:current_session])
-    server = Xplain.default_server 
-    if current_session
-      server = current_session.server
-    end
-    new_session = Xplain::Session.create(title: params[:name])
-    new_session.server = server
-    new_session.save
-    session[:current_session] = new_session.id
-    respond_to do |format|
-      format.json {render :json => "{\"message\":\"session #{params[:name]} saved\"}"}
-    end
+    
   end
   
   def close
-    if session[:current_session]
-      current_session = Xplain::Session.load(session[:current_session])
-      if current_session && current_session.title != "Unnamed"
-        current_session.save
-      end
+    
+      
+    if @current_session && @current_session.title != "Unnamed"
+      @current_session.save
+      @current_session.close()
     end
-    Xplain::memory_cache.clear
-    session[:current_session] = Xplain::Session.create(title: "Unnamed").id
+    
+    # Xplain::memory_cache.clear
+    @current_session = Xplain::Session.create(title: "Unnamed", server: Xplain.default_server)
+    session[:current_session] = @current_session.id
     respond_to do |format|
       format.any {render :json => "{\"message\":\"session closed\"}"}
     end
   end
   
+  def list_view_profiles
+    profiles = Xplain::Visualization::Profile.list
+    
+    json = Jbuilder.new()
+    json.profiles profiles
+    respond_to do |format|
+      format.json {render :json => json.target!}
+    end
+  end
+
+  def load_view_profile
+    respond_to do |format|
+      if !params[:id]
+        format.json{render :json => "You must supply an id as parameter", :status => :unprocessable_entity}
+      end
+      begin
+        profile = Xplain::Visualization::Profile.load(params[:id])
+        
+        format.json {render :json => profile.to_json}
+      rescue Exception => e
+        format.json {render :json => e.message, :status => :unprocessable_entity}
+      end
+
+    end
+  end
+
+  def save_profile
+    name = params[:name]
+    params[:id] = name
+    respond_to do |format|
+      begin
+        profile = Xplain::Visualization::Profile.load(name)
+        if !profile
+          profile = Xplain::Visualization::Profile.create(params)
+        end
+        #TODO relate the profile to the session
+        
+        
+        
+        @current_session.view_profile = profile
+        @current_session.save
+        format.json {render :json => "{\"msg\":\"Profile successfuly created!\"}"}
+      rescue Exception => e
+        puts e.backtrace
+        format.json {render :json => e.message, :status => :unprocessable_entity}
+      end
+
+    
+
+    end
+  end
+
   def generate_jbuilder(result_set, template_html, component_name = 'DefaultSetWidget', page = 1, should_paginate=true)
     if should_paginate
       total_by_page = 20

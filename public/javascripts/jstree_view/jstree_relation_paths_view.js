@@ -212,7 +212,8 @@ XPLAIN.views.RelationPathTree = function(setId, $treeDiv, params){
 		  this.createTree();
 		}
 		debugger
-		XPLAIN.AjaxHelper.execute(expression, function(data){
+		
+		XPLAIN.AjaxHelper.execute(expression.replace(/#/g, "%23"), function(data){
 			this_projection.populate(data.extension, data.id, data.resultedFrom);
 		},"json",1,false);
 		

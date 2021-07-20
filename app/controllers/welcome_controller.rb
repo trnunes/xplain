@@ -3,8 +3,15 @@ class WelcomeController < ApplicationController
   def index
     
     
+    begin
+      @current_session = Xplain::Session.create(title: "Unnamed", server: Xplain.default_server, view_profile: Xplain::Visualization.current_profile)
       
-      session[:current_session] = Xplain::Session.create(title: "Unnamed").id
+    rescue Exception => e
+      puts e.backtrace
+      puts e.message
+      
+    end
+
     
 
   end

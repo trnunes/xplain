@@ -26,6 +26,8 @@ XPLAIN.AjaxHelper = {
 		
 		
 		executeOperationUrl += "&should_paginate=" + should_paginate;
+		let session_id = $("#session_name").data("sessionId") || "	";
+		executeOperationUrl += "&xplain_session=" + session_id;
 		
 		XPLAIN.AjaxHelper.post(executeOperationUrl, format, successFunction);
 	},

@@ -18,21 +18,21 @@ XPLAIN.SetController = {
 	},
 	
 	getResultedFrom: function(setId){
-		var resultedFrom = $($('[data-id='+ setId + ']')[0]).data('resultedFrom');
+		var resultedFrom = $($('[data-id="'+ setId + '"]')[0]).data('resultedFrom');
 		return resultedFrom;
 	},
 	
 	getExtension: function(setId){
-		return $($('[data-id=' + setId  + ']')[0]).data('extension');
+		return $($('[data-id="' + setId  + '"]')[0]).data('extension');
 	},
 	
 	getTitle: function(setId){
-		return $('[data-id=' + setId + ']').data('title');
+		return $('[data-id="' + setId + '"]').data('title');
 	},
 	
 	getInputSets: function(setId){
 		
-		return $('[data-resultedFrom='+setId+ ']').map(function(){$(this).data('title');});
+		return $('[data-resultedFrom="'+setId+ '"]').map(function(){$(this).data('title');});
 	},
 		
     countLevels: function(setId){

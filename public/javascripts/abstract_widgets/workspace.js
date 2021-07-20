@@ -15,6 +15,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
 	XPLAIN.widgets.Widget.call(this, null, workspaceState);
 	this.params_hash = new Hashtable();
 	this.save_url = "/session/save_session.json"
+	this.execute_url = "/session/execute.json"
 	
 }
 
@@ -27,6 +28,21 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.build = function(){
 }
 	
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerBehavior = function(){
+	var currentXhr;
+	currentXhr = null;
+
+	$(document).on('ajax:send', function(_event, xhr) {
+	  if (currentXhr) {
+		currentXhr.abort();
+		debugger;
+	  }
+	  currentXhr = xhr;
+	  return true;
+	});
+	$(document).on('ajax:complete', function(_event, _xhr, _status) {
+	  currentXhr = null;
+	});
+
 	$(".help_btn").unbind().click(function(){
 		if ($('#' + $(this).attr("operation") + "_help").is(':empty')){
 			XPLAIN.AjaxHelper.get("/session/help?operation=" + $(this).attr("operation"));
@@ -36,6 +52,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerBehavior = function(){
 		}
 
 	});
+
 	this.registerLandmarkHandlers();
 	this.registerExplorationBehavior();
 }
@@ -79,7 +96,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	$("#all_types").unbind().click(function(){
 		debugger;
 		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"has_type\", server: @server).image.sort_asc!')"
-		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/execute.json?exp="+ expression + "&xplain_session=" + xplain_session;
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			
 			if (data.errors){
 				return XPLAIN.alertErrors(data.errors)
@@ -89,8 +108,10 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 	});
 
 	$("#all_relations").unbind().click(function(){
-	    var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank"
-        XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
+		var expression = "Xplain::ExecuteRuby.new(code: 'Xplain::SchemaRelation.new(id: \"relations\", server: @server).image.sort_asc!').rank"
+		let xplain_session = $("#session_name").data("sessionId");
+let url = "/session/execute.json?exp="+ expression + "&xplain_session=" + xplain_session;
+        XPLAIN.AjaxHelper.get(url, "json", function(data){
 			if (data.errors){
 				return XPLAIN.alertErrors(data.errors)
 			}
@@ -98,20 +119,31 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerLandmarkHandlers = funct
 		});
 	});
     
-    $('#set_endpoint_btn').click(function () {
+    $('#set_endpoint_btn').click(function (e) {
         var endpoint_url = $('#input_url').val().trim();
         var named_graph_uri = $('#ngraph_uri').val().trim();
         var http_method = $("#endpoint_modal [name=http-method]:checked").val();
-        var max_items_per_query = $("#endpoint_modal #max_items").val().trim();
+		var max_items_per_query = $("#endpoint_modal #max_items").val().trim();
+		if (!endpoint_url){
+			e.stopPropagation();
+			return alert("you should provide a URL for the endpoint");
+		}
         
-        // mounting endpoint config url
-        var url = "/session/set_endpoint?method="+http_method+"&items_limit=" + max_items_per_query + "&graph=" +  encodeURIComponent(endpoint_url)+ "&named_graph=" +  encodeURIComponent(named_graph_uri);
+		// mounting endpoint config url
+		let session_id = $("#session_name").data("sessionId") || "	";
+		let endpoint = $("#endpoint_url").text();
+
+        var url = "/session/set_endpoint?xplain_session="+session_id+"&method="+http_method+"&items_limit=" + max_items_per_query + "&graph=" +  encodeURIComponent(endpoint_url)+ "&named_graph=" +  encodeURIComponent(named_graph_uri);
 
         if ($("#endpoint_modal #blazegraph_search_idx:checked").size()){
             url += "&class=BlazegraphDataServer";            
         } else {
         	url += "&class=Xplain::RDF::DataServer";
-        }
+		}
+		if ($("#dbpedia_lookup:checked")) {
+			url += "&lookup_service=Xplain::DbpediaLookup"
+		}
+
         
         if (endpoint_url) {
             XPLAIN.AjaxHelper.get(url, "json", function(data){
@@ -154,21 +186,31 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.list_sessions = function(){
 	});
 }
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session = function(){
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session = function(name, callback){
 	var thisWidget = this;
 	debugger;
-	var session_name = $("input:radio[name=radio_session]:checked").parent().text();
-	XPLAIN.AjaxHelper.get("/session/load_session.json?name=" + session_name, "json", function(data){
-		
-		$('.set').find("._remove").click()
-		data.sets.forEach(function(setData){
-			debugger;
-			thisWidget.state.addSetFromJson(setData);
-		});
-		$("#session_name").text(session_name);
-		$("#endpoint_url 	").text(data.server);
-		
+	if (!name){
+		name = $("input:radio[name=radio_session]:checked").parent().text();
+	}
+
+	XPLAIN.AjaxHelper.get("/session/load_session.json?name=" + name, "json", function(data){
+		thisWidget.load_session_data(data);
+		if (callback){
+			callback(data);
+		}
 	});
+}
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session_data = function(data){
+	var thisWidget = this;
+	$('.set').remove();
+	XPLAIN.graph.clear();
+	data.sets.forEach(function(setData){
+		debugger;
+		thisWidget.state.addSetFromJson(setData);
+	});
+	$("#session_name").text(data.name);
+	$("#session_name").data("session_id", data.id);
+	$("#endpoint_url").text(data.server);
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session_by_id = function(id){
@@ -176,14 +218,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session_by_id = function(id
     debugger;
     
     XPLAIN.AjaxHelper.get("/session/load_session.json/" + id, "json", function(data){
-        debugger;
-        $('.set').find("._remove").click()
-        data.sets.forEach(function(setData){
-            thisWidget.state.addSetFromJson(setData);
-        });
-        
-        $("#session_name").text(data.name);
-        
+		thisWidget.load_session_data(data);
     });
 }
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_last_active_session = function(){
@@ -201,19 +236,40 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_last_active_session = funct
 
 }
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.close_session = function(){
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.close_session = function(callback){
 	var thisWidget = this;
     XPLAIN.AjaxHelper.get("/session/close", "json", function(data){
         
         $('.set').find("._remove").click()
         
-        $("#session_name").text("Unnamed");
+		$("#session_name").text("Unnamed");
+
+		if (callback){
+			callback(data);
+		}
         
     });
 
 }
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(){
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.reload_current_session = function(){
+	var thisWidget = this;
+	this.save_session(function(){
+		debugger
+		var session_name = $("#session_name").text();
+		if (!session_name || session_name === "Unnamed"){
+			return alert("You must save the current session with a valid name before setting a visualization profile.");
+		}
+		
+		thisWidget.close_session(function(){
+			console.log("Reloading session: ", session_name);
+			thisWidget.load_session(session_name)
+		});
+
+	});
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(callback){
 	var thisWidget = this;
 	debugger;
 	var name = prompt("Save session: please enter the session name", "").trim();
@@ -229,14 +285,17 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(){
 		debugger;
 		alert("Session has been saved!");
 		$("#session_name").text(name.trim());
+		if (callback){
+			callback(data);
+		}
 	});
 }
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(){
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(callback){
 
 	var name = $("#session_name").text().trim();
 	if (name.indexOf("Unnamed") >= 0 ) {
-		return this.save_session_as();
+		return this.save_session_as(callback);
 	}
 
 	XPLAIN.AjaxHelper.get(this.save_url, "json", function(data){
@@ -246,6 +305,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(){
 		}
 
 		alert(data.success);
+		if (callback){
+			callback(data);
+		}
 		
 	});
 
@@ -275,7 +337,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.create_session = function(){
 	
 }
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
-	var thisWidget= this
+	var thisWidget= this;
 	var inputValues = $("#seachbykeyword").val().trim();
 	
 
@@ -288,8 +350,11 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
 		return this;
 	} else {
 
-		var expression =  "Xplain::ExecuteRuby.new(code: 'Xplain::ResultSet.new(nodes: [Xplain::Entity.new(\""+inputValues+"\")])')";		
-		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression, "json", function(data){
+		var expression =  "Xplain::ExecuteRuby.new(code: 'Xplain::ResultSet.new(nodes: [Xplain::Entity.new(\""+inputValues+"\")])')";
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/execute.json?exp="+ expression + "&xplain_session=" + xplain_session;
+
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			if (data.errors){
 				return XPLAIN.alertErrors(data.errors)
 			}
@@ -300,7 +365,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_derref = function(){
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function(){
 	var inputValues = $("#seachbykeyword").val();
-	
+	var thisWidget= this;
 
 	if (inputValues === '') {
 		$("#seachbykeyword").fadeOut(50).promise().done(function () {
@@ -309,9 +374,21 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.ajax_keyword_search = function()
 
 		alert("Please, type one or more keywords!");
 		return this;
-	} else {
-		new KeywordSearch([inputValues]).execute("json");
 	}
+	let endpoint = $('#endpoint_url').text()
+	let session_id = $("#session_name").data("sessionId") || "	";
+	
+	var expression = `Xplain::KeywordSearch.new(keyword_phrase: "${inputValues}")`;
+	let url = this.execute_url + "?exp=" + expression + "&endpoint=" + endpoint + "&xplain_session=" + session_id;
+	XPLAIN.AjaxHelper.get(url, "json", function(data){
+		if (data.errors){
+			return XPLAIN.alertErrors(data.errors);
+		}
+		thisWidget.state.addSetFromJson(data)
+
+	});
+
+	
 }
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.registerExplorationBehavior = function(){
@@ -485,12 +562,228 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.removeCSS = function(klass){
     $('.' + klass).removeClass(klass);
 	
 };
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_view_profile = function(id) {
+	var that = this;
+	$.ajax({
+		url: '/session/load_view_profile.json?id='+id ,
+		type: 'get',
+		contentType: 'application/json',
+		success: function(data){
+			that.edit_view_profile(data);
+		},
+		error: function(data){
+			alert(data.responseText)
+		}
 
-XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_view_profiles = function(){
-	$('#view_modal').modal('show');
+	});
+
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.list_view_profiles = function(){
 	debugger
+	var that = this;
+	XPLAIN.AjaxHelper.get("/session/list_view_profiles.json", 'json', function(data){
+		if (data.errors){
+			return XPLAIN.alertErrors(data.errors);
+		}
+		debugger
+		$('#list_profiles_modal ul').empty();
+		data.profiles.forEach(function(profile){
+
+			var profile_html = $('<button type="button" class="list-group-item list-group-item-action">' + profile.name +'</button>');
+			profile_html.click(function(event){
+				that.load_view_profile(profile.id)
+
+			});
+			
+			$('#list_profiles_modal ul').append(profile_html);
+			$('#new_profile_btn').click(function(e){
+				
+				$('#list_profiles_modal').modal('hide');
+				that.edit_view_profile();
+			});
+			
+		});
+	});
+	$('#list_profiles_modal').modal('show');
+	
 
 };
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.edit_view_profile = function(data){
+	$("#input_profile_name").val("");
+	$(".labels_for_type").remove();
+	$(".text_for_items").remove();
+
+	const labels_by_type_div = `
+		<div class="form-group row feature labels_for_type">
+			<div class="form-group col-md-4">
+				<label for="type_id">Type ID</label>
+				<input type="text" class="form-control col-sm-2 type_id" placeholder="">
+			</div>
+			<div class="form-group col-md-4">
+				<label for="relations_ids">Label Relation ID</label>
+				<input type="text" class="form-control col-sm-2 relations_ids" placeholder="">
+			</div>
+		</div>
+	`;
+
+	const text_for_items_div = `
+		<div class="form-group row feature text_for_items">
+			<div class="form-group col-md-4">
+				<label for="item">Item ID</label>
+				<input type="text" class="form-control col-sm-2 item_id" placeholder="">
+			</div>
+
+			<div class="form-group col-md-4">
+				<label for="input_name">Label</label>
+				<input type="text" class="form-control col-sm-2 input_label" placeholder="">
+			</div>
+
+			<div class="form-group col-md-4">
+				<label for="input_name">Label for inverse relation </label>
+				<input type="text" class="form-control col-sm-2 inverse_input_label" placeholder="">
+			</div>
+
+		</div>			
+	`;
+	var add_form_group = function(e){
+		e.preventDefault()
+		e.stopPropagation()
+		
+		var $feature_div;
+
+		if ($(this).attr("id") === "label_for_type_add_btn"){
+			$feature_div = $(labels_by_type_div);
+		} else {
+			$feature_div = $(text_for_items_div);
+		}
+		
+		var form_group = $(this).parents('.profile_feature').first();
+		// $feature_div.find('select').selectpicker();
+		
+		form_group.append($feature_div);
+	}
+
+
+
+
+	$('#label_for_type_add_btn').off('click').click(add_form_group);
+	$('#text_for_item_add_btn').off('click').click(add_form_group);
+	if (data){
+		
+		$('#input_profile_name').val(data.name);
+
+		for (var key in data.labels_by_type_dict){
+				
+			if(data.labels_by_type_dict.hasOwnProperty(key)){ 
+				
+				var relations = data.labels_by_type_dict[key]
+				var $div = $(labels_by_type_div);
+				$div.find(".type_id").val(key);
+				$div.find(".relations_ids").val(relations.join("; "));
+				$(".profile_types").append($div);
+			
+			}
+		}
+
+		for (var key in data.item_text_dict){
+			
+			if(data.item_text_dict.hasOwnProperty(key)){ 
+				var text = data.item_text_dict[key]
+				var $div = $(text_for_items_div);
+				$div.find(".item_id").val(key)
+				$div.find(".input_label").val(text);
+				$(".profile_items").append($div);
+			}
+		}
+
+		for(var key in data.inverse_relation_text_dict){
+			if(data.inverse_relation_text_dict.hasOwnProperty(key)){
+				var text = data.inverse_relation_text_dict[key]
+				var $div = $(text_for_items_div);
+				$div.find(".item_id").val(key)
+				$div.find(".inverse_input_label").val(text);
+				$(".profile_items").append($div);
+			}
+		}
+
+	}
+
+	$('#view_profile_modal').modal('show');
+}
+
+XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_view_profile = function(){
+	var thisWidget = this;
+	var type_config = {
+		id: $('#input_profile_name').val(),
+		name: $('#input_profile_name').val(),
+		labels_by_type_dict: {},
+		item_text_dict: {},
+		inverse_relation_text_dict: {}
+	}
+	debugger
+	if (!type_config.name) {
+		return alert("Please enter a valid name for the profile!");
+	}
+
+	$('#view_profile_modal .labels_for_type').each(function(){
+		var selected_type = $(this).find(".type_id").val();
+		if (!selected_type){
+			return;
+		}
+
+		var relations = []
+		$(this).find(".relations_ids").val().split(";").forEach(function(r){
+			relations.push(r.trim());
+		});
+
+		if (relations.length){
+		    type_config.labels_by_type_dict[selected_type.trim()] = relations
+		}
+		
+	});
+
+	$('#view_profile_modal .text_for_items').each(function(){
+		var selected_item = $(this).find(".item_id").val();
+		if (!selected_item){
+			return;
+		}
+		var text = $(this).find(".input_label").val();
+		var inverse_text = $(this).find(".inverse_input_label").val();
+		if (text){
+		    type_config["item_text_dict"][selected_item] = text.trim();
+		}
+		
+		if (inverse_text) {
+			type_config["inverse_relation_text_dict"][selected_item] = inverse_text.trim();
+		}
+
+		debugger
+	});
+	console.log(type_config);
+
+
+
+	$.ajax({
+		url: '/session/save_profile.json',
+		type: 'post',
+		dataType: 'json',
+		contentType: 'application/json',
+		success: function(data){
+			debugger
+			thisWidget.reload_current_session();
+		},
+		error: function(data) {
+			debugger
+			alert("Something went wrong while saving the profile: "+ data.responseText)
+
+		},
+		data: JSON.stringify(type_config)
+	});
+
+
+}
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_namespaces_modal = function(){
 
@@ -616,7 +909,7 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.setup_and_show_endpoint_modal = 
 		for (var i in data){
 			add_endpoint(data[i].url, data[i].named_graph, data[i].is_blz_graph);    
 		}
-		$("#endpoint_modal [name=http-method] [value=post]").first().prop('checked', true);
+		$("#endpoint_modal [name=http-method][value=post]").first().prop('checked', true);
 		$('#endpoint_modal').modal('show');
 	});
 	
@@ -639,13 +932,13 @@ XPLAIN.states.WorkspaceState.prototype.sets = [];
 XPLAIN.states.WorkspaceState.prototype.currentOperation = null;
 
 XPLAIN.states.WorkspaceState.prototype.addSetFromJson = function(setJson){
-	const viewAlreadyAdded = $('[data-id='+setJson.id+']').length;
-	debugger;
+	const viewAlreadyAdded = $('[data-id="'+setJson.id+'"]').length;
+	
 	if (viewAlreadyAdded){
+		$('[data-id='+setJson.id+']').remove();
 		
-		XPLAIN.activeWorkspaceWidget.selectSetAndFocus(setJson.id);
-		XPLAIN.graph.addSet(setJson);
-		return;
+		XPLAIN.graph.removeSet(setJson.id);
+		
 	}
 
 	this.addSetState(new XPLAIN.states.SetState(setJson));

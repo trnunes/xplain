@@ -19,6 +19,8 @@ gem 'jquery-rails'
 
 gem 'jquery-ui-rails'
 
+gem "typhoeus", "~>0"
+
 gem 'rack-cors'
 
 gem 'rdf', '2.1.0'
@@ -27,7 +29,7 @@ gem 'linkeddata', '2.0.0'
 
 gem 'sparql-client', '2.0.1'
 
-gem 'xplain'
+# gem 'xplain'
 
 
 
@@ -48,8 +50,9 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
-group :development, :test do
-end
-
+# group :development, :test do
+# end
+# group :development do
+# end
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]

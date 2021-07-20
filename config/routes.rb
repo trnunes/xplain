@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
 
+  post 'session/execute_operation'
+  post 'session/save_profile'
+  get 'session/list_view_profiles'
+  get 'session/load_view_profile'
   get 'session/execute'
   get 'session/fetch_nested_relations'
   get 'session/calculate_extension'

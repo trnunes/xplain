@@ -81,9 +81,10 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.init = function(){
 			pathExpr += '])';
 			return pathExpr;
 		}
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = '/session/save_path.js?expr='+exp_gen().replace(/#/g, "%23") + "&xplain_session=" + xplain_session;
 		
-		
-		XPLAIN.AjaxHelper.get('/session/save_path.js?expr='+exp_gen().replace(/#/g, "%23"), "js");
+		XPLAIN.AjaxHelper.get(url, "js");
 
 		return 
 	});
@@ -383,9 +384,10 @@ XPLAIN.controllers.AbstractRelationsTreeController.prototype.updateValuesList = 
 				return;
 			  }
 
-			  
-
-			  XPLAIN.AjaxHelper.get("/session/search.json?set=" + setId + "&str=" + params.data.term, "json", function(data){
+			  let xplain_session = $("#session_name").data("sessionId");
+			  let url = "/session/search.json?set=" + setId + "&str=" + params.data.term + "&xplain_session=" + xplain_session;
+			
+			  XPLAIN.AjaxHelper.get(url, "json", function(data){
 			  	debugger;
 			  	success(data, (params.data.page || 1));
 			  });
@@ -895,7 +897,7 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 			var setId = that.setId;
 			var item_type = "literal";
 			debugger;
-			if(data.node.type.toLowerCase() == "xplain::entity" || data.node.type.toLowerCase() == "type"){
+			if(data.node.type.toLowerCase() == "xplain::entity" || data.node.type.toLowerCase() == "xplain::type"){
 				item_type = "entity"
 			}
 			
@@ -968,8 +970,10 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 
 	this.updateFacets = function(filter){
 		
-
-		XPLAIN.AjaxHelper.get("/session/apply_facet.json?id="+this.setId+"&filter="+ filter.replace(/#/g, "%23"), "json", function(data){
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/apply_facet.json?id="+this.setId+"&filter="+ filter.replace(/#/g, "%23") +  "&xplain_session=" + xplain_session;
+		
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			debugger;
 			that.sourceSet = data.resultedFrom[0].id;
 			var $tree = $("#facetedSearchModal .facets_area").jstree(true);
@@ -1027,8 +1031,10 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 		});
 	},
 	this.addFacetRelations = function(){
-
-		XPLAIN.AjaxHelper.get("/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot(visual: true){relation \"relations\"}", "json", function(data){
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/execute.json?exp=Xplain::ResultSet.load(\""+ this.setId + "\").pivot(visual: true){relation \"relations\"}" +  "&xplain_session=" + xplain_session;
+		
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			if (data.errors){
 				return XPLAIN.alertErrors(data.errors)
 			}
@@ -1101,8 +1107,11 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 		if (relation.li_attr.inverse){
 			is_inverse_param = "&inverse=" + relation.li_attr.inverse	
 		}
-
-		XPLAIN.AjaxHelper.get("/session/render_faceted_search.json?id="+ this.sourceSet + "&relation=" + relation_id.replace(/#/, "%23") + is_inverse_param, "json", function(data){
+		
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/render_faceted_search.json?id="+ this.sourceSet + "&relation=" + relation_id.replace(/#/, "%23") + is_inverse_param +  "&xplain_session=" + xplain_session;
+		
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			debugger;
 			var $jstreeListView	= $("#facetedSearchModal .facets_area");
 				
@@ -1141,7 +1150,9 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 	},
 
 	this.load_facets = function(callback){
-		XPLAIN.AjaxHelper.get("/session/render_faceted_search.json?id="+ this.setId, "json", function(data){
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/render_faceted_search.json?id="+ this.setId +  "&xplain_session=" + xplain_session;
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			debugger;
 			callback(data);
 		});
@@ -1158,7 +1169,10 @@ XPLAIN.controllers.FacetedSearchController = function(setId){
 		filter_expression += "]}"
 
 		var expression = "Xplain::ResultSet.load(\""+this.setId+"\").refine{ "+filter_expression+"}"
-		XPLAIN.AjaxHelper.get("/session/execute.json?exp="+ expression.replace(/#/g, "%23"), "json", function(data){
+		let xplain_session = $("#session_name").data("sessionId");
+		let url = "/session/execute.json?exp="+ expression.replace(/#/g, "%23") +  "&xplain_session=" + xplain_session;
+		
+		XPLAIN.AjaxHelper.get(url, "json", function(data){
 			debugger
 			if (data.errors){
 				return XPLAIN.alertErrors(data.errors)

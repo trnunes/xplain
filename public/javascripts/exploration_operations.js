@@ -585,12 +585,13 @@ function RelationRestriction(relation, operator, value, connector){
 };
 
 
-function KeywordSearch(keywords, isVisual){
+function KeywordSearch(keywords, isVisual, server){
 	Operation.call(this, null, isVisual);
-	this.keywords = keywords;
+	this.keywords = keywords.join(" ");
+	this.server = server;
 	this.getExpression = function(){
 		var prefix = "";
-		var expr = "Xplain::KeywordSearch.new(keyword_phrase: \""+ keywords.join(" ")+"\")";
+		var expr = `Xplain::KeywordSearch.new(keyword_phrase: "${this.keywords}")`;
 		return expr	;
 	},
 	

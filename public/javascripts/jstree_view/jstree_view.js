@@ -439,24 +439,35 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 			if(node_to_open.li_attr.item_type == "Xplain::SchemaRelation"){
 				
 				var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr.item;
+				var node_id = $tree.jstree().get_node(node_to_open.parent).li_attr.node;
 				var relation_id = $tree.jstree().get_node(node_to_open).li_attr.item;
 				var is_inverse = $tree.jstree().get_node(node_to_open).li_attr.inverse == "true";
 				var expression= "";
 				
-				if(relation_id.indexOf(":")){
-					expression = "Xplain::ResultSet.new(nodes: [Xplain::Node.new(item: Xplain::Entity.create(\""+item_id+"\"))]).pivot{relation \""+relation_id+"\"}";
-					if (is_inverse) {
-						debugger
-
-					    expression = "Xplain::ResultSet.new(nodes: [Xplain::Node.new(item: Xplain::Entity.create(\""+item_id+"\"))]).pivot{relation inverse(\""+relation_id+"\")}"
-					}
-					
-				} else {
-
-					expression = "Xplain::SchemaRelation.create(\""+relation_id+"\", inverse: "+is_inverse+", \"\", current_session.server).restricted_image([Entity.create(id:\""+item_id+"\"])";
-
+				
+				json = {
+					operation: "pivot",
+					node: node_id,
+					visual: true,
+					relation: {}					
 				}
-				XPLAIN.AjaxHelper.execute(expression, tree_update_function);
+
+				json.relation = {id: relation_id, inverse: is_inverse};
+				let session_id = $("#session_name").data("sessionId");
+				let endpoint = $("#endpoint_url").text();
+				$.ajax({
+					type: "POST",
+					url: `/session/execute_operation.json?endpoint=${endpoint}&xplain_session=${session_id}`,
+					dataType: 'json',
+					contentType: 'application/json',
+					data: JSON.stringify(json),
+					success: tree_update_function,
+					error: function(data){
+						alert(data);
+					}
+
+				});
+				debugger;
 			} else if (node_to_open.li_attr.item_type == "Xplain::PathRelation"){
 				var item_id = $tree.jstree().get_node(node_to_open.parent).li_attr.item;
 
@@ -467,10 +478,34 @@ XPLAIN.widgets.JstreeView.prototype.registerItemBehavior = function($tree){
 				pivot.addRelation(new Relation(node_to_open.li_attr));
 				pivot.execute("json", tree_update_function);
 			} else {
-			    
-			    var expression = "Xplain::Entity.create(\""+node_to_open.li_attr.item+"\", \"\", current_session.server).relations"
-			    
-			    XPLAIN.AjaxHelper.execute(expression, tree_update_function);
+				
+				var item_id = $tree.jstree().get_node(node_to_open).li_attr.item;
+				var node_id = $tree.jstree().get_node(node_to_open).li_attr.node;
+				var expression= "";
+								
+								
+				json = {
+					operation: "pivot",
+					node: node_id,
+					visual: true,
+					relation: {}					
+				};
+				
+				json.relation = {id: "relations"};
+				let session_id = $("#session_name").data("sessionId") || "	";
+				let endpoint = $("#endpoint_url").text();
+				$.ajax({
+					type: "POST",
+					url: `/session/execute_operation.json?endpoint=${endpoint}&xplain_session=${session_id}`,
+					dataType: 'json',
+					contentType: 'application/json',
+					data: JSON.stringify(json),
+					success: tree_update_function,
+					error: function(data){
+						alert(data);
+					}
+				
+				});
 			}
 			
 		}
@@ -520,6 +555,7 @@ XPLAIN.widgets.JstreeView.prototype.convertItem = function(item){
 		item_node.subset = item.subset
 		item_node.li_attr.subset = item.subset
 	}
+	debugger
 
 	if(item.children !== undefined && item.children.length > 0){
 		for(var i in item.children){

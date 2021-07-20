@@ -1,0 +1,2 @@
+class RefineAux::Not
+end

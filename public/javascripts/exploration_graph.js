@@ -114,15 +114,19 @@ XPLAIN.graph = new function(){
 		this.focus(xsetId);
 		this.graph.selectNodes([xsetId]);		
 	},
-	
+	this.clear = function(){
+		this.init()
+
+	},
 	this.addSet = function(setJson){
+		debugger
         try {
 	        this.nodes.add({
                 id: setJson.id,
                 label: setJson.title,
 				color: this.nodeColor
             });
-			
+			debugger
 			if (setJson.resultedFrom.length > 0){
 				var resultedFromFound = false;
 				for (var i in setJson.resultedFrom){

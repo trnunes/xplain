@@ -1,0 +1,122 @@
+<div class="modal fade" id="view_profile_modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow: auto; width: 900px">
+            <div class="modal-header">
+                <h4 class="modal-title"><%=t :view_profile_edit%></h4>
+            </div>
+
+
+            <div class="modal-body">
+                <form>
+
+                    <div class="form-group row">
+                        <div class="form-group col-md-4">
+                            <label for="input_profile_name"><%= t :profile_name%> </label>
+                            <input type="text" class="form-control col-sm-2" id="input_profile_name" placeholder="">
+                            
+                        </div>
+
+                    </div>
+                    <div class = "form-group profile_feature profile_types">
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <h4 class="modal-title"><%=t :label_relations_for_types%></h4>
+                            </div>
+                        </div>
+
+                        <div class ="row">
+                            <div class="form-group col-md-2">
+                                <label for="prof-add-btn">Add New Type Config</label>
+                                <button type="button" id="label_for_type_add_btn" class="btn btn-default form-control">
+                                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group row feature labels_for_type">
+                            <div class="form-group col-md-4">
+
+                                <label for="type_id">Type ID</label>
+                                <input type="text" class="form-control col-sm-2 type_id" placeholder="">
+                            
+                                <!--TODO implement a select
+                                <select class="form-control selectpicker type" data-live-search="true">
+                                    <option>http://www.w3.org/2000/01/rdf-schema#Resource</option>
+                                    <option>http://purl.org/spar/fabio/Expression</option>
+                                    <option>http://purl.org/spar/fabio/JournalArticle</option>
+                                    <option>foaf:Agent</option>
+                                </select>
+                                -->
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="relations_ids">Label Relation ID</label>
+                                <input type="text" class="form-control col-sm-2 relations_ids" placeholder="">
+                                
+                                <!--TODO implement a select
+                                <select class="selectpicker relations form-control" multiple data-live-search="true">
+                                    <option>dcterms:title</option>
+                                    <option>c4o:hasContent</option>
+                                    <option>foaf:name</option>
+                                    <option>rdfs:label</option>
+                                </select>
+                                -->
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class = "form-group profile_feature profile_items">
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <h4 class="modal-title"><%=t :labels_for_types_and_relations%></h4>
+                            </div>
+                        </div>
+
+                        <div class ="row">
+                            <div class="form-group col-md-2">
+                                <label for="prof-add-btn">Add a label for type/relation</label>
+                                <button type="button" id="text_for_item_add_btn" class="btn btn-default form-control">
+                                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group row feature text_for_items">
+                            <div class="form-group col-md-4">
+
+                                <label for="item">Item ID</label>
+                                <input type="text" class="form-control col-sm-2 item_id" placeholder="">
+                                
+                                <!--TODO implement a selection with on demand query
+                                <select class="form-control selectpicker item" data-live-search="true">
+                                    <option>http://www.w3.org/2000/01/rdf-schema#Resource</option>
+                                    <option>http://purl.org/spar/fabio/Expression</option>
+                                    <option>http://purl.org/spar/fabio/JournalArticle</option>
+                                    <option>foaf:Agent</option>
+                                </select>
+                                -->
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="input_name"><%= t :label%> </label>
+                                <input type="text" class="form-control col-sm-2 input_label" placeholder="">
+
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="input_name"><%= t :label_for_inverse_relation%> </label>
+                                <input type="text" class="form-control col-sm-2 inverse_input_label" placeholder="">
+
+                            </div>
+                        </div>           
+                    </div>
+
+                </form>
+            </div>			
+
+            <div class="modal-footer">
+                <button type="button" id="save_profile_btn" class="exec btn btn-default" onclick = "XPLAIN.activeWorkspaceWidget.save_view_profile()"> <%=t :save_profile%></button>
+            </div>
+
+        </div>
+        <!-- /.modal-content -->
+    </div>
+<!-- /.modal-dialog -->
+</div>

@@ -141,12 +141,20 @@ XPLAIN.widgets.DefaultSetWidget.prototype.build = function(){
 	//TODO add init pagination list
 	this.init_pagination_list($view, setJson);
 	
-
-
-
 	this.register_ui_behaviour($view);
+	
+	if ($view.data('ui-draggable')){
+		$view.draggable("destroy");
+		$view.resizable("destroy");				
+	}
+	$view.draggable();
+	$view.resizable();				
 	this.view = $view;
 	this.html = $view;
+	
+	
+	
+	
 
 	
 }

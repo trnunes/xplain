@@ -21,7 +21,14 @@ module Wxplain
     # config.time_zone = 'Central Time (US & Canada)'
 
     # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
-    # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
+    
+    Dir[ "#{Rails.root}/lib/*.rb"].each { |file| require file }
+    # config.eager_load_paths += ["#{Rails.root}/lib"]
+    # /home/thiago/projects/xplain/lib/adapters/rdf/lib/lookup_services.rb
+    # config.eager_load_paths += ["#{Rails.root}/lib/adapters/rdf/lib"]
+
+
+    config.i18n.load_path += Dir[Rails.root.join('config', 'locales', '*.{rb,yml}').to_s]
     config.i18n.default_locale = :en
     config.encoding = "utf-8"
 
@@ -51,13 +58,13 @@ module Wxplain
     #graph_url = "http://localhost:3001/blazegraph/namespace/kb/sparql"
 
     # setting the blazegraph server as the default data server for the exploration tasks
-    Xplain.set_default_server class: BlazegraphDataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
+    Xplain.set_default_server class: Xplain::RDF::DataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true, lookup_service: "Xplain::BlazegraphLookup"
     #Xplain.set_default_server class: Xplain::RDF::DataServer, named_graph: "http://namedgraph.com",graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
     #Xplain.set_default_server class: Xplain::RDF::DataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
     Xplain.cache_results = true
     # setting the session information repository
     begin
-      Xplain.set_exploration_repository class: BlazegraphDataServer, graph: session_graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000
+      Xplain.set_exploration_repository class: Xplain::RDF::DataServer, graph: session_graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, lookup_service: "Xplain::BlazegraphLookup"
     rescue Exception => e
 
         puts e.message
@@ -212,3 +219,4 @@ module Wxplain
     Xplain::SchemaRelation.inverse_suffix = "of"
   end
 end
+
