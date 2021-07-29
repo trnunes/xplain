@@ -263,17 +263,17 @@ module SPARQLHelper
     item
   end
   
-  def get_results(query, relation)
+  def get_results(query, relation, server=self)
     result_hash = {}
     items_hash = {}
-    execute(query).each do |solution|
+    server.execute(query).each do |solution|
       next if(solution.to_a.empty?)
       
       subject_id = Xplain::Namespace.colapse_uri(solution[:s].to_s)
       subject_item = Xplain::Entity.create(subject_id)
       subject_item.text = solution[:ls].to_s
       subject_item.text_relation = Xplain::Namespace.colapse_uri(solution[:textProps].to_s)
-      subject_item.add_server(self)
+      subject_item.add_server(server)
       
       object_id = solution[:o]
       related_item = nil
@@ -287,7 +287,7 @@ module SPARQLHelper
             related_item = Xplain::Entity.create(Xplain::Namespace.colapse_uri(object_id.to_s))
             related_item.text = solution[:lo].to_s.gsub('"', '\"')
             related_item.text_relation = Xplain::Namespace.colapse_uri(solution[:textPropo].to_s)
-            related_item.add_server self
+            related_item.add_server(server)
             related_item
           end
 

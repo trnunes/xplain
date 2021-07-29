@@ -8,6 +8,7 @@ module RankAux
     
     def prepare(nodes)
       #TODO refactor to_item_h and group_by methods in relations
+      # binding.pry
       @images_hash = @relation.restricted_image(nodes, group_by_domain: true).nodes.map{|n| [n.item, n.children.map{|c| c.item}]}.to_h
     end
     

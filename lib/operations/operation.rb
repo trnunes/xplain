@@ -110,6 +110,30 @@ class Xplain::Operation
     to_ruby_dsl.gsub(" ", "").gsub("\n", "").gsub(";", "")
     
   end
+
+  def reify
+    input_resultsets = inputs.map do |input|
+      input_intention = nil
+      
+      if input.is_a? Xplain::Operation
+        input_intention = input
+      else
+        input_intention = input.intention
+      end
+      
+      
+      if !input_intention
+        if input.id.to_s.empty?
+          input.save()
+        end
+        input
+      else
+        input_intention.execute().save()
+      end
+    end
+    binding.pry
+    inputs = input_resultsets
+  end
   
   def execute
      
@@ -117,8 +141,11 @@ class Xplain::Operation
       @auxiliar_function.server = @server
     end
     validate()
+    # reify()
     resultset = Xplain::ResultSet.new(intention: self)
+    # binding.pry
     result_nodes = get_results()
+    
     result_nodes.each{|node| node.parent_edges = []}
     resultset.children = result_nodes
     resultset.fetched = true

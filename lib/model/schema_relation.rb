@@ -63,7 +63,7 @@ module Xplain
 
     
     def reverse
-      Xplain::SchemaRelation.new(id: id, inverse: !inverse?)
+      Xplain::SchemaRelation.new(server: @server, id: id, inverse: !inverse?)
     end
     
     def image(offset=0, limit=nil)

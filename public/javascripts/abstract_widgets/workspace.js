@@ -14,8 +14,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget = function(workspaceState){
 	
 	XPLAIN.widgets.Widget.call(this, null, workspaceState);
 	this.params_hash = new Hashtable();
+	
 	this.save_url = "/session/save_session.json"
-	this.execute_url = "/session/execute.json"
+	this.execute_url = "/session/execute.json";
 	
 }
 
@@ -209,7 +210,8 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_session_data = function(dat
 		thisWidget.state.addSetFromJson(setData);
 	});
 	$("#session_name").text(data.name);
-	$("#session_name").data("session_id", data.id);
+	$("#session_name").data("sessionId", data.id);
+	debugger;
 	$("#endpoint_url").text(data.server);
 }
 
@@ -238,7 +240,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.load_last_active_session = funct
 
 XPLAIN.widgets.DefaultWorkspaceWidget.prototype.close_session = function(callback){
 	var thisWidget = this;
-    XPLAIN.AjaxHelper.get("/session/close", "json", function(data){
+	let xplain_session = $("#session_name").data("sessionId");
+	let close_url = "session/close?xplain_session=" + xplain_session;
+    XPLAIN.AjaxHelper.get(close_url, "json", function(data){
         
         $('.set').find("._remove").click()
         
@@ -279,9 +283,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session_as = function(callb
 	}
 	$("#session_name").text("Saving session...");
 	
-	param_str = "?name=" + name;
-
-	XPLAIN.AjaxHelper.get(this.save_url + param_str, "json", function(data){
+	param_str = "&name=" + name;
+    let xplain_session = $("#session_name").data("sessionId");
+	XPLAIN.AjaxHelper.get(this.save_url + "?xplain_session=" + xplain_session  + param_str, "json", function(data){
 		debugger;
 		alert("Session has been saved!");
 		$("#session_name").text(name.trim());
@@ -297,8 +301,8 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_session = function(callback
 	if (name.indexOf("Unnamed") >= 0 ) {
 		return this.save_session_as(callback);
 	}
-
-	XPLAIN.AjaxHelper.get(this.save_url, "json", function(data){
+    let xplain_session = $("#session_name").data("sessionId");
+	XPLAIN.AjaxHelper.get(this.save_url + "?xplain_session=" + xplain_session, "json", function(data){
 		debugger
 		if (data.errors){
 			return XPLAIN.alertErrors(data.errors)
@@ -764,9 +768,9 @@ XPLAIN.widgets.DefaultWorkspaceWidget.prototype.save_view_profile = function(){
 	console.log(type_config);
 
 
-
+	let xplain_session = $("#session_name").data("sessionId");
 	$.ajax({
-		url: '/session/save_profile.json',
+		url: '/session/save_profile.json' + '?xplain_session=' + xplain_session,
 		type: 'post',
 		dataType: 'json',
 		contentType: 'application/json',

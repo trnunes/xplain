@@ -16,8 +16,26 @@ class Xplain::KeywordSearch < Xplain::Operation
     end
     
     if !@inplace
-      results = @server.match_all(parse_keyword_phrase(), restriction_nodes)      
-      result_nodes = results.map{|item| Xplain::Node.new(item: item)}
+      servers_hash = {}
+      restriction_nodes.each do |node|
+        if !node.item.server
+          raise "Item \"#{node.item.id}\", \"#{node.item.text}\" does not contain a server!"
+        end
+        if !servers_hash.has_key? node.item.server
+          servers_hash[node.item.server] = []
+        end
+        
+        servers_hash[node.item.server] << node
+      end
+      
+      servers_hash.entries.each do |server, nodes|
+        results = server.match_all(parse_keyword_phrase(), nodes)
+        result_nodes += results.map{|item| Xplain::Node.new(item: item)}
+      end
+      if restriction_nodes.empty? && @server
+        results = @server.match_all(parse_keyword_phrase(), [])
+        result_nodes += results.map{|item| Xplain::Node.new(item: item)}
+      end
     end
     
     result_nodes

@@ -61,8 +61,9 @@ module Xplain::RDF
         
       end
       
-      
-      self.result_set_find_by_session(session, exploration_only: true)
+      if session
+        self.result_set_find_by_session(session, exploration_only: true)
+      end
        
       session
     end

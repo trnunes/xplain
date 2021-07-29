@@ -6,36 +6,36 @@ class MapTest < XplainUnitTest
   def test_map_by_empty_input_set
     root = Xplain::ResultSet.new(nodes:  [])
 
-    rs = Xplain::Aggregate.new(inputs: root, mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(id: "_:cite"))).execute
+    rs = Xplain::Aggregate.new(inputs: root, mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:cite"))).execute
 
     assert_true rs.children.empty?, rs.inspect
   end
 
   def test_sum_by_single_relation_0
-    input_nodes = create_nodes [Xplain::Entity.new("_:p5"), Xplain::Entity.new("_:p6"), Xplain::Entity.new("_:p7")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p5"), Xplain::Entity.new(server: @papers_server, id: "_:p6"), Xplain::Entity.new(server: @papers_server, id: "_:p7")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(id: "_:relevance"))).execute()
+    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:relevance"))).execute()
     
     assert_same_items_set rs.children, input_nodes
     assert_true rs.children.map{|n| n.children}.flatten.empty?
   end
   
   def test_sum_by_not_number
-    input_nodes = create_nodes [Xplain::Entity.new("_:paper1"), Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p4")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:paper1"), Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
-    
+    input.save
     assert_raise NumericItemRequiredException do
-      rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(id: "_:cite"))).execute()
+      rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:cite"))).execute()
     end
   end
   
   def test_sum_single_relation
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
+    input.save
     
-    
-    expr = Xplain::Aggregate.new(inputs: [input], mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(id: "_:relevance")))
+    expr = Xplain::Aggregate.new(inputs: [input], mapping_relation: AggregateAux::Sum.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:relevance")))
     rs = @papers_session.execute(expr)
     
     assert_equal 3, rs.children.size
@@ -53,11 +53,11 @@ class MapTest < XplainUnitTest
   end
   
   def test_count_by_single_relation
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p6"), Xplain::Entity.new("_:paper1")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p6"), Xplain::Entity.new(server: @papers_server, id: "_:paper1")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     
-    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Count.new(Xplain::SchemaRelation.new(id: "_:cite"))).execute()
+    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Count.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:cite"))).execute()
     
     assert_equal 3, rs.children.size
     assert_same_items_set input_nodes, rs.children
@@ -73,11 +73,11 @@ class MapTest < XplainUnitTest
   end
 
   def test_count_by_inverse_relation
-    input_nodes = create_nodes [Xplain::Entity.new("_:paper1"), Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:paper1"), Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     
-    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Count.new(Xplain::SchemaRelation.new(id: "_:cite", inverse: true))).execute()
+    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Count.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:cite", inverse: true))).execute()
     
     assert_equal 3, rs.children.size
     assert_same_items_set input_nodes, rs.children
@@ -93,11 +93,11 @@ class MapTest < XplainUnitTest
   end
   
   def test_average
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     
-    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Avg.new(Xplain::SchemaRelation.new(id: "_:relevance"))).execute()
+    rs = Xplain::Aggregate.new(inputs: input, mapping_relation: AggregateAux::Avg.new(Xplain::SchemaRelation.new(server: @papers_server, id: "_:relevance"))).execute()
     
     assert_equal 3, rs.children.size
     assert_same_items_set input_nodes, rs.children
@@ -113,7 +113,7 @@ class MapTest < XplainUnitTest
   end
   
   def test_count_computed_relation
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     computed_relation = input.get_level_relation(1)
     rs = Xplain::Aggregate.new(inputs: input, level: 2, mapping_relation: AggregateAux::Count.new()).execute()
@@ -124,10 +124,10 @@ class MapTest < XplainUnitTest
   end
   
   def test_count_computed_relation_level_2
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
-    input_nodes.first.children = create_nodes [Xplain::Entity.new("_:p2.1"), Xplain::Entity.new("_:p2.2"), Xplain::Entity.new("_:p2.3")]
-    input_nodes[1].children = create_nodes [Xplain::Entity.new("_:p3.1"), Xplain::Entity.new("_:p3.2")]
-    input_nodes[2].children = create_nodes [Xplain::Entity.new("_:p4.1")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
+    input_nodes.first.children = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2.1"), Xplain::Entity.new(server: @papers_server, id: "_:p2.2"), Xplain::Entity.new(server: @papers_server, id: "_:p2.3")]
+    input_nodes[1].children = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p3.1"), Xplain::Entity.new(server: @papers_server, id: "_:p3.2")]
+    input_nodes[2].children = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p4.1")]
     
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     rs = Xplain::Aggregate.new(inputs: input, level: 3, mapping_relation: AggregateAux::Count.new()).execute()
@@ -147,10 +147,10 @@ class MapTest < XplainUnitTest
 
 
   def test_count_computed_relation_level_2_dsl
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
-    input_nodes.first.children = create_nodes [Xplain::Entity.new("_:p2.1"), Xplain::Entity.new("_:p2.2"), Xplain::Entity.new("_:p2.3")]
-    input_nodes[1].children = create_nodes [Xplain::Entity.new("_:p3.1"), Xplain::Entity.new("_:p3.2")]
-    input_nodes[2].children = create_nodes [Xplain::Entity.new("_:p4.1")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
+    input_nodes.first.children = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2.1"), Xplain::Entity.new(server: @papers_server, id: "_:p2.2"), Xplain::Entity.new(server: @papers_server, id: "_:p2.3")]
+    input_nodes[1].children = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p3.1"), Xplain::Entity.new(server: @papers_server, id: "_:p3.2")]
+    input_nodes[2].children = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p4.1")]
     
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
@@ -170,7 +170,7 @@ class MapTest < XplainUnitTest
   end
   
   def test_sum_single_relation_dsl
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     rs = input.aggregate do
@@ -191,7 +191,7 @@ class MapTest < XplainUnitTest
   end
   
   def test_count_by_single_relation_dsl
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p6"), Xplain::Entity.new("_:paper1")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p6"), Xplain::Entity.new(server: @papers_server, id: "_:paper1")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     rs = input.aggregate do
@@ -212,7 +212,7 @@ class MapTest < XplainUnitTest
   end
 
   def test_count_by_inverse_relation_dsl
-    input_nodes = create_nodes [Xplain::Entity.new("_:paper1"), Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:paper1"), Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     rs = input.aggregate do
@@ -235,7 +235,7 @@ class MapTest < XplainUnitTest
   
   def test_average_dsl
     
-    input_nodes = create_nodes [Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p4")]
+    input_nodes = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     input = Xplain::ResultSet.new(nodes:  input_nodes)
     
     

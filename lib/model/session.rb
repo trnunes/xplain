@@ -30,8 +30,18 @@ module Xplain
     end
 
     def <<(result_set)
+      if result_set.id.to_s.empty?
+        raise "Result Set is not persisted, please call save() first!"
+      end
       @result_sets_hash[result_set.intention.to_ruby_dsl_sum] = result_set
       add_result_set(result_set)
+      
+    end
+
+    def setup_result_sets(result_sets)
+      result_sets.each do |rs|
+        @result_sets_hash[rs.intention.to_ruby_dsl_sum] = rs
+      end
       
     end
     
@@ -49,18 +59,29 @@ module Xplain
       
 
       input_resultsets = operation.inputs.map do |input|
-        input_intention = nil        
+        input_intention = nil
+        
         if input.is_a? Xplain::Operation
           input_intention = input
         else
           input_intention = input.intention
         end
-        input_intention.server = @server
-        cached_input = @result_sets_hash[input_intention.to_ruby_dsl_sum]
-        cached_input || self.execute(input_intention)
+        
+        
+        if !input_intention
+          if input.id.to_s.empty?
+            input.save()
+          end
+          input
+        else
+          input_intention.server = @server
+          cached_input = @result_sets_hash[input_intention.to_ruby_dsl_sum]
+          cached_input || self.execute(input_intention)
+        end
       end
       operation.inputs = input_resultsets
       operation.server = @server
+      
       
       rs = operation.execute
       @result_sets_hash[operation.to_ruby_dsl_sum] = rs

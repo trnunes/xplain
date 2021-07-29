@@ -40,18 +40,18 @@ class CompositionsTest < XplainUnitTest
 
   def test_chain_two_operations_executing_last_one
      input_nodes = [
-       Xplain::Node.new(item: Xplain::Entity.new("_:paper1")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p2")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p3")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p4")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p5")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p6")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p8"))
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p4")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p5")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8"))
      ]
 
      root = Xplain::ResultSet.new(nodes:  input_nodes)
-     
-     expected_results = Set.new([Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p5")])
+     root.save
+     expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p5")])
      
      op = Xplain::Pivot.new(inputs: root){relation "_:cite"}.refine do
          equals do
@@ -109,18 +109,19 @@ class CompositionsTest < XplainUnitTest
   
   def test_pivot_refine
     input_nodes = [
-      Xplain::Node.new(item: Xplain::Entity.new("_:paper1")),
-      Xplain::Node.new(item: Xplain::Entity.new("_:p2")),
-      Xplain::Node.new(item: Xplain::Entity.new("_:p3")),
-      Xplain::Node.new(item: Xplain::Entity.new("_:p4")),
-      Xplain::Node.new(item: Xplain::Entity.new("_:p5")),
-      Xplain::Node.new(item: Xplain::Entity.new("_:p6")),
-      Xplain::Node.new(item: Xplain::Entity.new("_:p8"))
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")),
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2")),
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3")),
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p4")),
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p5")),
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")),
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8"))
     ]
 
     root = Xplain::ResultSet.new(nodes:  input_nodes)
+    root.save
     
-    expected_results = Set.new([Xplain::Entity.new("_:p5")])
+    expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:p5")])
     
     op = Xplain::Pivot.new(inputs: root){relation "_:cite"}.refine do
       And do [
@@ -140,18 +141,18 @@ class CompositionsTest < XplainUnitTest
    
    def test_pivot_refine_intersect
      input_nodes = [
-       Xplain::Node.new(item: Xplain::Entity.new("_:paper1")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p2")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p3")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p4")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p5")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p6")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p8"))
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p4")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p5")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8"))
      ]
 
      root = Xplain::ResultSet.new(nodes:  input_nodes)
-     
-     expected_results = Set.new([Xplain::Entity.new("_:p5")])
+     root.save
+     expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:p5")])
      op = Xplain::Pivot.new(inputs: root){relation "_:cite"}.refine do
          equals do
            relation "_:author"
@@ -174,18 +175,18 @@ class CompositionsTest < XplainUnitTest
    
    def test_pivot_refine_unite
      input_nodes = [
-       Xplain::Node.new(item: Xplain::Entity.new("_:paper1")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p2")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p3")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p4")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p5")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p6")),
-       Xplain::Node.new(item: Xplain::Entity.new("_:p8"))
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p4")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p5")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")),
+       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8"))
      ]
 
      root = Xplain::ResultSet.new(nodes:  input_nodes)
-     
-     expected_results = Set.new([Xplain::Entity.new("_:p2"), Xplain::Entity.new("_:p3"), Xplain::Entity.new("_:p5")])
+     root.save
+     expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p3"), Xplain::Entity.new(server: @papers_server, id: "_:p5")])
      op = Xplain::Pivot.new(inputs: root){relation "_:cite"}.refine do
          equals do
            relation "_:author"

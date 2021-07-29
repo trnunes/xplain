@@ -86,7 +86,8 @@ INSERT DATA{
     end
     
     #TODO CORRECT
-    def restricted_image(relation, restriction, options={})
+
+    def restricted_image_old(relation, restriction, options={})
       if relation.nil?
         raise "Cannot compute restricted image of a null relation!"
       end
@@ -139,7 +140,75 @@ INSERT DATA{
       
       result_set
     end
-  
+    
+    
+
+    def restricted_image(relation, restriction, options={})
+      result_set  = Xplain::ResultSet.new()
+      if relation.nil?
+        raise "Cannot compute restricted image of a null relation!"
+      end
+      image_filter_items = options[:image_filter] || []
+      where_clause = ""
+      restriction_items = restriction.map{|node| node.item}.uniq || []
+      entities = []
+      relation_uri = parse_relation(relation)
+      servers_hash = {}
+      results_hash = {}
+      
+      paginate(restriction_items, @items_limit).each do |page_items|
+        page_items.each do |item|
+          if !item.server
+            raise "Item \"#{item.id}\", \"#{item.text}\" does not contain a server!"
+          end
+
+          if !servers_hash.has_key? item.server
+            servers_hash[item.server] = []            
+          end
+
+          servers_hash[item.server] << item
+        end
+        servers_hash.entries.each do |server, server_items|
+          if relation.size > 1
+            where_clause = "{#{path_clause(relation)}}. #{values_clause("?s", page_items)} #{values_clause("?o", image_filter_items)} #{mount_label_clause("?o", page_items, relation)}"
+          else
+            where_clause = "#{values_clause("?s", page_items)} {#{path_clause(relation)}}. #{mount_label_clause("?o", page_items, relation)} #{values_clause("?o", image_filter_items)}"
+          end
+          
+          query = "SELECT ?s ?o ?textPropo ?lo ?t"
+          
+          if options[:group_by_domain]
+            label_relations = page_items.map{|item| item.text_relation}
+              .select{|text_relation| Xplain::Namespace.colapse_uri(text_relation) != "xplain:has_text"}
+              .compact.uniq
+            query << " ?ls ?textProps"
+            where_clause << " #{optional_label_where_clause("?s", label_relations)}"
+            
+          end
+          where_clause << types_clause("?o")
+          
+          query << " where{#{where_clause} }"
+          query = insert_order_by_subject(query)
+          binding.pry if options[:debug]
+        
+          results_hash.merge! get_results(query, relation, server)
+
+        end
+
+      end
+      result_nodes = hash_to_graph(results_hash)
+      result_set =  Xplain::ResultSet.new nodes: result_nodes
+      if !options[:group_by_domain] && !result_set.empty?
+        image = result_set.last_level
+        if !image.first.is_a? Xplain::Literal
+          image = Set.new image
+        end
+        result_set = Xplain::ResultSet.new(nodes: image)
+      end
+      
+      binding.pry if options[:debug]
+      result_set
+    end
     #TODO CORRECT
     def restricted_domain(relation, restriction, options)
       if relation.nil?
@@ -164,20 +233,34 @@ INSERT DATA{
       
       domain_items = options[:domain_filter] || []
       results_hash = {}
+      servers_hash = {}
       
       paginate(restriction_items, @items_limit).each do |page_items|
-      
-        label_clause = mount_label_clause("?s", page_items, relation)
-    
-        where = "#{path_clause(relation)}. #{label_clause}"
-        if(!domain_items.empty?)
-          where = "#{values_clause("?s", domain_items)}" << where
+        page_items.each do |item|
+          if !item.server
+            raise "Item \"#{item.id}\", \"#{item.text}\" does not contain a server!"
+          end
+
+          if !servers_hash[item.server]
+            servers_hash[item.server] = []
+          end
+          servers_hash[item.server] << item
         end
+        servers_hash.entries.each do |server, items|
+          label_clause = mount_label_clause("?s", page_items, relation)
     
-        query = "SELECT ?s ?o ?textProp ?ls WHERE{#{where}  #{values_clause("?o", page_items)} #{path_clause_as_subselect(relation, values_clause("?o", page_items) + values_clause("?s", domain_items), "?s", options[:limit], options[:offset])}}"
-        query = insert_order_by_subject(query)
-        puts query
-        results_hash.merge! get_results(query, relation)      
+          where = "#{path_clause(relation)}. #{label_clause}"
+          if(!domain_items.empty?)
+            where = "#{values_clause("?s", domain_items)}" << where
+          end
+
+          query = "SELECT ?s ?o ?textProp ?ls WHERE{#{where}  #{values_clause("?o", page_items)} #{path_clause_as_subselect(relation, values_clause("?o", page_items) + values_clause("?s", domain_items), "?s", options[:limit], options[:offset])}}"
+          query = insert_order_by_subject(query)
+          puts query
+          results_hash.merge! get_results(query, relation, server)
+
+        end
+      
       end
       Xplain::ResultSet.new(nodes: hash_to_graph(results_hash))
     end

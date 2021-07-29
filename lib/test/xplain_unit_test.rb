@@ -52,7 +52,7 @@ require './operations/auxiliary_function'
 require './operations/operation'
 require './operations/set_operation'
 require './operations/group_aux/grouping_relation'
-
+require './operations/load'
 require './operations/refine_aux/filter_factory'
 require './operations/refine_aux/generic_filter'
 require './operations/refine_aux/relation_filter'
@@ -305,7 +305,7 @@ class XplainUnitTest < Test::Unit::TestCase
   def assert_same_items_tree_set(root1, root2, debug=false)
     item1 = root1.item if root1.is_a? Xplain::Node
     item2 = root2.item if root2.is_a? Xplain::Node
-     if debug
+    
     assert_equal item1, item2
     
     assert_same_items_set root1.children, root2.children

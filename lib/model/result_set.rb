@@ -56,13 +56,7 @@ module Xplain
     def intention
       
       if !@intention
-        intention_str = "Xplain::ExecuteRuby.new(code: '"
-        intention_str << "Xplain::ResultSet.new("
-        intention_str << "id: \"#{id}\", title: \"#{title.escape}\""
-        intention_str << ", nodes: "
-        intention_str << parse_nodes(children)
-        intention_str << ")')"
-        @intention = eval(intention_str)
+        @intention = Xplain::Load.new(id: @id)
       end
       @intention
       
@@ -103,6 +97,7 @@ module Xplain
     
         
     def resulted_from
+      return [] if intention.to_s.empty?
       inputs = intention.inputs
       
       inputs || []

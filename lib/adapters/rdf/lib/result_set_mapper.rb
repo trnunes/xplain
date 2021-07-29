@@ -386,10 +386,12 @@ module Xplain::RDF
         
         if rs.intention
           rs.intention.session = session
-          session << rs
+          
         end
         rs 
       end
+      session.setup_result_sets(results)
+      
       results
     end
 

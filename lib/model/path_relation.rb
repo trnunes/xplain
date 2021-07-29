@@ -32,6 +32,7 @@ module Xplain
       Xplain::PathRelation.new(args)
     end
     
+
     def id
       @relations.map{|r| r.id}.join("/")
     end

@@ -12,7 +12,7 @@ module AggregateAux
     def prepare(nodes)
       if @relation
         pivot_relation = @relation
-        @relation.server = @server
+        # @relation.server = @server
         @pivoted_nodes = Xplain::ResultSet.new(nodes: nodes)
           .pivot(group_by_domain: true){relation pivot_relation}.execute
       end

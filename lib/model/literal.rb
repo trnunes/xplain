@@ -21,7 +21,9 @@ module Xplain
         self.text <=> other_literal.text
       end
     end
-
+    def id
+      value.to_s
+    end
     def copy
       self_copy = Literal.new(@value, @datatype)
       self_copy

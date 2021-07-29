@@ -25,6 +25,8 @@ module Xplain
       if Xplain.cache_results?
         Xplain::memory_cache.result_set_save(self)
       end
+      self
+
     end
     
     def update()

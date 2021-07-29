@@ -20,12 +20,16 @@ module GroupAux
       end
 
       result_hash = {}
-      @relation.server = @server
+      # @relation.server = @server
+      # binding.pry
       result_set = @relation.restricted_image(nodes, group_by_domain: true)
+      # binding.pry
       result_set.last_level.each do |leaf|
+        
         if !result_hash.has_key? leaf.item
           result_hash[leaf.item] = Xplain::Node.new(item: leaf.item)
         end
+        # binding.pry
         result_hash[leaf.item] << Xplain::Node.new(item: leaf.parent.item)
       end
       result_hash.values

@@ -1,14 +1,14 @@
-module Xplain
-  class Load < Operation
+class Xplain::Load < Xplain::Operation
+  
     
-    def initialize(args={}, &block)    
-      super(args, &block)
-      @set_id = args[:id]
-    end
-    
-    def get_results()
-      Xplain::ResultSet.load(@set_id)
-      
-    end
+  def initialize(args={}, &block)    
+    super(args, &block)
+    @set_id = args[:id]
   end
+  
+  def get_results()
+    Xplain::ResultSet.load(@set_id)
+    
+  end
+  
 end

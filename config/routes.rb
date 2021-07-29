@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get 'session/fetch_nested_relations'
   get 'session/calculate_extension'
   get 'session/search'
+  get 'session/uri_derref'
   get 'session/update_title'
   get 'session/list_sessions'
   get 'session/load_session'

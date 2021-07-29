@@ -1,7 +1,0 @@
-<nprs1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://tecweb.inf.puc-rio.br/xplain/Node>.
-<nprs1> <http://tecweb.inf.puc-rio.br/xplain/included_in> <http://tecweb.inf.puc-rio.br/xplain/resulted_from_set>.
-<nprs1> <http://tecweb.inf.puc-rio.br/xplain/has_item> <_:p1>.
-<_:p1> <http://tecweb.inf.puc-rio.br/xplain/item_type> "Xplain::Entity".
-<nprs1> <http://tecweb.inf.puc-rio.br/xplain/has_text>  "_:p1".
-<_:p1> <http://tecweb.inf.puc-rio.br/xplain/has_server> <default>.
-<nprs1> <http://tecweb.inf.puc-rio.br/xplain/index> "1"^^<http://www.w3.org/2001/XMLSchema#integer>.

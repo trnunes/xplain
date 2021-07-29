@@ -11,6 +11,10 @@ module Xplain
       @text
     end  
     
+    def size
+      1
+    end
+
     def meta?
       false
     end  

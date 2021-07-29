@@ -1,13 +1,13 @@
 require 'timeout'
 class SessionController < ApplicationController
   protect_from_forgery except: :new
-  before_filter :load_temp_session, :except=>[:render_page, :namespace, :endpoint, :load_session, :list_view_profiles]
+  before_filter :load_temp_session, :except=>[:list_sessions, :load_view_profile, :render_page, :namespace, :endpoint, :load_session, :list_view_profiles]
   
   def load_temp_session
     endpoint_id = params[:endpoint]
-    
+    # 
     @current_session = Xplain::Session.load(params[:xplain_session])
-    binding.pry
+    
     if !@current_session
       endpoint = Xplain::DataServer.load(endpoint_id)
       @current_session = Xplain::Session.create({title: "Unnamed", server: endpoint})
@@ -18,7 +18,23 @@ class SessionController < ApplicationController
     # @current_session.lang = 'en'
     
   end
+  
+  def uri_derref
+    uri = params[:uri]
+    rs = Xplain::ResultSet.new(nodes:[Xplain::Entity.new(id: uri, server: @current_session.server)])
     
+    operation = rs.pivot(visual: true) do
+      relation "relations"
+    end
+    pivot_results = @current_session.execute(operation)
+    respond_to do |format|
+      
+      format.json {render :json => generate_jbuilder(pivot_results, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb')).target!}
+    
+    end    
+
+  end
+
   def load_last_active_session
     
     
@@ -463,8 +479,6 @@ class SessionController < ApplicationController
   
   def list_sessions
     @section_list = Xplain::Session.list_titles
-    @section_list.delete("Unnamed")
-    @section_list.delete(@current_session.title)
     view = ActionView::Base.new(ActionController::Base.view_paths, {section_list: @section_list})
     template_html = view.render({partial: "session/section_list"})
     puts template_html
@@ -638,7 +652,7 @@ class SessionController < ApplicationController
   
   def render_session_json(exp_session)
     begin
-      result_sets_json = "{\"server\": \"#{exp_session.server.url}\", \"name\":\"#{exp_session.title}\",\"sets\":[#{exp_session.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb', {}, rs)).target!}.join(", ")}]}"
+      result_sets_json = "{\"id\": \"#{exp_session.id}\", \"server\": \"#{exp_session.server.url}\", \"name\":\"#{exp_session.title}\",\"sets\":[#{exp_session.each_result_set_tsorted(exploration_only: true).map{|rs| generate_jbuilder(rs, render_template(Wxplain::Application::DEFAULT_SET_VIEW+ '/_'+Wxplain::Application::DEFAULT_SET_VIEW+ '.html.erb', {}, rs)).target!}.join(", ")}]}"
     rescue Exception => e
       puts e.message
       puts e.backtrace

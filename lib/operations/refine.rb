@@ -42,30 +42,46 @@ class Xplain::Refine < Xplain::Operation
     in_memory_result_nodes = input_nodes
     final_result_nodes = []
     #TODO implement composite filter execution correctly. It does not respect the composite tree
-    non_interpretable_filters = @server.validate_filters(@auxiliar_function)
-    if !non_interpretable_filters.empty?
-      interpreter = InMemoryFilterInterpreter.new(non_interpretable_filters, input_nodes)
+    servers_hash = {}
 
-      in_memory_result_nodes = @auxiliar_function.accept(interpreter)
+    input_nodes.each do |node|
+      if !node.item.server
+        raise "Item \"#{node.item.id}\", \"#{node.item.text}\" does not contain a server!"
+      end
+
+      if !servers_hash.has_key? node.item.server
+        servers_hash[node.item.server] = []
+      end
+      servers_hash[node.item.server] << node
+      
     end
-
-    result_nodes_hash = {}
-    in_memory_result_nodes.each do |node|
-      result_nodes_hash[node.item] = [] if !result_nodes_hash.has_key?(node.item)
-      result_nodes_hash[node.item] << node
-    end
-
+    servers_hash.each do |server, nodes|
+      non_interpretable_filters = server.validate_filters(@auxiliar_function)
     
-    final_result_nodes = in_memory_result_nodes
-    if @server.can_filter? @auxiliar_function
-      final_result_nodes = []
-
-      @server.filter(in_memory_result_nodes.map{|node| node.item}, @auxiliar_function).each do |item_to_keep|
-
-        final_result_nodes += result_nodes_hash[item_to_keep].to_a
-
-      end      
-    end    
+      if !non_interpretable_filters.empty?
+        interpreter = InMemoryFilterInterpreter.new(non_interpretable_filters, nodes)
+  
+        in_memory_result_nodes = @auxiliar_function.accept(interpreter)
+      end
+  
+      result_nodes_hash = {}
+      in_memory_result_nodes.each do |node|
+        result_nodes_hash[node.item] = [] if !result_nodes_hash.has_key?(node.item)
+        result_nodes_hash[node.item] << node
+      end
+  
+      
+      final_result_nodes = in_memory_result_nodes
+      if server.can_filter? @auxiliar_function
+        final_result_nodes = []
+  
+        server.filter(in_memory_result_nodes.map{|node| node.item}, @auxiliar_function).each do |item_to_keep|
+  
+          final_result_nodes += result_nodes_hash[item_to_keep].to_a
+  
+        end      
+      end    
+    end
     
     if @level > 2
 
