@@ -1,20 +1,14 @@
 module AggregateAux
-  class Sum < AuxiliaryFunction
-    include Xplain::RelationFactory
+  class Sum
     
-    def initialize(*args, &block)
-      super
-      if !@relation
-        @relation = args.first
-      end
-    end
-    
+    def initialize(params = {})
+      @relation = params[:relation]
+    end    
+
     def prepare(nodes)
       if @relation
-        pivot_relation = @relation
-        # @relation.server = @server
-        @pivoted_nodes = Xplain::ResultSet.new(nodes: nodes)
-          .pivot(group_by_domain: true){relation pivot_relation}.execute
+        pivot_results = Xplain::Pivot.new.get_results(relation: @relation, group_by_domain: true)
+        @pivoted_nodes = Xplain::ResultSet.new(nodes: pivot_results)
       end
     end
     
@@ -42,7 +36,7 @@ module AggregateAux
         raise NumericItemRequiredException if !img.item.is_a?(Xplain::Literal) 
         img.item.value 
       end.inject(0, :+)
-      sum_node = Xplain::Node.new(item: Xplain::Literal.new(sum_literal.to_f))
+      sum_node = Xplain::Node.new(item: Xplain::Literal.new(value: sum_literal.to_f))
       node.children = [sum_node]
       agg_value
     end

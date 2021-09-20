@@ -59,6 +59,7 @@ module Wxplain
 
     # setting the blazegraph server as the default data server for the exploration tasks
     Xplain.set_default_server class: Xplain::RDF::DataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true, lookup_service: "Xplain::BlazegraphLookup"
+    
     #Xplain.set_default_server class: Xplain::RDF::DataServer, named_graph: "http://namedgraph.com",graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
     #Xplain.set_default_server class: Xplain::RDF::DataServer, graph: graph_url, method: 'post', results_limit: 10000, items_limit: 0, read_timeout: 3000, ignore_literal_queries: true
     Xplain.cache_results = true

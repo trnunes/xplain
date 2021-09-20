@@ -15,6 +15,15 @@ module Xplain
       @inverse = params[:inverse] || false
     end
     
+    def descriptor
+      descriptor = @id
+      direction = "->"
+      if inverse?
+        direction = "<-"
+      end
+      descriptor << direction
+    end
+
     def meta?
       @@meta_relations.include? @id.to_sym      
     end

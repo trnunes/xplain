@@ -31,7 +31,7 @@ module XmapAux
           raise NumericItemRequiredException if !img_item.is_a?(Xplain::Literal)
           img.item.value.to_f
         end.inject(0, :+)
-        [Xplain::Node.new(item: Xplain::Literal.new(sum))]
+        [Xplain::Node.new(item: Xplain::Literal.new(value: sum))]
       else
         []
       end

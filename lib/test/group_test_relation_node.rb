@@ -85,7 +85,7 @@ class Xplain::GroupTest < XplainUnitTest
 
     rs = Xplain::Group.new(inputs: input, grouping_relation: GroupAux::ByImage.new(path)).execute
 
-    assert_equal Set.new([Xplain::Literal.new(2005), Xplain::Literal.new(2010)]), Set.new(rs.children.map{|node| node.item})
+    assert_equal Set.new([Xplain::Literal.new(value: 2005), Xplain::Literal.new(value: 2010)]), Set.new(rs.children.map{|node| node.item})
 
     l2005 = rs.children.select{|g| g.item.value == 2005}.first
     l2010 = rs.children.select{|g| g.item.value == 2010}.first
@@ -174,8 +174,8 @@ class Xplain::GroupTest < XplainUnitTest
     assert_equal [inverse_author], a1.children.map{|c| c.item}
     assert_equal [inverse_author], a2.children.map{|c| c.item}
 
-    assert_equal Set.new(a1.children.first.children.map{|c| c.item}), Set.new([Xplain::Literal.new(2000)])
-    assert_equal Set.new(a2.children.first.children.map{|c| c.item}), Set.new([Xplain::Literal.new(1998)])
+    assert_equal Set.new(a1.children.first.children.map{|c| c.item}), Set.new([Xplain::Literal.new(value: 2000)])
+    assert_equal Set.new(a2.children.first.children.map{|c| c.item}), Set.new([Xplain::Literal.new(value: 1998)])
     subg1 = a1.children.first.children.select{|g| g.item.value.to_s == '2000'}.first
     subg2 = a2.children.first.children.select{|g| g.item.value.to_s == '1998'}.first
 
@@ -249,7 +249,7 @@ class Xplain::GroupTest < XplainUnitTest
     
     rs = input.group{ by_image{relation "_:publishedOn", "_:releaseYear"}}.execute
 
-    assert_equal Set.new([Xplain::Literal.new(2005), Xplain::Literal.new(2010)]), Set.new(rs.children.map{|node| node.item})
+    assert_equal Set.new([Xplain::Literal.new(value: 2005), Xplain::Literal.new(value: 2010)]), Set.new(rs.children.map{|node| node.item})
 
     l2005 = rs.children.select{|g| g.item.value == 2005}.first
     l2010 = rs.children.select{|g| g.item.value == 2010}.first

@@ -239,7 +239,11 @@ module Xplain
       )
       #TODO implement the group_by_domain option!
       image = self.children.select{|node| restriction_items.include? node.item}.map{|node| node.children}.flatten.compact
-      Xplain::ResultSet.new(nodes: image)
+      nodes = image
+      if options[:group_by_domain]
+        nodes = image.map{|i| i.parent}.compact.uniq
+      end
+      Xplain::ResultSet.new(nodes: nodes)
     end
   
     def restricted_domain(restriction, options={})

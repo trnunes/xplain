@@ -152,6 +152,21 @@ class Xplain::Operation
     
     resultset
   end
+
+  def execute_eager(params)
+    @auxiliar_function = params[:auxiliar_function]
+    @params = params
+    validate()
+    resultset = Xplain::ResultSet.new(intention: self)
+    
+    result_nodes = get_results()
+    
+    result_nodes.each{|node| node.parent_edges = []}
+    resultset.children = result_nodes
+    resultset.fetched = true
+    
+    resultset
+  end
   
     
   def parse_item_specs(item_spec)
@@ -167,7 +182,7 @@ class Xplain::Operation
       end
       return item
     else
-      return Xplain::Literal.new(item_spec)
+      return Xplain::Literal.new(value: item_spec)
     end
     
   end

@@ -4,21 +4,20 @@ class Xplain::DiffTest < XplainUnitTest
 
   def test_empty_input_set
     input_nodes = []
-    origin = Xplain::ResultSet.new(nodes:  input_nodes)
+    origin = input_nodes
     
     
-    actual_results = Xplain::Diff.new([origin, origin]).execute()
-    assert_true actual_results.children.empty?
+    actual_results = Xplain::Diff.new.get_results(input: [origin, origin])
+    assert_true actual_results.empty?
   end
 
   def test_single_input
     input_nodes = create_nodes [Xplain::Entity.new("_:p1"), Xplain::Entity.new("_:p2")]
-    origin = Xplain::ResultSet.new(nodes:  input_nodes)
+    origin = input_nodes
     
     
-    actual_results = Xplain::Diff.new([origin]).execute()
-    origin.title = actual_results.title
-    assert_same_result_set origin, actual_results
+    actual_results = Xplain::Diff.new.get_results(input: [origin])
+    assert_same_items_set origin, actual_results
   end
   
   def test_nil_input
@@ -26,9 +25,9 @@ class Xplain::DiffTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new("_:p1")),
       Xplain::Node.new(item: Xplain::Entity.new("_:p2"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
+    root = input_nodes
     
-    actual_results = Xplain::Diff.new().execute()
+    actual_results = Xplain::Diff.new.get_results(input: nil)
   end
     
   def test_diff_1_height
@@ -36,20 +35,19 @@ class Xplain::DiffTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new("_:p1")),
       Xplain::Node.new(item: Xplain::Entity.new("_:p2"))
     ]
-    input_1 = Xplain::ResultSet.new(nodes:  input1_nodes)
+    input_1 = input1_nodes
 
     input2_nodes = [
       Xplain::Node.new(item: Xplain::Entity.new("_:p2")),
       Xplain::Node.new(item: Xplain::Entity.new("_:p3"))
     ]
-    input_2 = Xplain::ResultSet.new(nodes:  input2_nodes)
+    input_2 = input2_nodes
     
-    expected_results = Xplain::ResultSet.new(nodes:  [Xplain::Entity.new("_:p1")])
+    expected_results = create_nodes [Xplain::Entity.new("_:p1")]
 
-    actual_results = Xplain::Diff.new([input_1, input_2]).execute()
-    assert_false actual_results.children.empty?
-    actual_results.title = expected_results.title
-    assert_same_result_set expected_results, actual_results
+    actual_results = Xplain::Diff.new.get_results(input: [input_1, input_2])
+    assert_false actual_results.empty?
+    assert_same_items_set expected_results, actual_results
     
   end
 
@@ -60,7 +58,7 @@ class Xplain::DiffTest < XplainUnitTest
     i1p1.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p1.1")), Xplain::Node.new(item: Xplain::Entity.new("_:p1.2"))]
     i1p2.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p2.1")), Xplain::Node.new(item: Xplain::Entity.new("_:p2.2"))]
     i1p3.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p3.1"))]
-    input1 = Xplain::ResultSet.new(nodes:  [i1p1, i1p2, i1p3])
+    input1 = [i1p1, i1p2, i1p3]
 
     i2p1 = Xplain::Node.new(item: Xplain::Entity.new("_:p1"))
     i2p2 = Xplain::Node.new(item: Xplain::Entity.new("_:p2"))
@@ -68,19 +66,18 @@ class Xplain::DiffTest < XplainUnitTest
     i2p1.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p1.1")), Xplain::Node.new(item: Xplain::Entity.new("_:p1.3"))]
     i2p2.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p2.1")), Xplain::Node.new(item: Xplain::Entity.new("_:p2.3"))]
     i2p3.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p3.1"))]
-    input2 = Xplain::ResultSet.new(nodes:  [i2p1, i2p2, i2p3])
+    input2 = [i2p1, i2p2, i2p3]
     
     expected_p1 = Xplain::Node.new(item: Xplain::Entity.new("_:p1"))
     expected_p2 = Xplain::Node.new(item: Xplain::Entity.new("_:p2"))
     expected_p1.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p1.2"))]
     expected_p2.children = [Xplain::Node.new(item: Xplain::Entity.new("_:p2.2"))]
     
-    expected_output = Xplain::ResultSet.new(nodes:  [expected_p1, expected_p2])
+    expected_output = [expected_p1, expected_p2]
 
-    actual_results = Xplain::Diff.new([input1, input2]).execute()
-    assert_false actual_results.children.empty?
-     expected_output.title = actual_results.title
-    assert_same_result_set expected_output, actual_results
+    actual_results = Xplain::Diff.new.get_results(input: [input1, input2])
+    assert_false actual_results.empty?
+    assert_same_items_set expected_output, actual_results
   end
     
 end

@@ -161,27 +161,14 @@ module SPARQLHelper
   
     
   def build_literal(literal, datatype = "")
-    xplain_literal = 
-    if (literal.respond_to?(:datatype) && !literal.datatype.to_s.empty?)
-      Xplain::Literal.new(literal.to_s, literal.datatype.to_s)
-    else
-      if literal.to_s.match(/\A[-+]?[0-9]+\z/).nil?
-        Xplain::Literal.new(literal.to_s)
-      else
-        Xplain::Literal.new(literal.to_s.to_i)
-      end
-    end
-    if xplain_literal.value.to_s.to_i.to_s == xplain_literal.value.to_s
-      xplain_literal.value = xplain_literal.value.to_s.to_i
-    end
-    if xplain_literal.value.to_f.to_s == xplain_literal.value.to_s
-      xplain_literal.value = xplain_literal.value.to_s.to_f
-    end
-    if !datatype.empty?
-      xplain_literal.datatype = datatype
-    end
+    
+    value = literal.to_s
+    datatype = literal.datatype.to_s
+    
+    x_literal = Xplain::Literal.create(value, datatype)
+    # binding.pry
+    x_literal
 
-    xplain_literal
   end
   
   def get_literal_type(literal)
@@ -242,6 +229,7 @@ module SPARQLHelper
       raise "Cannot build a nil item!"
     end
     if(server_item.literal?)
+      binding.pry
       item = build_literal(server_item)
     else
       if item_class == "Xplain::PathRelation"

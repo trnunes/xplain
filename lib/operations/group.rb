@@ -1,34 +1,25 @@
-class Xplain::Group < Xplain::Operation
+class Xplain::Group
     
-  def initialize(args={}, &block)
-    super(args, &block)
-    if args[:grouping_relation]
-      @auxiliar_function = args[:grouping_relation]
-      @level = args[:level]
-      args.delete(:grouping_relation)
-    end
-  end
-  
-  def get_results()
-    if @inputs.nil? || @inputs.empty? || @inputs.first.empty?
-      return []
-    end
-    input_set = inputs_working_copy.first
-    
-    if input_set.nil? || input_set.children.empty?
+  def get_results(params)
+    input_nodes = params[:input_nodes]
+    if input_nodes.to_a.empty?
       return []
     end
     
-    @level ||= input_set.count_levels - 1
+    copied_nodes = input_nodes.map{|n| n.copy}
+    root_input_node = Xplain::Node.new(children: copied_nodes)
+    level = params[:level]
+    level ||= root_input_node.count_levels - 1
+    aux_function = params[:function]
 
-    next_to_last_level = input_set.get_level(@level)
+    next_to_last_level = root_input_node.get_level(level)
     nodes_to_group = []
     next_to_last_level.each do |node|
       nodes_to_group += node.children
     end
     new_groups = []
-    @auxiliar_function.prepare(nodes_to_group, new_groups)
-    new_groups = @auxiliar_function.group(nodes_to_group)
+    aux_function.prepare(nodes_to_group, new_groups)
+    new_groups = aux_function.group(nodes_to_group)
     
     next_to_last_level.each do |node|
       children = node.children
@@ -51,7 +42,7 @@ class Xplain::Group < Xplain::Operation
     end
     
     
-    groups = input_set.get_level(2)
+    groups = root_input_node.get_level(2)
 
     # groups.each{|group| group.parent_edges = []}
     

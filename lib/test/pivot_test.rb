@@ -6,11 +6,11 @@ class Xplain::PivotTest < XplainUnitTest
   def test_empty_input_set
     
     input_nodes = []
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    
-    actual_results = Xplain::Pivot.new(inputs: root,  relation: Xplain::SchemaRelation.new(server: @papers_server, id: "_:r1")).execute()
-    assert_true actual_results.children.empty?
+    relation = Xplain::SchemaRelation.new(id: "_:r1")
+
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes,  relation: relation)
+    assert_true actual_results.empty?
   end
   
   def test_empty_relation
@@ -18,10 +18,9 @@ class Xplain::PivotTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p1")),
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p2"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
     begin
-      actual_results = Xplain::Pivot.new(inputs: root).execute()
+      actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes)
       assert false
     rescue MissingRelationException => e
       assert true
@@ -36,10 +35,11 @@ class Xplain::PivotTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:notexist1")),
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:notexist2"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
 
-    actual_results = Xplain::Pivot.new(inputs: root,  relation: Xplain::SchemaRelation.new(server: @papers_server, id:"_:r1")).execute()
-    assert_true actual_results.children.empty?
+    relation = Xplain::SchemaRelation.new(id:"_:r1")
+    
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes,  relation: relation)
+    
   end
   
   def test_pivot_single_relation
@@ -47,13 +47,15 @@ class Xplain::PivotTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p1")),
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p2"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    expected_results = Set.new([Xplain::Entity.new(server: @server, id: "_:o1"), Xplain::Entity.new(server: @server, id: "_:o2")])
+    expected_results = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o2"))
+    ]
 
-    actual_results = Xplain::Pivot.new(inputs: root, server: @server, relation: Xplain::SchemaRelation.new(server: @papers_server, id:"_:r1", server: @server)).execute()
-    assert_false actual_results.children.empty?
-    assert_equal expected_results, Set.new(actual_results.children.map{|node| node.item})
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes, server: @server, relation: Xplain::SchemaRelation.new(id:"_:r1", server: @server))
+    assert_false actual_results.empty?
+    assert_same_items_set expected_results, actual_results
     
   end
   
@@ -62,18 +64,21 @@ class Xplain::PivotTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p1")),
       Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p2"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
     expec_p1 = Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p1"))
     expec_p2 = Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:p2"))
-    expec_p1.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o1")), Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o2"))]
+    expec_p1.children = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o2"))
+    ]
     expec_p2.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @server, id: "_:o2"))]
     
-    expected_rs = Xplain::ResultSet.new(nodes:  [expec_p1, expec_p2])
+    expected_rs = [expec_p1, expec_p2]
+    relation = Xplain::SchemaRelation.new(id:"_:r1")
 
-    actual_results = Xplain::Pivot.new(inputs: root, server: @server, relation: Xplain::SchemaRelation.new(server: @papers_server, id:"_:r1", server: @server), group_by_domain: true).execute()
-    actual_results.title = expected_rs.title
-    assert_same_result_set actual_results, expected_rs
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes, relation: relation, group_by_domain: true)
+    
+    assert_same_items_set actual_results, expected_rs
   end
   
   def test_pivot_single_relation_inverse
@@ -81,13 +86,17 @@ class Xplain::PivotTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2")),
       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:paper1"), Xplain::Entity.new(server: @papers_server, id: "_:p6"), Xplain::Entity.new(server: @papers_server, id: "_:p7"), Xplain::Entity.new(server: @papers_server, id: "_:p8")])
+    expected_results = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p7")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8"))
+    ]
 
-    actual_results = Xplain::Pivot.new(inputs: root,  relation: Xplain::SchemaRelation.new(server: @papers_server, id:"_:cite", inverse: true)).execute()
-    assert_false actual_results.children.empty?
-    assert_equal expected_results, Set.new(actual_results.children.map{|node| node.item})
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes,  relation: Xplain::SchemaRelation.new(id:"_:cite", inverse: true))
+    assert_false actual_results.empty?
+    assert_same_items_set expected_results, actual_results
   end
 
   def test_pivot_relation_path
@@ -95,13 +104,17 @@ class Xplain::PivotTest < XplainUnitTest
       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")),
       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:a1"), Xplain::Entity.new(server: @papers_server, id: "_:a2")])
-    path = Xplain::PathRelation.new(relations: [Xplain::SchemaRelation.new(server: @papers_server, id: "_:cite"), Xplain::SchemaRelation.new(server: @papers_server, id: "_:author")])
-    actual_results = Xplain::Pivot.new(inputs: root,  relation: path).execute()
-    assert_false actual_results.children.empty?
-    assert_equal expected_results, Set.new(actual_results.children.map{|node| node.item})
+    expected_results = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:a1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:a2"))
+    ]
+    
+    path = Xplain::PathRelation.new(relations: [Xplain::SchemaRelation.new(id: "_:cite"), Xplain::SchemaRelation.new(id: "_:author")])
+    
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes,  relation: path)
+    assert_false actual_results.empty?
+    assert_same_items_set expected_results, actual_results
   end
   
   
@@ -109,64 +122,87 @@ class Xplain::PivotTest < XplainUnitTest
     input_nodes = [
       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:a1"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    path = Xplain::PathRelation.new(relations: [Xplain::SchemaRelation.new(server: @papers_server, id: "_:author", inverse: true), Xplain::SchemaRelation.new(server: @papers_server, id: "_:cite", inverse: true)])
-    expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:paper1"), Xplain::Entity.new(server: @papers_server, id: "_:p6"), Xplain::Entity.new(server: @papers_server, id: "_:p7"), Xplain::Entity.new(server: @papers_server, id: "_:p8"), Xplain::Entity.new(server: @papers_server, id: "_:p9"), Xplain::Entity.new(server: @papers_server, id: "_:p10")])
+    path = Xplain::PathRelation.new(relations: [Xplain::SchemaRelation.new(id: "_:author", inverse: true), Xplain::SchemaRelation.new(id: "_:cite", inverse: true)])
+    expected_results = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p7")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p9")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p10"))
+    ]
 
-    actual_results = Xplain::Pivot.new(inputs: root,  relation: path).execute()
-    assert_false actual_results.children.empty?
-    assert_equal expected_results, Set.new(actual_results.children.map{|node| node.item})
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes,  relation: path)
+    assert_false actual_results.empty?
+    assert_same_items_set expected_results, actual_results
   end
   
-  def test_pivot_backward_relation_path_dsl
-    input_nodes = [
-      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:a1"))
-    ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
-    
-    expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:paper1"), Xplain::Entity.new(server: @papers_server, id: "_:p6"), Xplain::Entity.new(server: @papers_server, id: "_:p7"), Xplain::Entity.new(server: @papers_server, id: "_:p8"), Xplain::Entity.new(server: @papers_server, id: "_:p9"), Xplain::Entity.new(server: @papers_server, id: "_:p10")])
-
-    actual_results = root.pivot{relation inverse("_:author"), inverse("_:cite")}.execute
-    assert_false actual_results.children.empty?
-    assert_equal expected_results, Set.new(actual_results.children.map{|node| node.item})
-  end
+  # def test_pivot_backward_relation_path_dsl
+    # input_nodes = [
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:a1"))
+    # ]
+    # 
+    # expected_results = [
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:paper1")), 
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p6")), 
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p7")), 
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p8")), 
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p9")), 
+      # Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p10"))
+    # ]
+# 
+    # actual_results = root.pivot{relation inverse("_:author"), inverse("_:cite")}.execute
+    # assert_false actual_results.empty?
+    # assert_same_items_set expected_results, actual_results
+  # end
     
   def test_pivot_forward_backward_relation_path
     input_nodes = [
       Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:journal1"))
     ]
-    root = Xplain::ResultSet.new(nodes:  input_nodes)
     
-    expected_results = Set.new([Xplain::Entity.new(server: @papers_server, id: "_:a1")])
-    path = Xplain::PathRelation.new(relations: [Xplain::SchemaRelation.new(server: @papers_server, id: "_:publishedOn", inverse: true), Xplain::SchemaRelation.new(server: @papers_server, id: "_:author")])
-    actual_results = Xplain::Pivot.new(inputs: root,  relation: path).execute()
-    assert_false actual_results.children.empty?
-    assert_equal expected_results, Set.new(actual_results.children.map{|node| node.item})
+    expected_results = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:a1"))]
+
+    path = Xplain::PathRelation.new(relations: [Xplain::SchemaRelation.new(id: "_:publishedOn", inverse: true), Xplain::SchemaRelation.new(id: "_:author")])
+    
+    actual_results = Xplain::Pivot.new.get_results(input_nodes: input_nodes,  relation: path)
+    assert_false actual_results.empty?
+    assert_same_items_set expected_results, actual_results
   end
   
   def test_pivot_direct_computed_relation
     i1p1 = Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1"))
     i1p2 = Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2"))
     i1p3 = Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3"))
-    i1p1.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.2"))]
-    i1p2.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.2"))]
+    i1p1.children = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.2"))
+    ]
+    i1p2.children = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.2"))
+    ]
     i1p3.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3.1"))]
+    
     computed_relation = Xplain::ResultSet.new(nodes:  [i1p1, i1p2, i1p3])
     
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1"))])
+    input = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1"))]
     
-    expected_rs = Xplain::ResultSet.new(nodes:  i1p1.children)
-    actual = input.pivot{relation computed_relation}.execute
-    actual.title = expected_rs.title
-    assert_same_result_set expected_rs, actual 
+    expected_rs =i1p1.children
+    # binding.pry    
+    actual = Xplain::Pivot.new.get_results(relation: computed_relation, input_nodes: input)
+    
+    assert_same_items expected_rs, actual 
 
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2"))])
+    input = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2"))
+    ]
     
-    expected_rs = Xplain::ResultSet.new(nodes:  i1p1.children + i1p2.children)
-    actual = input.pivot{relation computed_relation}.execute
-    actual.title = expected_rs.title
-    assert_same_result_set expected_rs, actual 
+    expected_rs = i1p1.children + i1p2.children
+    actual = Xplain::Pivot.new.get_results(relation: computed_relation, input_nodes: input)
+    assert_same_items expected_rs, actual 
 
   end
   
@@ -174,25 +210,41 @@ class Xplain::PivotTest < XplainUnitTest
     i1p1 = Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1"))
     i1p2 = Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2"))
     i1p3 = Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3"))
-    i1p1.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.2"))]
-    i1p2.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.2"))]
+    i1p1.children = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.2"))
+    ]
+    i1p2.children = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p2.2"))
+    ]
     i1p3.children = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3.1"))]
-    computed_relation = Xplain::ResultSet.new(nodes:  [i1p1, i1p2, i1p3])
     
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.2"))])
+    computed_relation = Xplain::ResultSet.new(nodes: [i1p1, i1p2, i1p3])
     
-    expected_rs = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1"))])
+    input = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.2"))]
     
-    actual = input.pivot{relation inverse: computed_relation}.execute
-    actual.title = expected_rs.title
-    assert_same_result_set expected_rs, actual 
+    expected_rs = [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1"))]
     
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3.1"))])
+    actual = Xplain::Pivot.new.get_results(input_nodes: input, relation: computed_relation.reverse())
     
-    expected_rs = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1")), Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3"))])
-    actual = input.pivot{relation inverse: computed_relation}.execute
-    actual.title = expected_rs.title
-    assert_same_result_set expected_rs, actual 
+    assert_same_items_set expected_rs, actual 
+    
+    input = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1.1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3.1"))
+    ]
+    
+    expected_rs = [
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p1")), 
+      Xplain::Node.new(item: Xplain::Entity.new(server: @papers_server, id: "_:p3"))
+    ]
+    
+    
+
+    actual = Xplain::Pivot.new.get_results(input_nodes: input, relation: computed_relation.reverse())
+    
+    assert_same_items_set expected_rs, actual 
   end
  
 end

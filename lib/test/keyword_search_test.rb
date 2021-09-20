@@ -26,28 +26,28 @@ class Xplain::KeywordSearchTest < XplainUnitTest
   end
 
   def test_empty_keyword_phrase_nil
-    @keyword_search_operation = Xplain::KeywordSearch.new()
+    
     
     assert_raise MissingArgumentException do
-      @keyword_search_operation.execute
+      Xplain::KeywordSearch.new.get_results()
     end    
     
   end
 
   def test_empty_keyword_phrase
-    @keyword_search_operation = Xplain::KeywordSearch.new(server: @papers_server, keyword_phrase:  '')
+    
     assert_raise MissingArgumentException do
-      @keyword_search_operation.execute
+      Xplain::KeywordSearch.new.get_results(server: @papers_server, keyword:  '')
     end    
   end
   
   def test_keyword_search_no_whole_dataset
     expected_results = Set.new(create_nodes [ Xplain::Entity.new(server: @papers_server, id: '_:paper1')])
     
-    @keyword_search_operation = Xplain::KeywordSearch.new(server: @papers_server, keyword_phrase:  'paper1_keyword')
-    result_set =  @keyword_search_operation.execute
+    result_set =  Xplain::KeywordSearch.new.get_results(server: @papers_server, keyword:  'paper1_keyword')
     
-    assert_same_items_set expected_results, result_set.last_level    
+    
+    assert_same_items_set expected_results, result_set    
   end
   
   def test_keyword_search_restricted_scope
@@ -57,24 +57,24 @@ class Xplain::KeywordSearchTest < XplainUnitTest
     ]
     input = Xplain::ResultSet.new(nodes:  restriction_input)
     
-    @keyword_search_operation = Xplain::KeywordSearch.new(inputs: input, keyword_phrase:  'common_keyword')
-    result_set =  @keyword_search_operation.execute
+    result_set =  Xplain::KeywordSearch.new.get_results(inputs: input, keyword:  'common_keyword')
     
-    assert_same_items_set input.last_level, result_set.last_level
+    
+    assert_same_items_set input.last_level, result_set
   end
   
   def test_disjunctive_keyword_search
     expected_results = Set.new(create_nodes [ Xplain::Entity.new(server: @papers_server, id: '_:p3'), Xplain::Entity.new(server: @papers_server, id: '_:paper1')])
-    @keyword_search_operation = Xplain::KeywordSearch.new(server: @papers_server, keyword_phrase:  'paper3_keyword|paper1_keyword')
-    result_set =  @keyword_search_operation.execute
-    assert_same_items_set expected_results, result_set.last_level
+    result_set =  Xplain::KeywordSearch.new.get_results(server: @papers_server, keyword:  'paper3_keyword|paper1_keyword')
+    
+    assert_same_items_set expected_results, result_set
   end
   
   def test_conjunctive_keyword_search
     expected_results = Set.new(create_nodes [Xplain::Entity.new(server: @papers_server, id: '_:p2')])
-    @keyword_search_operation = Xplain::KeywordSearch.new(server: @papers_server, keyword_phrase:  'paper2_keyword1.*paper2_keyword2')
-    result_set =  @keyword_search_operation.execute
-    assert_same_items_set expected_results, result_set.last_level
+    result_set =  Xplain::KeywordSearch.new.get_results(server: @papers_server, keyword:  'paper2_keyword1.*paper2_keyword2')
+    
+    assert_same_items_set expected_results, result_set
 
   end
   
@@ -87,8 +87,8 @@ class Xplain::KeywordSearchTest < XplainUnitTest
       
    
     expected_results = Set.new(create_nodes [Xplain::Entity.new(server: @papers_server, id: '_:p3')])
-    @keyword_search_operation = Xplain::KeywordSearch.new(server: @papers_server, keyword_phrase:  'common_keyword.*paper3_keyword2')
-    result_set =  @keyword_search_operation.execute
-    assert_same_items_set expected_results, result_set.last_level
+    result_set =  Xplain::KeywordSearch.new.get_results(server: @papers_server, keyword:  'common_keyword.*paper3_keyword2')
+    
+    assert_same_items_set expected_results, result_set
   end
 end

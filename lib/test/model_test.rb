@@ -59,7 +59,7 @@ class ModelTest < XplainUnitTest
 
   def test_path_restricted_domain
     path = Xplain::PathRelation.new(server: @papers_server, relations: [Xplain::SchemaRelation.new(server: @papers_server, id: "_:publishedOn"), Xplain::SchemaRelation.new(server: @papers_server, id: "_:releaseYear")])
-    actual_image = path.restricted_domain(create_nodes [Xplain::Literal.new("2005", RDF::XSD.string.to_s, @papers_server)])
+    actual_image = path.restricted_domain(create_nodes [Xplain::Literal.new(value: "2005", datatype: RDF::XSD.string.to_s, server: @papers_server)])
     expected_image = create_nodes [Xplain::Entity.new(server: @papers_server, id: "_:p2"), Xplain::Entity.new(server: @papers_server, id: "_:p4")]
     assert_same_items_set expected_image, actual_image
   end
@@ -280,20 +280,20 @@ class ModelTest < XplainUnitTest
   end
   
   def test_result_set_sort_literals_string
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Literal.new("b", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("a", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("c", "", @papers_server))])
-    expected_nodes_array = [Xplain::Node.new(item: Xplain::Literal.new("a", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("b", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("c", "", @papers_server))]
+    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Literal.new(value: "b", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "a", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "c", server: @papers_server))])
+    expected_nodes_array = [Xplain::Node.new(item: Xplain::Literal.new(value: "a", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "b", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "c", server: @papers_server))]
     assert_same_items input.sort_asc.nodes, expected_nodes_array
   end
   
   def test_result_set_sort_literals_string_numeric
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Literal.new("12", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("112", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("3", "", @papers_server))])
-    expected_nodes_array = [Xplain::Node.new(item: Xplain::Literal.new("3", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("12", "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new("112", "", @papers_server))]
+    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Literal.new(value: "12", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "112", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "3", server: @papers_server))])
+    expected_nodes_array = [Xplain::Node.new(item: Xplain::Literal.new(value: "3", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "12", server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: "112", server: @papers_server))]
     assert_same_items input.sort_asc.nodes, expected_nodes_array
   end
   
   def test_result_set_sort_literals_numeric
-    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Literal.new(12, "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(112, "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(3))])
-    expected_nodes_array = [Xplain::Node.new(item: Xplain::Literal.new(112, "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(12, "", @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(3))]
+    input = Xplain::ResultSet.new(nodes:  [Xplain::Node.new(item: Xplain::Literal.new(value: 12, server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: 112, server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: 3))])
+    expected_nodes_array = [Xplain::Node.new(item: Xplain::Literal.new(value: 112, server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: 12, server: @papers_server)), Xplain::Node.new(item: Xplain::Literal.new(value: 3))]
     assert_same_items expected_nodes_array, input.sort.nodes
   end
 end

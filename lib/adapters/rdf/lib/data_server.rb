@@ -95,7 +95,7 @@ module Xplain::RDF
       types_with_vis_properties.empty? ? Xplain::Type.new("rdfs:Resource") : Xplain::Type.new(types_with_vis_properties.first)
     end
   
-    def match_all(keyword_phrase, restriction_nodes=[], offset = 0, limit = 0)
+    def match_all(keyword_phrase, restriction_nodes=[], offset = 0, limit = 0, exact = false)
       
       print "LOOKUP SERVICE: #{@lookup_service}"
       if @lookup_service
@@ -106,10 +106,14 @@ module Xplain::RDF
       label_relations = Xplain::Visualization.current_profile.label_relations_for("rdfs:Resource")    
       values_p = values_clause("?p", label_relations.map{|id| "<#{id}>"})
       
-      filter_clause = "regex(str(?ls), \".*#{keyword_phrase.join(' ')}.*\")" 
+      filter_clause = "FILTER(regex(str(?ls), \".*#{keyword_phrase.join(' ')}.*\"))" 
+      if exact
+        filter_clause = "?ls ?lp \"#{keyword_phrase.join(" ")}\""
+      end
+      
       query = "SELECT distinct ?s ?ls WHERE{
         #{values_clause("?s", restriction_nodes.map{|n|n.item})} 
-        {?s ?p ?ls}. FILTER(#{filter_clause}).}"
+        {?s ?p ?ls}. #{filter_clause}.}"
       
   
       if Xplain::Namespace.expand_uri(keyword_phrase.join('').strip) =~ URI::regexp

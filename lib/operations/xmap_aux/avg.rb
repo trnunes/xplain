@@ -27,7 +27,7 @@ module XmapAux
         image = node.children
       end
       if !image.empty?
-        avg_literal = Xplain::Literal.new(image.map{|img| img.item.value}.inject(0, :+)/image.size.to_f)
+        avg_literal = Xplain::Literal.new(value: image.map{|img| img.item.value}.inject(0, :+)/image.size.to_f)
         [Xplain::Node.new(item: avg_literal)]
       else
         []

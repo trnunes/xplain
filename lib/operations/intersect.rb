@@ -1,4 +1,23 @@
-class Xplain::Intersect < Xplain::SetOperation
+class Xplain::Intersect
+
+  def get_results(params)
+    input_sets = params[:input].to_a.map do |nodes| 
+      Xplain::Node.new(children: nodes)
+    end.compact
+    
+    if input_sets.empty?
+      return []
+    end
+
+    set1 = input_sets.delete_at(0)
+    
+    input_sets.each do |set2|
+      union_nodes = compute(set1, set2)
+      set1 = Xplain::Node.new(children: union_nodes)
+    end
+    
+    set1.children
+  end
 
   def compute(input, target)
     parent = Xplain::Node.new()

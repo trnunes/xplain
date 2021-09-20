@@ -20,9 +20,9 @@ module XmapAux
     def visit(node)
       if @relation
         image_size = @pivoted_nodes.restricted_image([node]).size
-        literal = Xplain::Literal.new(image_size)
+        literal = Xplain::Literal.new(value: image_size)
       else
-        literal = Xplain::Literal.new(node.children.size)
+        literal = Xplain::Literal.new(value: node.children.size)
       end
       
       return [Xplain::Node.new(item: literal)]

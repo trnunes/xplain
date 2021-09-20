@@ -3,7 +3,44 @@ module Xplain
   module Relation
     attr_accessor :root, :text, :inverse, :id   
     
+    def self.create(descriptor)
+      
+      relation_descs = descriptor.scan(/([^<-]*->)|([^->]*<-)/)
+      # binding.pry
+      created_relation = nil
+      
+      if relation_descs.empty?
+        return Xplain::SchemaRelation.new(id: descriptor)
+      end
+      
+      relations = relation_descs.map do |r| 
+        r.compact!
+        relation_desc = r.first
+        relation_params = {}
+
+        if relation_desc.include?("<-")
+          relation_params[:inverse] = true
+        end
+        relation_params[:id] = relation_desc.gsub(/(->)|(<-)/, "")
+        Xplain::SchemaRelation.new(relation_params)
+      end
+
+      if relations.size > 1
+        return Xplain::PathRelation.new(relations: relations)
+      end
+      # binding.pry
+      return relations.first
+    end
     #TODO generalize it!
+
+    def to_h
+      {
+        type: self.class.to_s,
+        server: @server.id,
+        id: descriptor()
+      }
+    end
+
     def text
       if @text.to_s.empty?
         return Xplain::Namespace.colapse_uri(id)

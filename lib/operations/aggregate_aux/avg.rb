@@ -1,23 +1,17 @@
 module AggregateAux
-  class Avg < AuxiliaryFunction
-    include Xplain::RelationFactory
+  class Avg
     
-    def initialize(*args, &block)
-      super
-      if !@relation
-        @relation = args.first
-      end
-    end
     
+    def initialize(params = {})
+      @relation = params[:relation]
+    end    
+
     def prepare(nodes)
       if @relation
-        pivot_relation = @relation
-        # @relation.server = @server
-        @pivoted_nodes = Xplain::ResultSet.new(nodes: nodes)
-          .pivot(group_by_domain: true){relation pivot_relation}.execute
+        pivot_results = Xplain::Pivot.new.get_results(relation: @relation, group_by_domain: true)
+        @pivoted_nodes = Xplain::ResultSet.new(nodes: pivot_results)
       end
-    end
-    
+    end    
       
     def map(node, agg_value)
       
@@ -42,7 +36,7 @@ module AggregateAux
       agg_value ||= []
       image = @pivoted_nodes.restricted_image([node])
       avg_literal = image.map{|img| img.item.value}.inject(0, :+)/image.size.to_f
-      avg_node = Xplain::Node.new(item: Xplain::Literal.new(avg_literal))
+      avg_node = Xplain::Node.new(item: Xplain::Literal.new(value: avg_literal))
       node.children = [avg_node]
       agg_value << node
       agg_value

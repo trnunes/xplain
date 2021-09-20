@@ -1,5 +1,13 @@
 Rails.application.routes.draw do
-
+  get 'exploration/pivot'
+  get 'exploration/search'
+  get 'exploration/refine'
+  get 'exploration/group'
+  get 'exploration/map'
+  get 'exploration/rank'
+  get 'exploration/unite'
+  get 'exploration/intersect'
+  get 'exploration/diff'
   post 'session/execute_operation'
   post 'session/save_profile'
   get 'session/list_view_profiles'

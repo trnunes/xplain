@@ -6,7 +6,7 @@ module ItemFactory
     if params[:id]      
       item = Xplain::memory_cache.get_item(params[:id])
       if !item
-        item = self.new(params)
+        item = params[:class].new(params)
         Xplain::memory_cache.save_item(item)
       end
       

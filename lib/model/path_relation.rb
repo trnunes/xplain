@@ -32,9 +32,13 @@ module Xplain
       Xplain::PathRelation.new(args)
     end
     
-
+    #replace by descriptor()
     def id
       @relations.map{|r| r.id}.join("/")
+    end
+
+    def descriptor
+      @relations.map{|r| r.descriptor}.join("")
     end
   
     def can_fire_path_query

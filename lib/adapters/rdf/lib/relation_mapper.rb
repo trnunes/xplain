@@ -155,8 +155,11 @@ INSERT DATA{
       relation_uri = parse_relation(relation)
       servers_hash = {}
       results_hash = {}
-      
+      preserve_input = options[:preserve_input]
+      preserve_input = true if preserve_input.to_s.empty?
+
       paginate(restriction_items, @items_limit).each do |page_items|
+        # binding.pry
         page_items.each do |item|
           if !item.server
             raise "Item \"#{item.id}\", \"#{item.text}\" does not contain a server!"
@@ -190,8 +193,16 @@ INSERT DATA{
           query << " where{#{where_clause} }"
           query = insert_order_by_subject(query)
           binding.pry if options[:debug]
-        
+          
           results_hash.merge! get_results(query, relation, server)
+          if preserve_input
+            server_items.each do|item| 
+              if !results_hash.has_key? item
+                results_hash[item] = []
+              end
+
+            end
+          end
 
         end
 
@@ -354,6 +365,7 @@ INSERT DATA{
       restriction_items = restriction.map{|node|node.item} || []
       results = Set.new
       are_literals = !restriction_items.empty? && restriction_items[0].is_a?(Xplain::Literal)
+      items_hash = {}
       paginate(restriction_items, @items_limit).each do |page_items|
         page_items.each do |item|
           if !servers_hash.has_key? item.server
@@ -367,28 +379,42 @@ INSERT DATA{
         
         end
         servers_hash.entries.each do |server, server_items|
+          query = "SELECT distinct ?s ?o ?pf ?pb WHERE{ {{#{values_clause("?o", server_items)}}. ?s ?pf ?o.} UNION {{#{values_clause("?s", server_items)}}. ?s ?pb ?o.}}"
           if(are_literals)
-            query = "SELECT distinct ?pf WHERE{ {#{values_clause("?o", server_items)}}. ?s ?pf ?o.}"
-          else
-            query = "SELECT distinct ?pf ?pb WHERE{ {{#{values_clause("?o", server_items)}}. ?s ?pf ?o.} UNION {{#{values_clause("?s", server_items)}}. ?s ?pb ?o.}}"
+            query = "SELECT distinct ?o ?pf WHERE{ {#{values_clause("?o", server_items)}}. ?s ?pf ?o.}"
           end
+
           #puts "ITEMS SIZE: #{page_items.size}"
           #File.open("query_logs.txt", "a"){|f| f.write("BEGIN\n" + query + "\nEND")}
-          
+          items_hash = server_items.map{|i| [i.id, [i]]}.to_h
+
           server.execute(query).each do |s|
+            relations = items_hash[s[:s].to_s] || items_hash[s[:o].to_s]
+            
             if(!s[:pf].nil?)
-              results << Xplain::SchemaRelation.new(id: Xplain::Namespace.colapse_uri(s[:pf].to_s), inverse: true)
+              relations << Xplain::SchemaRelation.new(id: Xplain::Namespace.colapse_uri(s[:pf].to_s), inverse: true)
+              
             end
 
             if(!s[:pb].nil?)
-              results << Xplain::SchemaRelation.new(id: Xplain::Namespace.colapse_uri(s[:pb].to_s), inverse: false)
+              relations << Xplain::SchemaRelation.new(id: Xplain::Namespace.colapse_uri(s[:pb].to_s), inverse: false)
             end
+
+
           end
           
         end
       end
-      
-      Xplain::ResultSet.new nodes: results.sort{|r1, r2| r1.to_s <=> r2.to_s}
+      results = items_hash.values.map do |item_relations| 
+        Xplain::Node.new(
+          item: item_relations[0], 
+          children: item_relations[1, item_relations.size].uniq.map{|i| Xplain::Node.new(item: i)}
+        ) 
+      end
+
+      result_set = Xplain::ResultSet.new nodes: results.sort{|r1, r2| r1.to_s <=> r2.to_s}
+      # binding.pry
+      result_set
     end
     
     ##TODO implement

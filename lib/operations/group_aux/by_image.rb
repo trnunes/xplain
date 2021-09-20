@@ -1,27 +1,22 @@
 module GroupAux
-  class ByImage < GroupingRelation  
-    include Xplain::RelationFactory
+  class ByImage
     
-    attr_accessor :groups_hash
-    def initialize(*args, &block)
-      super
-      @groups_hash = {}
-      if !block_given?
-        @relation = args.first
-      end    
+    def initialize(params={})
+      if params[:relation].nil?
+        raise MissingRelationException
+      end
+      @relation = params[:relation]
     end
-  
+
+    def prepare(items, groups)
+    end
+    
     def group(nodes)
       if nodes.empty?
         return []
       end
-      if @relation.nil?
-        raise MissingRelationException
-      end
 
       result_hash = {}
-      # @relation.server = @server
-      # binding.pry
       result_set = @relation.restricted_image(nodes, group_by_domain: true)
       # binding.pry
       result_set.last_level.each do |leaf|

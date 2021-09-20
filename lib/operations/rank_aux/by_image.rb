@@ -1,9 +1,14 @@
 module RankAux
-  class ByImage < AuxiliaryFunction
-    include Xplain::RelationFactory
+  class ByImage
     
-    def initialize(*args, &block)
-      super(&block)
+    attr_accessor :relation
+
+    def initialize(params)
+      # binding.pry
+      if params[:relation].nil?
+        raise MissingRelationException.new()
+      end
+      @relation = params[:relation]
     end
     
     def prepare(nodes)
@@ -22,6 +27,7 @@ module RankAux
       if @images_hash[node2.item]
         comparable2 = @images_hash[node2.item].first        
       end
+      # binding.pry
       return comparable1 <=> comparable2 if (comparable1 && comparable2)      
       return -1 if (!comparable1 && comparable2)
       return 1 if (!comparable2 && comparable1)

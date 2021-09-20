@@ -7,8 +7,9 @@ module Xplain
     attr_accessor :id, :text, :server, :types, :text_relation
 
     #TODO standardize all initializers to receive hashes
-    def self.create(id, text="", server=nil)
-      super(id: id, text: text, server: server)
+    def self.create(id, text="", server=nil, klass = self)
+      
+      super(id: id, text: text, server: server, class: klass)
     end
     
     def initialize(params = {})
@@ -49,7 +50,7 @@ module Xplain
     def to_s
       "Item #{self.class.name}: " + id + " : " + text.to_s
     end
-  
+
     def inspect
       to_s
     end

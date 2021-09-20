@@ -5,6 +5,16 @@ module Xplain
       def uniq_by_item(nodes)
         nodes.map{|n| [n.item, n]}.to_h.values
       end
+      def from_h(node_hash)
+        item = Xplain::Item.create(node_hash[:id], node_hash[:text].to_s, node_hash[:server], eval(node_hash[:type]))
+
+        node =  new(
+          id: node_hash[:node], 
+          item: item, 
+          children: node_hash[:children].to_a.map{|c|from_h(c)}
+        )
+        node        
+      end
     end
     
     def initialize(params = {})
@@ -159,7 +169,7 @@ module Xplain
       if(limit > 0 && offset >= 0 )
         level_items = level_items[offset..(offset+limit)-1]
       end
-  
+      # binding.pry
       level_items
     end
     
@@ -227,38 +237,6 @@ module Xplain
   
     end
     
-    def build_h(&block)
-      results_hash = {}
-      children.each do |node|
-        yield(node, results_hash)
-      end
-      results_hash
-    end
-    
-    def to_h
-      build_h{|node, results_hash| add_value(results_hash, node.parent, node)}
-    end
-    
-    def to_item_h
-      build_h{|node, results_hash| add_value(results_hash, node.parent.item, node.item)}
-    end
-
-    def to_inverse_h
-      build_h{|node, results_hash| add_value(results_hash, node, node.parent)}
-    end
-    
-    def add_value(hash, key, value)
-      if(!hash.has_key?(key))
-        if value.is_a? Xplain::Literal
-          hash[key] = []
-        else
-          hash[key] = Set.new
-        end
-      end
-      hash[key] << value
-    end
-
-    
     def inspect
       inspect_string = ""
       
@@ -266,9 +244,24 @@ module Xplain
       inspect_string
     end
     
-    alias == eql?
-    
+    def to_h()
+      node_hash = {
+        node: @id.to_s,        
+      }
 
-    
+
+      children_hashes = self.children.map do |c|
+        c.to_h
+      end
+      
+      node_hash.merge! @item.to_h
+      node_hash[:children] = children_hashes
+      # binding.pry
+      return node_hash
+
+    end
+    alias == eql?
+
   end
+
 end

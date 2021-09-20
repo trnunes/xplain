@@ -9,5 +9,13 @@ module Xplain
         super(id: id, text: text)
       end
     end
+
+    def to_h
+      return {
+        id: @id,
+        type: self.class.to_s,
+        server: @server.id
+      }
+    end
   end
 end

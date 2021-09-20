@@ -36,6 +36,9 @@ require './model/result_set'
 require './model/remote_set'
 require './model/relation_handler'
 require './model/sequence'
+require './model/workflow_node'
+require './model/param'
+
 
 require './repositories/data_server'
 require './repositories/schema_relation_gateway'
@@ -62,6 +65,7 @@ require './operations/refine_aux/in_memory_filter_interpreter'
 require './execution/dsl_parser.rb'
 
 #TODO Duplicated code with xplain.rb!
+
 module Xplain
   @@base_dir = ""
   @@cache_results = false
@@ -114,12 +118,24 @@ module Xplain
       
       klass = Object.const_get "Xplain::" + name.to_s.to_camel_case
   
-      if !Xplain::Operation.operation_class? klass
-        raise NoMethodError.new("Operation #{klass.to_s} not supported!")           
-      end
+      # if !Xplain::Operation.operation_class? klass
+        # raise NoMethodError.new("Operation #{klass.to_s} not supported!")           
+      # end
           
       return klass
     end
+  end
+
+  class StubOperation
+    attr_accessor :result_set
+    def initialize(params = {})
+      @result_set = params[:result_set]
+    end
+  
+    def execute_eager(params)
+      params[:result_set]
+    end
+  
   end
 end
 
@@ -213,8 +229,8 @@ class XplainUnitTest < Test::Unit::TestCase
       graph << [RDF::URI("_:p3"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal2")]
       graph << [RDF::URI("_:p4"),  RDF::URI("_:publishedOn"), RDF::URI("_:journal1")]
       
-      graph << [RDF::URI("_:journal1"),  RDF::URI("_:releaseYear"), RDF::Literal.new("2005", datatype: RDF::XSD.string)]
-      graph << [RDF::URI("_:journal2"),  RDF::URI("_:releaseYear"), RDF::Literal.new("2010", datatype: RDF::XSD.string)]
+      graph << [RDF::URI("_:journal1"),  RDF::URI("_:releaseYear"), RDF::Literal.new(2005)]
+      graph << [RDF::URI("_:journal2"),  RDF::URI("_:releaseYear"), RDF::Literal.new(2010)]
       
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:keywords"), RDF::URI("_:k1")]
       graph << [RDF::URI("_:paper1"),  RDF::URI("_:keywords"), RDF::URI("_:k2")]
@@ -224,9 +240,9 @@ class XplainUnitTest < Test::Unit::TestCase
       graph << [RDF::URI("_:p3"),  RDF::URI("_:keywords"), RDF::URI("_:k2")]
       graph << [RDF::URI("_:p5"),  RDF::URI("_:keywords"), RDF::URI("_:k1")]
       
-      graph << [RDF::URI("_:p2"),  RDF::URI("_:publicationYear"), RDF::Literal.new("2000", datatype: RDF::XSD.string)]
-      graph << [RDF::URI("_:p3"),  RDF::URI("_:publicationYear"), RDF::Literal.new("1998", datatype: RDF::XSD.string)]
-      graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), RDF::Literal.new("2010", datatype: RDF::XSD.string)]     
+      graph << [RDF::URI("_:p2"),  RDF::URI("_:publicationYear"), RDF::Literal.new(2000)]
+      graph << [RDF::URI("_:p3"),  RDF::URI("_:publicationYear"), RDF::Literal.new(1998)]
+      graph << [RDF::URI("_:p4"),  RDF::URI("_:publicationYear"), RDF::Literal.new(2010)]     
       
       graph << [RDF::URI("_:p2"),  RDF::URI("_:relevance"), RDF::Literal.new(10, datatype: RDF::XSD.int)]
       graph << [RDF::URI("_:p2"),  RDF::URI("_:relevance"), RDF::Literal.new(20, datatype: RDF::XSD.int)]
