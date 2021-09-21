@@ -65,7 +65,7 @@ class ExplorationController < ApplicationController
         respond_to do |format|
             begin
                 # binding.pry
-                filter = Xplain::create_filter(@input_nodes, params[:filter])
+                filter = Xplain::create_filter(params[:input_nodes], params[:filter])
 
                 results = filter.filter()
 

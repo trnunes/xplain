@@ -149,10 +149,11 @@ module Xplain
         def initialize(input_nodes, relation, operator, value)
             @relation = relation
             @value = value
-            @input_nodes = input_nodes
+            @input_nodes = input_nodes.to_a
+            binding.pry
             @input_nodes_hash = input_nodes.map{|n|[n.item, n]}.to_h
             @operator = operator
-            # binding.pry
+            
         end
 
         def filter()
